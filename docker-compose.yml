@@ -1,0 +1,68 @@
+version: "3.7"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./application:/src
+    ports:
+      - "1323:1323"
+    env_file:
+      - .env
+    environment:
+      ADDR: 0.0.0.0
+      HOST: https://keygo.local
+      PORT: 3000
+      APP_NAME: keygo
+      DATABASE_URL: postgres://keygo:keygo@db:5432/keygo?sslmode=disable
+      GO_ENV: development
+      SUPPORT_EMAIL: forget_about_it@example.com
+    depends_on:
+      - db
+    working_dir: /src
+    command: go run main.go
+
+  db:
+    image: postgres:11.6
+    volumes:
+      - ./db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: keygo
+      POSTGRES_PASSWORD: keygo
+      POSTGRES_DB: keygo
+
+  # http://localhost:8080/?pgsql=db&username=keygo&db=keygo&ns=public
+  adminer:
+    image: adminer
+    depends_on:
+      - db
+    ports:
+      - 8000:8080
+    environment:
+      ADMINER_DEFAULT_DB_DRIVER: pgsql
+      ADMINER_DEFAULT_DB_HOST: db
+      ADMINER_DEFAULT_DB_NAME: keygo
+
+  swagger:
+    image: quay.io/goswagger/swagger:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./application/:/app
+    working_dir: /app
+
+  redoc:
+    build:
+      context: ./application
+      dockerfile: Dockerfile-redoc-cli
+    volumes:
+      - ./application/swagger:/data
+
+  docs:
+    build:
+      context: ./application
+      dockerfile: Dockerfile-api-docs
