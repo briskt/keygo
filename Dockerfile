@@ -18,6 +18,6 @@ RUN go get ./...
 
 RUN go build -o /bin/app server.go
 
-RUN go build -o /bin/migrate migrations/main.go
+RUN go build -o /bin/migrate migrations/migrate.go
 RUN pwd && ls
 CMD ["app", "dev"]
