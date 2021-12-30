@@ -12,6 +12,8 @@ import (
 	"os"
 )
 
+const AuthCallback = "/auth/callback"
+
 type AuthError struct {
 	Error string
 }
@@ -33,19 +35,27 @@ func main() {
 	//CORS
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials: true,
-		AllowOrigins:     []string{"http://keygo-ui.local:8016"},
+		AllowOrigins:     []string{os.Getenv("UI_URL")},
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
 	}))
 
 	// Goth
 	goth.UseProviders(
-		auth0.New(os.Getenv("AUTH0_KEY"), os.Getenv("AUTH0_SECRET"), "http://localhost:3000/auth/auth0/callback", os.Getenv("AUTH0_DOMAIN")),
-		google.New(os.Getenv("GOOGLE_KEY"), os.Getenv("GOOGLE_SECRET"), "http://localhost:3000/auth/google/callback"),
+		auth0.New(os.Getenv("AUTH0_KEY"),
+			os.Getenv("AUTH0_SECRET"),
+			os.Getenv("HOST")+AuthCallback+"?provider=auth0",
+			os.Getenv("AUTH0_DOMAIN"),
+		),
+		google.New(
+			os.Getenv("GOOGLE_KEY"),
+			os.Getenv("GOOGLE_SECRET"),
+			os.Getenv("HOST")+AuthCallback+"?provider=google",
+		),
 	)
 
 	// Route => handler
 	e.POST("/auth/login", authLogin)
-	e.GET("/auth/callback", authCallback)
+	e.GET(AuthCallback, authCallback)
 	e.GET("/auth/logout", authLogout)
 
 	// Start server

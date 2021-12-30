@@ -9,11 +9,12 @@ services:
       - ./application:/src
     ports:
       - "1323:1323"
+      - "2345:2345"
     env_file:
       - .env
     environment:
       ADDR: 0.0.0.0
-      HOST: https://keygo.local
+      HOST: https://localhost:1323
       PORT: 3000
       APP_NAME: keygo
       DATABASE_URL: postgres://keygo:keygo@db:5432/keygo?sslmode=disable
