@@ -23,14 +23,13 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// Gorm DB Middleware
-	dsn := "host=localhost user=keygo password=keygo dbname=keygo port=5432 sslmode=disable TimeZone=UTC"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
 	if err != nil {
 		panic("error opening database, " + err.Error())
 	}
 	e.Use(http.Transaction(db))
 
-	//CORS
+	// CORS
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials: true,
 		AllowOrigins:     []string{os.Getenv("UI_URL")},
