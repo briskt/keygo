@@ -37,6 +37,7 @@ func main() {
 	}))
 
 	http.RegisterAuthRoutes(e)
+	http.RegisterUserRoutes(e)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":1323"))

@@ -15,7 +15,6 @@ services:
     environment:
       ADDR: 0.0.0.0
       HOST: http://localhost:1323
-      PORT: 3000
       APP_NAME: keygo
       DATABASE_URL: postgres://keygo:keygo@db:5432/keygo?sslmode=disable
       GO_ENV: development

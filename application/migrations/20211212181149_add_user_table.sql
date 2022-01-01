@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE "user" (
+CREATE TABLE "users" (
     id uuid NOT NULL,
     first_name text NOT NULL,
     last_name text NOT NULL,
@@ -14,5 +14,5 @@ CREATE TABLE "user" (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE "user";
+DROP TABLE "users";
 -- +goose StatementEnd

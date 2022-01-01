@@ -38,8 +38,8 @@ func init() {
 			os.Getenv("HOST")+AuthCallbackPath+"?provider=google",
 		),
 	)
-
 }
+
 func RegisterAuthRoutes(e *echo.Echo) {
 	// Route => handler
 	e.POST("/auth/login", authLogin)
