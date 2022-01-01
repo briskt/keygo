@@ -1,18 +1,18 @@
-package main
+package http
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/auth0"
 	"github.com/markbates/goth/providers/google"
-	"net/http"
-	"os"
 )
 
-const AuthCallback = "/auth/callback"
+const AuthCallbackPath = "/auth/callback"
 
 type AuthError struct {
 	Error string
@@ -24,42 +24,27 @@ type ProviderOption struct {
 	RedirectURL string
 }
 
-func main() {
-	// Echo instance
-	e := echo.New()
-
-	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
-	//CORS
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowCredentials: true,
-		AllowOrigins:     []string{os.Getenv("UI_URL")},
-		AllowHeaders:     []string{"Authorization", "Content-Type"},
-	}))
-
+func init() {
 	// Goth
 	goth.UseProviders(
 		auth0.New(os.Getenv("AUTH0_KEY"),
 			os.Getenv("AUTH0_SECRET"),
-			os.Getenv("HOST")+AuthCallback+"?provider=auth0",
+			os.Getenv("HOST")+AuthCallbackPath+"?provider=auth0",
 			os.Getenv("AUTH0_DOMAIN"),
 		),
 		google.New(
 			os.Getenv("GOOGLE_KEY"),
 			os.Getenv("GOOGLE_SECRET"),
-			os.Getenv("HOST")+AuthCallback+"?provider=google",
+			os.Getenv("HOST")+AuthCallbackPath+"?provider=google",
 		),
 	)
 
+}
+func RegisterAuthRoutes(e *echo.Echo) {
 	// Route => handler
 	e.POST("/auth/login", authLogin)
-	e.GET(AuthCallback, authCallback)
+	e.GET(AuthCallbackPath, authCallback)
 	e.GET("/auth/logout", authLogout)
-
-	// Start server
-	e.Logger.Fatal(e.Start(":1323"))
 }
 
 func authLogin(c echo.Context) error {

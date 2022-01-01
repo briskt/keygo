@@ -14,7 +14,7 @@ services:
       - .env
     environment:
       ADDR: 0.0.0.0
-      HOST: https://localhost:1323
+      HOST: http://localhost:1323
       PORT: 3000
       APP_NAME: keygo
       DATABASE_URL: postgres://keygo:keygo@db:5432/keygo?sslmode=disable
@@ -35,7 +35,7 @@ services:
       POSTGRES_PASSWORD: keygo
       POSTGRES_DB: keygo
 
-  # http://localhost:8080/?pgsql=db&username=keygo&db=keygo&ns=public
+  # http://localhost:8000/?pgsql=db&username=keygo&db=keygo&ns=public
   adminer:
     image: adminer
     depends_on:
