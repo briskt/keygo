@@ -3,7 +3,7 @@
 
 # Working directory
 # . or absolute path, please note that the directories following must be under root.
-root = "./cmd/api"
+root = "."
 tmp_dir = "tmp"
 
 [build]
