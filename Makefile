@@ -1,19 +1,23 @@
-app:
+app: db adminer
 	docker-compose up -d app
 
 bounce:
 	docker-compose kill app && docker-compose up -d app
 
-migrate:
-	docker-compose run --rm app migrate
+migrate: db
+	#docker-compose run --rm app migrate
+	docker-compose run --rm app bash -c "goose -dir migrations postgres postgres://keygo:keygo@db:5432/keygo?sslmode=disable up"
 
-migratedown:
+migratedown: db
 	docker-compose run --rm app bash -c "goose -dir migrations postgres postgres://keygo:keygo@db:5432/keygo?sslmode=disable down"
 
-new-migration:
+new-migration: db
 	bash -c "cd application/migrations && goose create change_me sql"
+
+db:
+	docker-compose up -d db
 
 adminer:
 	docker-compose up -d adminer
 
-.PHONY: app, bounce, migrate, migratedown, new-migration, adminer
+.PHONY: app bounce migrate migratedown new-migration adminer

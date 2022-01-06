@@ -4,33 +4,50 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 )
 
 type User struct {
-	ID        uuid.UUID `db:"id"`
+	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
 	FirstName string    `db:"first_name"`
 	LastName  string    `db:"last_name"`
 	Email     string    `db:"email"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	Role      string    `db:"role"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time `sql:"index"`
+}
+
+func (u *User) BeforeCreate(tx *gorm.DB) error {
+	u.ID = NewUUID()
+	return nil
+}
+
+func NewUUID() uuid.UUID {
+	id, err := uuid.NewV4()
+	if err != nil {
+		panic(err.Error())
+	}
+	return id
 }
 
 // UserService represents a service for managing users
 type UserService interface {
 	// FindUserByID retrieves a user by ID
-	FindUserByID(id uuid.UUID) (User, error)
+	FindUserByID(echo.Context, uuid.UUID) (User, error)
 
 	// FindUsers retrieves a list of users by filter
-	FindUsers(filter UserFilter) ([]User, int, error)
+	FindUsers(echo.Context, UserFilter) ([]User, int, error)
 
 	// CreateUser creates a new user
-	CreateUser(user User) error
+	CreateUser(echo.Context, User) error
 
 	// UpdateUser updates a user object
-	UpdateUser(id uuid.UUID, upd UserUpdate) (User, error)
+	UpdateUser(echo.Context, uuid.UUID, UserUpdate) (User, error)
 
 	// DeleteUser permanently deletes a user and all child objects
-	DeleteUser(id uuid.UUID) error
+	DeleteUser(echo.Context, uuid.UUID) error
 }
 
 // UserFilter represents a filter passed to FindUsers()
@@ -47,7 +64,7 @@ type UserFilter struct {
 
 // UserUpdate represents a set of fields to be updated via UpdateUser()
 type UserUpdate struct {
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
+	FirstName *string `json:"firstName"`
+	LastName  *string `json:"lastName"`
 	Email     *string `json:"email"`
 }
