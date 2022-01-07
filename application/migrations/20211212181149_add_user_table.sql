@@ -6,6 +6,7 @@ CREATE TABLE "users" (
     last_name text NOT NULL,
     role text NOT NULL,
     email text NOT NULL UNIQUE,
+    avatar_url text NOT NULL,
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
     deleted_at timestamp,

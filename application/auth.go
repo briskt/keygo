@@ -27,9 +27,6 @@ type Auth struct {
 	UserID uuid.UUID `json:"userID"`
 	User   User      `json:"user"`
 
-	// Avatar URL provided by the auth provider
-	AvatarURL string `json:"avatarURL"`
-
 	// The authentication provider & the provider's user ID
 	Provider   string `json:"provider"`
 	ProviderID string `json:"providerID"`
@@ -64,17 +61,6 @@ func (a *Auth) Validate() error {
 		return Errorf(ERR_INVALID, "Access token required.")
 	}
 	return nil
-}
-
-// GetAvatarURL returns a URL to the avatar image hosted by the authentication provider
-// Returns an empty string if the authentication provider is invalid
-func (a *Auth) GetAvatarURL(size int) string {
-	switch a.Provider {
-	case AuthProviderGoogle:
-		return a.AvatarURL
-	default:
-		return ""
-	}
 }
 
 // AuthService represents a service for managing auths

@@ -4,7 +4,6 @@
 CREATE TABLE "auths" (
     id uuid NOT NULL,
     user_id uuid NOT NULL,
-    avatar_url text NOT NULL,
     provider text NOT NULL,
     provider_id text NOT NULL,
     access_token text NOT NULL,

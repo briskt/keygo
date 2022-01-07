@@ -9,6 +9,9 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/auth0"
 	"github.com/markbates/goth/providers/google"
+
+	"github.com/schparky/keygo"
+	"github.com/schparky/keygo/db"
 )
 
 const AuthCallbackPath = "/auth/callback"
@@ -98,9 +101,22 @@ func authLogout(c echo.Context) error {
 }
 
 func authCallback(c echo.Context) error {
-	user, err := gothic.CompleteUserAuth(c.Response(), c.Request())
+	authUser, err := gothic.CompleteUserAuth(c.Response(), c.Request())
+
+	auth, err := db.NewAuthService().CreateAuth(c, keygo.Auth{
+		Provider:     authUser.Provider,
+		ProviderID:   authUser.UserID,
+		AccessToken:  authUser.AccessToken,
+		RefreshToken: authUser.RefreshToken,
+		User: keygo.User{
+			FirstName: authUser.FirstName,
+			LastName:  authUser.LastName,
+			Email:     authUser.Email,
+			AvatarURL: authUser.AvatarURL,
+		},
+	})
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, user)
+	return c.JSON(http.StatusOK, auth)
 }
