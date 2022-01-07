@@ -3,7 +3,7 @@ module github.com/schparky/keygo
 go 1.17
 
 require (
-	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/google/uuid v1.3.0
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/lib/pq v1.10.3
 	github.com/markbates/goth v1.68.0

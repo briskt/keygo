@@ -3,7 +3,7 @@ package keygo
 import (
 	"time"
 
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
@@ -21,16 +21,8 @@ type User struct {
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
-	u.ID = NewUUID()
+	u.ID = uuid.New()
 	return nil
-}
-
-func NewUUID() uuid.UUID {
-	id, err := uuid.NewV4()
-	if err != nil {
-		panic(err.Error())
-	}
-	return id
 }
 
 // UserService represents a service for managing users

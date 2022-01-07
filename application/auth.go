@@ -3,7 +3,7 @@ package keygo
 import (
 	"time"
 
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
@@ -44,7 +44,7 @@ type Auth struct {
 }
 
 func (a *Auth) BeforeCreate(tx *gorm.DB) error {
-	a.ID = NewUUID()
+	a.ID = uuid.New()
 	return nil
 }
 

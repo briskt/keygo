@@ -1,7 +1,7 @@
 package keygo
 
 import (
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
