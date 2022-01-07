@@ -24,12 +24,6 @@ type Auth struct {
 	Provider   string
 	ProviderID string
 
-	// OAuth fields returned from the authentication provider
-	// Not all providers use refresh tokens.
-	AccessToken  string
-	RefreshToken string
-	Expiry       time.Time
-
 	// Timestamps of creation & last update
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -44,8 +38,6 @@ func (a *Auth) Validate() error {
 		return keygo.Errorf(keygo.ERR_INVALID, "Provider required.")
 	} else if a.ProviderID == "" {
 		return keygo.Errorf(keygo.ERR_INVALID, "Provider ID required.")
-	} else if a.AccessToken == "" {
-		return keygo.Errorf(keygo.ERR_INVALID, "Access token required.")
 	}
 	return nil
 }
@@ -106,7 +98,7 @@ func (s *AuthService) CreateAuth(ctx echo.Context, keygoAuth keygo.Auth) (keygo.
 	// Check to see if the auth already exists for the given source.
 	if other, err := findAuthByProviderID(ctx, auth.Provider, auth.ProviderID); err == nil {
 		// If an auth already exists for the source user, update with the new tokens.
-		if other, err = updateAuth(ctx, other.ID, auth.AccessToken, auth.RefreshToken, auth.Expiry); err != nil {
+		if other, err = updateAuth(ctx, other.ID); err != nil {
 			return keygo.Auth{}, fmt.Errorf("cannot create auth: id=%d err=%w", other.ID, err)
 		} else if err = attachAuthAssociations(ctx, other); err != nil {
 			return keygo.Auth{}, err
@@ -195,17 +187,12 @@ func createAuth(ctx echo.Context, auth Auth) (Auth, error) {
 
 // updateAuth updates tokens & expiry on exist auth object
 // Returns new state of the auth object
-func updateAuth(ctx echo.Context, id uuid.UUID, accessToken, refreshToken string, expiry time.Time) (Auth, error) {
+func updateAuth(ctx echo.Context, id uuid.UUID) (Auth, error) {
 	// Fetch current object state.
 	auth, err := findAuthByID(ctx, id)
 	if err != nil {
 		return Auth{}, err
 	}
-
-	// Update fields
-	auth.AccessToken = accessToken
-	auth.RefreshToken = refreshToken
-	auth.Expiry = expiry
 
 	if err = auth.Validate(); err != nil {
 		return auth, err
@@ -240,30 +227,24 @@ func attachAuthAssociations(ctx echo.Context, auth Auth) (err error) {
 
 func convertAuth(a Auth) keygo.Auth {
 	return keygo.Auth{
-		ID:           a.ID,
-		UserID:       a.UserID,
-		User:         convertUser(a.User),
-		Provider:     a.Provider,
-		ProviderID:   a.ProviderID,
-		AccessToken:  a.AccessToken,
-		RefreshToken: a.RefreshToken,
-		Expiry:       a.Expiry,
-		CreatedAt:    a.CreatedAt,
-		UpdatedAt:    a.UpdatedAt,
+		ID:         a.ID,
+		UserID:     a.UserID,
+		User:       convertUser(a.User),
+		Provider:   a.Provider,
+		ProviderID: a.ProviderID,
+		CreatedAt:  a.CreatedAt,
+		UpdatedAt:  a.UpdatedAt,
 	}
 }
 
 func convertKeygoAuth(a keygo.Auth) Auth {
 	return Auth{
-		ID:           a.ID,
-		UserID:       a.UserID,
-		User:         convertKeygoUser(a.User),
-		Provider:     a.Provider,
-		ProviderID:   a.ProviderID,
-		AccessToken:  a.AccessToken,
-		RefreshToken: a.RefreshToken,
-		Expiry:       a.Expiry,
-		CreatedAt:    a.CreatedAt,
-		UpdatedAt:    a.UpdatedAt,
+		ID:         a.ID,
+		UserID:     a.UserID,
+		User:       convertKeygoUser(a.User),
+		Provider:   a.Provider,
+		ProviderID: a.ProviderID,
+		CreatedAt:  a.CreatedAt,
+		UpdatedAt:  a.UpdatedAt,
 	}
 }

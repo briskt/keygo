@@ -31,12 +31,6 @@ type Auth struct {
 	Provider   string `json:"provider"`
 	ProviderID string `json:"providerID"`
 
-	// OAuth fields returned from the authentication provider
-	// Not all providers use refresh tokens.
-	AccessToken  string    `json:"-"`
-	RefreshToken string    `json:"-"`
-	Expiry       time.Time `json:"-"`
-
 	// Timestamps of creation & last update
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`

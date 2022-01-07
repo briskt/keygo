@@ -104,10 +104,8 @@ func authCallback(c echo.Context) error {
 	authUser, err := gothic.CompleteUserAuth(c.Response(), c.Request())
 
 	auth, err := db.NewAuthService().CreateAuth(c, keygo.Auth{
-		Provider:     authUser.Provider,
-		ProviderID:   authUser.UserID,
-		AccessToken:  authUser.AccessToken,
-		RefreshToken: authUser.RefreshToken,
+		Provider:   authUser.Provider,
+		ProviderID: authUser.UserID,
 		User: keygo.User{
 			FirstName: authUser.FirstName,
 			LastName:  authUser.LastName,
