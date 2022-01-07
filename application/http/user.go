@@ -15,8 +15,8 @@ func RegisterUserRoutes(e *echo.Echo) {
 }
 
 func usersHandler(c echo.Context) error {
-	s := db.NewUserService(db.Tx(c))
-	u, _, err := s.FindUsers(keygo.UserFilter{})
+	s := db.NewUserService()
+	u, _, err := s.FindUsers(c, keygo.UserFilter{})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
