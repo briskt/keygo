@@ -20,7 +20,7 @@ const (
 // on some providers don't provide their public email so we may not be able to link them
 // by email address.
 type Auth struct {
-	ID uuid.UUID `gorm:"type:uuid;primary_key;"`
+	ID uuid.UUID `json:"id"`
 
 	// User can have one or more methods of authentication
 	// However, only one per provider is allowed per user
@@ -38,28 +38,12 @@ type Auth struct {
 	Expiry       time.Time `json:"-"`
 
 	// Timestamps of creation & last update
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `sql:"index"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func (a *Auth) BeforeCreate(tx *gorm.DB) error {
 	a.ID = uuid.New()
-	return nil
-}
-
-// Validate returns an error if any fields are invalid on the Auth object.
-// This can be called by the database implementation to do some basic checks.
-func (a *Auth) Validate() error {
-	if a.UserID == uuid.Nil {
-		return Errorf(ERR_INVALID, "User required.")
-	} else if a.Provider == "" {
-		return Errorf(ERR_INVALID, "Provider required.")
-	} else if a.ProviderID == "" {
-		return Errorf(ERR_INVALID, "Provider ID required.")
-	} else if a.AccessToken == "" {
-		return Errorf(ERR_INVALID, "Access token required.")
-	}
 	return nil
 }
 

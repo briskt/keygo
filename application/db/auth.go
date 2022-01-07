@@ -12,6 +12,44 @@ import (
 	"github.com/schparky/keygo"
 )
 
+type Auth struct {
+	ID uuid.UUID `gorm:"type:uuid;primary_key;"`
+
+	// User can have one or more methods of authentication
+	// However, only one per provider is allowed per user
+	UserID uuid.UUID
+	User   User
+
+	// The authentication provider & the provider's user ID
+	Provider   string
+	ProviderID string
+
+	// OAuth fields returned from the authentication provider
+	// Not all providers use refresh tokens.
+	AccessToken  string
+	RefreshToken string
+	Expiry       time.Time
+
+	// Timestamps of creation & last update
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time `gorm:"index"`
+}
+
+// Validate returns an error if any fields are invalid on the Auth object.
+func (a *Auth) Validate() error {
+	if a.UserID == uuid.Nil {
+		return keygo.Errorf(keygo.ERR_INVALID, "User required.")
+	} else if a.Provider == "" {
+		return keygo.Errorf(keygo.ERR_INVALID, "Provider required.")
+	} else if a.ProviderID == "" {
+		return keygo.Errorf(keygo.ERR_INVALID, "Provider ID required.")
+	} else if a.AccessToken == "" {
+		return keygo.Errorf(keygo.ERR_INVALID, "Access token required.")
+	}
+	return nil
+}
+
 // Ensure service implements interface.
 var _ keygo.AuthService = (*AuthService)(nil)
 
@@ -28,12 +66,12 @@ func NewAuthService() *AuthService {
 func (s *AuthService) FindAuthByID(ctx echo.Context, id uuid.UUID) (keygo.Auth, error) {
 	auth, err := findAuthByID(ctx, id)
 	if err != nil {
-		return auth, err
+		return keygo.Auth{}, err
 	} else if err = attachAuthAssociations(ctx, auth); err != nil {
-		return auth, err
+		return keygo.Auth{}, err
 	}
 
-	return auth, nil
+	return convertAuth(auth), nil
 }
 
 // FindAuths retrieves authentication objects based on a filter.
@@ -44,18 +82,17 @@ func (s *AuthService) FindAuths(ctx echo.Context, filter keygo.AuthFilter) ([]ke
 	// Fetch the individual authentication objects from the database.
 	auths, n, err := findAuths(ctx, filter)
 	if err != nil {
-		return auths, n, err
+		return []keygo.Auth{}, n, err
 	}
 
-	// Iterate over returned objects and attach user objects.
-	// This works well for SQLite because it is in-process but remote database
-	// servers will incur a high per-query latency so queries should be batched.
-	for _, auth := range auths {
+	keygoAuths := make([]keygo.Auth, len(auths))
+	for i, auth := range auths {
 		if err = attachAuthAssociations(ctx, auth); err != nil {
-			return auths, n, err
+			return []keygo.Auth{}, n, err
 		}
+		keygoAuths[i] = convertAuth(auth)
 	}
-	return auths, n, nil
+	return keygoAuths, n, nil
 }
 
 // CreateAuth Creates a new authentication object If a User is attached to auth,
@@ -63,7 +100,9 @@ func (s *AuthService) FindAuths(ctx echo.Context, filter keygo.AuthFilter) ([]ke
 // object is created.
 //
 // On success, the auth.ID is set to the new authentication ID
-func (s *AuthService) CreateAuth(ctx echo.Context, auth keygo.Auth) (keygo.Auth, error) {
+func (s *AuthService) CreateAuth(ctx echo.Context, keygoAuth keygo.Auth) (keygo.Auth, error) {
+	auth := convertKeygoAuth(keygoAuth)
+
 	// Check to see if the auth already exists for the given source.
 	if other, err := findAuthByProviderID(ctx, auth.Provider, auth.ProviderID); err == nil {
 		// If an auth already exists for the source user, update with the new tokens.
@@ -73,7 +112,7 @@ func (s *AuthService) CreateAuth(ctx echo.Context, auth keygo.Auth) (keygo.Auth,
 			return keygo.Auth{}, err
 		}
 
-		return other, nil
+		return convertAuth(other), nil
 	} else if keygo.ErrorCode(err) != keygo.ERR_NOTFOUND {
 		return keygo.Auth{}, fmt.Errorf("canot find auth by source user: %w", err)
 	}
@@ -103,7 +142,7 @@ func (s *AuthService) CreateAuth(ctx echo.Context, auth keygo.Auth) (keygo.Auth,
 		return keygo.Auth{}, err
 	}
 
-	return newAuth, attachAuthAssociations(ctx, auth)
+	return convertAuth(newAuth), attachAuthAssociations(ctx, auth)
 }
 
 // DeleteAuth permanently deletes an authentication object from the system by ID
@@ -114,40 +153,40 @@ func (s *AuthService) DeleteAuth(ctx echo.Context, id uuid.UUID) error {
 
 // findAuthByID is a helper function to return an auth object by ID
 // Returns ERR_NOTFOUND if auth doesn't exist
-func findAuthByID(ctx echo.Context, id uuid.UUID) (keygo.Auth, error) {
-	var auth keygo.Auth
+func findAuthByID(ctx echo.Context, id uuid.UUID) (Auth, error) {
+	var auth Auth
 	result := Tx(ctx).Find(&auth, id)
 	if result.Error == sql.ErrNoRows {
-		return keygo.Auth{}, &keygo.Error{Code: keygo.ERR_NOTFOUND, Message: "Auth not found"}
+		return Auth{}, &keygo.Error{Code: keygo.ERR_NOTFOUND, Message: "Auth not found"}
 	}
 	return auth, result.Error
 }
 
 // findAuthByProviderID is a helper function to return an auth object by source ID.
 // Returns ERR_NOTFOUND if auth doesn't exist.
-func findAuthByProviderID(ctx echo.Context, provider, providerID string) (keygo.Auth, error) {
-	var auth keygo.Auth
+func findAuthByProviderID(ctx echo.Context, provider, providerID string) (Auth, error) {
+	var auth Auth
 	err := Tx(ctx).Where("provider = ? AND provider_id = ?", provider, providerID).First(&auth).Error
 	if err == gorm.ErrRecordNotFound {
-		return keygo.Auth{}, &keygo.Error{Code: keygo.ERR_NOTFOUND, Message: "Auth not found"}
+		return Auth{}, &keygo.Error{Code: keygo.ERR_NOTFOUND, Message: "Auth not found"}
 	}
 	return auth, err
 }
 
 // findAuths returns a list of auth objects that match a filter. Also returns
 // a total count of matches which may differ from results if filter.Limit is set.
-func findAuths(ctx echo.Context, filter keygo.AuthFilter) (_ []keygo.Auth, n int, err error) {
+func findAuths(ctx echo.Context, filter keygo.AuthFilter) (_ []Auth, n int, err error) {
 	// TODO: implement query filter
-	var auths []keygo.Auth
+	var auths []Auth
 	result := Tx(ctx).Find(&auths)
 	return auths, len(auths), result.Error
 }
 
 // createAuth creates a new auth object in the database. On success, the
 // ID is set to the new database ID & timestamp fields are set to the current time.
-func createAuth(ctx echo.Context, auth keygo.Auth) (keygo.Auth, error) {
+func createAuth(ctx echo.Context, auth Auth) (Auth, error) {
 	if err := auth.Validate(); err != nil {
-		return keygo.Auth{}, err
+		return Auth{}, err
 	}
 
 	result := Tx(ctx).Omit("User").Create(&auth)
@@ -156,11 +195,11 @@ func createAuth(ctx echo.Context, auth keygo.Auth) (keygo.Auth, error) {
 
 // updateAuth updates tokens & expiry on exist auth object
 // Returns new state of the auth object
-func updateAuth(ctx echo.Context, id uuid.UUID, accessToken, refreshToken string, expiry time.Time) (keygo.Auth, error) {
+func updateAuth(ctx echo.Context, id uuid.UUID, accessToken, refreshToken string, expiry time.Time) (Auth, error) {
 	// Fetch current object state.
 	auth, err := findAuthByID(ctx, id)
 	if err != nil {
-		return keygo.Auth{}, err
+		return Auth{}, err
 	}
 
 	// Update fields
@@ -192,9 +231,39 @@ func deleteAuth(ctx echo.Context, id uuid.UUID) error {
 
 // attachAuthAssociations is a helper function to fetch & attach the associated user
 // to the auth object.
-func attachAuthAssociations(ctx echo.Context, auth keygo.Auth) (err error) {
+func attachAuthAssociations(ctx echo.Context, auth Auth) (err error) {
 	if auth.User, err = findUserByID(ctx, auth.UserID); err != nil {
 		return fmt.Errorf("attach auth user: %w", err)
 	}
 	return nil
+}
+
+func convertAuth(a Auth) keygo.Auth {
+	return keygo.Auth{
+		ID:           a.ID,
+		UserID:       a.UserID,
+		User:         convertUser(a.User),
+		Provider:     a.Provider,
+		ProviderID:   a.ProviderID,
+		AccessToken:  a.AccessToken,
+		RefreshToken: a.RefreshToken,
+		Expiry:       a.Expiry,
+		CreatedAt:    a.CreatedAt,
+		UpdatedAt:    a.UpdatedAt,
+	}
+}
+
+func convertKeygoAuth(a keygo.Auth) Auth {
+	return Auth{
+		ID:           a.ID,
+		UserID:       a.UserID,
+		User:         convertKeygoUser(a.User),
+		Provider:     a.Provider,
+		ProviderID:   a.ProviderID,
+		AccessToken:  a.AccessToken,
+		RefreshToken: a.RefreshToken,
+		Expiry:       a.Expiry,
+		CreatedAt:    a.CreatedAt,
+		UpdatedAt:    a.UpdatedAt,
+	}
 }

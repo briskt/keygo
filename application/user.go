@@ -9,15 +9,14 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
-	FirstName string    `db:"first_name"`
-	LastName  string    `db:"last_name"`
-	Email     string    `db:"email"`
-	AvatarURL string    `db:"avatar_url"`
-	Role      string    `db:"role"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `sql:"index"`
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	Email     string    `json:"email"`
+	AvatarURL string    `json:"avatarURL"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
