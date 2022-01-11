@@ -30,6 +30,11 @@ type Auth struct {
 	DeletedAt *time.Time `gorm:"index"`
 }
 
+func (a *Auth) BeforeCreate(tx *gorm.DB) error {
+	a.ID = uuid.New()
+	return nil
+}
+
 // Validate returns an error if any fields are invalid on the Auth object.
 func (a *Auth) Validate() error {
 	if a.UserID == uuid.Nil {

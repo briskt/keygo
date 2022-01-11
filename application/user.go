@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 type User struct {
@@ -17,11 +16,6 @@ type User struct {
 	Role      string    `json:"role"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
-}
-
-func (u *User) BeforeCreate(tx *gorm.DB) error {
-	u.ID = uuid.New()
-	return nil
 }
 
 // UserService represents a service for managing users

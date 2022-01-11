@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 // Authentication providers
@@ -34,11 +33,6 @@ type Auth struct {
 	// Timestamps of creation & last update
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
-}
-
-func (a *Auth) BeforeCreate(tx *gorm.DB) error {
-	a.ID = uuid.New()
-	return nil
 }
 
 // AuthService represents a service for managing auths

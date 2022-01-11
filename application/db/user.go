@@ -22,6 +22,11 @@ type User struct {
 	DeletedAt *time.Time `gorm:"index"`
 }
 
+func (u *User) BeforeCreate(tx *gorm.DB) error {
+	u.ID = uuid.New()
+	return nil
+}
+
 // Ensure service implements interface.
 var _ keygo.UserService = (*UserService)(nil)
 
