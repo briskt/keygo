@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -15,6 +16,10 @@ import (
 )
 
 const AuthCallbackPath = "/auth/callback"
+
+const ClientIDParam = "client_id"
+
+const ClientIDSessionKey = "ClientID"
 
 type AuthError struct {
 	Error string
@@ -73,6 +78,14 @@ func RegisterAuthRoutes(e *echo.Echo) {
 }
 
 func authLogin(c echo.Context) error {
+	clientID := c.QueryParam(ClientIDParam)
+	if clientID == "" {
+		return c.JSON(http.StatusBadRequest, ClientIDParam+" is required to login")
+	}
+	if err := sessionSetValue(c, ClientIDSessionKey, clientID); err != nil {
+		return c.JSON(http.StatusInternalServerError, "error saving clientID into session, "+err.Error())
+	}
+
 	options := make([]ProviderOption, 0)
 	for _, p := range providers {
 		if p.secret == "" || p.authKey == "" {
@@ -101,6 +114,12 @@ func authLogout(c echo.Context) error {
 }
 
 func authCallback(c echo.Context) error {
+	clientID, err := sessionGetValue(c, ClientIDSessionKey)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ClientIDSessionKey+" not found in session")
+	}
+	fmt.Printf("client ID: %s\n", clientID)
+
 	authUser, err := gothic.CompleteUserAuth(c.Response(), c.Request())
 
 	auth, err := db.NewAuthService().CreateAuth(c, keygo.Auth{

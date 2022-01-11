@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/driver/postgres"
@@ -18,9 +20,14 @@ func main() {
 	// Echo instance
 	e := echo.New()
 
-	// Middleware
+	// Logger Middleware
 	e.Use(middleware.Logger())
+
+	// Recover Middleware
 	e.Use(middleware.Recover())
+
+	// Session Middleware
+	e.Use(session.Middleware(sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))))
 
 	// Gorm DB Middleware
 	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
