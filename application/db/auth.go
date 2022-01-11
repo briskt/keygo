@@ -64,7 +64,7 @@ func (s *AuthService) FindAuthByID(ctx echo.Context, id uuid.UUID) (keygo.Auth, 
 	auth, err := findAuthByID(ctx, id)
 	if err != nil {
 		return keygo.Auth{}, err
-	} else if err = attachAuthAssociations(ctx, auth); err != nil {
+	} else if err = auth.loadUser(ctx); err != nil {
 		return keygo.Auth{}, err
 	}
 
@@ -84,7 +84,7 @@ func (s *AuthService) FindAuths(ctx echo.Context, filter keygo.AuthFilter) ([]ke
 
 	keygoAuths := make([]keygo.Auth, len(auths))
 	for i, auth := range auths {
-		if err = attachAuthAssociations(ctx, auth); err != nil {
+		if err = auth.loadUser(ctx); err != nil {
 			return []keygo.Auth{}, n, err
 		}
 		keygoAuths[i] = convertAuth(auth)
@@ -105,7 +105,7 @@ func (s *AuthService) CreateAuth(ctx echo.Context, keygoAuth keygo.Auth) (keygo.
 		// If an auth already exists for the source user, update with the new tokens.
 		if other, err = updateAuth(ctx, other.ID); err != nil {
 			return keygo.Auth{}, fmt.Errorf("cannot create auth: id=%d err=%w", other.ID, err)
-		} else if err = attachAuthAssociations(ctx, other); err != nil {
+		} else if err = other.loadUser(ctx); err != nil {
 			return keygo.Auth{}, err
 		}
 
@@ -134,12 +134,16 @@ func (s *AuthService) CreateAuth(ctx echo.Context, keygoAuth keygo.Auth) (keygo.
 	}
 
 	// Create new auth object & attach associated user.
-	newAuth, err := createAuth(ctx, auth)
+	err := auth.create(ctx)
 	if err != nil {
 		return keygo.Auth{}, err
 	}
 
-	return convertAuth(newAuth), attachAuthAssociations(ctx, auth)
+	if err = auth.loadUser(ctx); err != nil {
+		return keygo.Auth{}, err
+	}
+
+	return convertAuth(auth), nil
 }
 
 // DeleteAuth permanently deletes an authentication object from the system by ID
@@ -179,15 +183,15 @@ func findAuths(ctx echo.Context, filter keygo.AuthFilter) (_ []Auth, n int, err 
 	return auths, len(auths), result.Error
 }
 
-// createAuth creates a new auth object in the database. On success, the
-// ID is set to the new database ID & timestamp fields are set to the current time.
-func createAuth(ctx echo.Context, auth Auth) (Auth, error) {
-	if err := auth.Validate(); err != nil {
-		return Auth{}, err
+// create a new auth object in the database. On success, the ID is set to the new database
+// ID & timestamp fields are set to the current time
+func (a *Auth) create(ctx echo.Context) error {
+	if err := a.Validate(); err != nil {
+		return err
 	}
 
-	result := Tx(ctx).Omit("User").Create(&auth)
-	return auth, result.Error
+	result := Tx(ctx).Omit("User").Create(a)
+	return result.Error
 }
 
 // updateAuth updates tokens & expiry on exist auth object
@@ -223,8 +227,8 @@ func deleteAuth(ctx echo.Context, id uuid.UUID) error {
 
 // attachAuthAssociations is a helper function to fetch & attach the associated user
 // to the auth object.
-func attachAuthAssociations(ctx echo.Context, auth Auth) (err error) {
-	if auth.User, err = findUserByID(ctx, auth.UserID); err != nil {
+func (a *Auth) loadUser(ctx echo.Context) (err error) {
+	if a.User, err = findUserByID(ctx, a.UserID); err != nil {
 		return fmt.Errorf("attach auth user: %w", err)
 	}
 	return nil

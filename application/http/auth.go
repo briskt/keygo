@@ -114,7 +114,7 @@ func authCallback(c echo.Context) error {
 		},
 	})
 	if err != nil {
-		return err
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 	return c.JSON(http.StatusOK, auth)
 }
