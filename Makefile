@@ -17,6 +17,11 @@ new-migration: db
 db:
 	docker-compose up -d db
 
+fresh:
+	docker-compose kill db
+	docker-compose rm -f db
+	make migrate
+
 adminer:
 	docker-compose up -d adminer
 
