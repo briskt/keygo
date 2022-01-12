@@ -27,6 +27,14 @@ func sessionSetValue(c echo.Context, key, value interface{}) error {
 	return nil
 }
 
+func sessionGetString(c echo.Context, key interface{}) (string, error) {
+	if i, err := sessionGetValue(c, key); err != nil {
+		return "", err
+	} else {
+		return i.(string), nil
+	}
+}
+
 func sessionGetValue(c echo.Context, key interface{}) (interface{}, error) {
 	sess, err := getSession(c)
 	if err != nil {

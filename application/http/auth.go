@@ -114,7 +114,7 @@ func authLogout(c echo.Context) error {
 }
 
 func authCallback(c echo.Context) error {
-	clientID, err := sessionGetValue(c, ClientIDSessionKey)
+	clientID, err := sessionGetString(c, ClientIDSessionKey)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ClientIDSessionKey+" not found in session")
 	}
@@ -135,5 +135,10 @@ func authCallback(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, auth)
+
+	token, err := db.NewTokenService().CreateToken(c, auth.ID, clientID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err)
+	}
+	return c.JSON(http.StatusOK, token)
 }

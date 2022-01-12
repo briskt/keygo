@@ -47,13 +47,13 @@ func (a *Auth) Validate() error {
 	return nil
 }
 
-// Ensure service implements interface.
+// Ensure service implements interface
 var _ keygo.AuthService = (*AuthService)(nil)
 
-// AuthService represents a service for managing OAuth authentication.
+// AuthService represents a service for managing OAuth authentication
 type AuthService struct{}
 
-// NewAuthService returns a new instance of AuthService attached to DB.
+// NewAuthService returns a new instance of AuthService
 func NewAuthService() *AuthService {
 	return &AuthService{}
 }
@@ -104,7 +104,7 @@ func (s *AuthService) CreateAuth(ctx echo.Context, keygoAuth keygo.Auth) (keygo.
 	if other, err := findAuthByProviderID(ctx, auth.Provider, auth.ProviderID); err == nil {
 		// If an auth already exists for the source user, update with the new tokens.
 		if other, err = updateAuth(ctx, other.ID); err != nil {
-			return keygo.Auth{}, fmt.Errorf("cannot create auth: id=%d err=%w", other.ID, err)
+			return keygo.Auth{}, fmt.Errorf("cannot create auth: id=%s err=%w", other.ID, err)
 		} else if err = other.loadUser(ctx); err != nil {
 			return keygo.Auth{}, err
 		}
@@ -156,7 +156,7 @@ func (s *AuthService) DeleteAuth(ctx echo.Context, id uuid.UUID) error {
 // Returns ERR_NOTFOUND if auth doesn't exist
 func findAuthByID(ctx echo.Context, id uuid.UUID) (Auth, error) {
 	var auth Auth
-	result := Tx(ctx).Find(&auth, id)
+	result := Tx(ctx).Preload("User").Find(&auth, id)
 	if result.Error == sql.ErrNoRows {
 		return Auth{}, &keygo.Error{Code: keygo.ERR_NOTFOUND, Message: "Auth not found"}
 	}
@@ -207,7 +207,7 @@ func updateAuth(ctx echo.Context, id uuid.UUID) (Auth, error) {
 		return auth, err
 	}
 
-	result := Tx(ctx).Save(&auth)
+	result := Tx(ctx).Omit("User").Save(&auth)
 	return auth, result.Error
 }
 
@@ -220,12 +220,12 @@ func deleteAuth(ctx echo.Context, id uuid.UUID) error {
 	//	return keygo.Errorf(keygo.ERR_UNAUTHORIZED, "You are not allowed to delete this auth")
 	//}
 
-	auth := keygo.User{ID: id}
+	auth := keygo.Auth{ID: id}
 	result := Tx(ctx).Delete(&auth)
 	return result.Error
 }
 
-// attachAuthAssociations is a helper function to fetch & attach the associated user
+// loadUser is a helper function to fetch & attach the associated user
 // to the auth object.
 func (a *Auth) loadUser(ctx echo.Context) (err error) {
 	if a.User, err = findUserByID(ctx, a.UserID); err != nil {
