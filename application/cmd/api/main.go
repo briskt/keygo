@@ -37,7 +37,10 @@ func main() {
 	e.Use(http.Transaction(db))
 
 	// Authn Middleware
-	e.Use(middleware.KeyAuth(http.AuthnMiddleware))
+	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		Skipper:   http.AuthnSkipper,
+		Validator: http.AuthnMiddleware,
+	}))
 
 	// CORS
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{

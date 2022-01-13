@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -162,4 +163,11 @@ func AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
 	}
 	c.Set(tokenContextKey, token)
 	return true, nil
+}
+
+func AuthnSkipper(c echo.Context) bool {
+	if strings.HasPrefix(c.Request().RequestURI, "/auth") {
+		return true
+	}
+	return false
 }
