@@ -2,8 +2,10 @@ package http
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/markbates/goth"
@@ -20,6 +22,8 @@ const AuthCallbackPath = "/auth/callback"
 const ClientIDParam = "client_id"
 
 const ClientIDSessionKey = "ClientID"
+
+const tokenContextKey = "token"
 
 type AuthError struct {
 	Error string
@@ -141,4 +145,21 @@ func authCallback(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 	return c.JSON(http.StatusOK, token)
+}
+
+func AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
+	tokenSvc := db.NewTokenService()
+	token, err := tokenSvc.FindToken(c, tokenString)
+	if err != nil {
+		return false, err
+	}
+	if token.ExpiresAt.Before(time.Now()) {
+		log.Printf("token expired at %s\n", token.ExpiresAt)
+		if err = tokenSvc.DeleteToken(c, token.ID); err != nil {
+			return false, fmt.Errorf("failed to delete expired token %s, %s", token.ID, err)
+		}
+		return false, nil
+	}
+	c.Set(tokenContextKey, token)
+	return true, nil
 }

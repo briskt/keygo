@@ -36,6 +36,9 @@ func main() {
 	}
 	e.Use(http.Transaction(db))
 
+	// Authn Middleware
+	e.Use(middleware.KeyAuth(http.AuthnMiddleware))
+
 	// CORS
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials: true,

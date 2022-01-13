@@ -82,15 +82,15 @@ func hashToken(accessToken string) string {
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(accessToken)))
 }
 
-// findTokenByID is a helper function to return a token object by ID
+// findToken is a helper function to return a token object by unhashed token string
 // Returns ERR_NOTFOUND if record doesn't exist
-func findTokenByID(ctx echo.Context, id uuid.UUID) (Token, error) {
+func findToken(ctx echo.Context, raw string) (Token, error) {
 	var token Token
-	result := Tx(ctx).Find(&token, id)
-	if result.Error == sql.ErrNoRows {
+	err := Tx(ctx).Where("hash = ?", hashToken(raw)).First(&token).Error
+	if err == sql.ErrNoRows {
 		return Token{}, &keygo.Error{Code: keygo.ERR_NOTFOUND, Message: "Token not found"}
 	}
-	return token, result.Error
+	return token, err
 }
 
 // deleteToken permanently removes a token object by ID
@@ -127,8 +127,8 @@ func NewTokenService() *TokenService {
 	return &TokenService{}
 }
 
-func (t TokenService) FindTokenByID(ctx echo.Context, id uuid.UUID) (keygo.Token, error) {
-	token, err := findTokenByID(ctx, id)
+func (t TokenService) FindToken(ctx echo.Context, raw string) (keygo.Token, error) {
+	token, err := findToken(ctx, raw)
 	if err != nil {
 		return keygo.Token{}, err
 	} else if err = token.loadAuth(ctx); err != nil {

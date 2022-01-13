@@ -23,9 +23,10 @@ type Token struct {
 
 // TokenService represents a service for managing tokens
 type TokenService interface {
-	// FindTokenByID looks up a token object by ID along with the associated user
-	// Returns ERR_NOTFOUND if ID does not exist
-	FindTokenByID(ctx echo.Context, tokenID uuid.UUID) (Token, error)
+	// FindToken looks up a token object by raw, unhashed token, and returns the Token object
+	// with associated Auth and Auth.User
+	// Returns ERR_NOTFOUND if token does not exist
+	FindToken(ctx echo.Context, raw string) (Token, error)
 
 	// CreateToken creates a new token object
 	//
