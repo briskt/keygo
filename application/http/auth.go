@@ -145,7 +145,11 @@ func authCallback(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.JSON(http.StatusOK, token)
+	return c.Redirect(http.StatusFound, loginURL(token.Token))
+}
+
+func loginURL(token string) string {
+	return fmt.Sprintf("%s?token=%s", os.Getenv("UI_URL"), token)
 }
 
 func AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
@@ -167,6 +171,9 @@ func AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
 
 func AuthnSkipper(c echo.Context) bool {
 	if strings.HasPrefix(c.Request().RequestURI, "/auth") {
+		return true
+	}
+	if c.Request().Method == http.MethodOptions {
 		return true
 	}
 	return false
