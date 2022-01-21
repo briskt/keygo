@@ -160,6 +160,9 @@ func AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
 	}
 	if token.ExpiresAt.Before(time.Now()) {
 		log.Printf("token expired at %s\n", token.ExpiresAt)
+
+		// bypass the transaction so the middleware doesn't roll back the token delete
+		c.Set(ContextKeyTx, db.DB)
 		if err = tokenSvc.DeleteToken(c, token.ID); err != nil {
 			return false, fmt.Errorf("failed to delete expired token %s, %s", token.ID, err)
 		}

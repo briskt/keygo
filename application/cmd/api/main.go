@@ -8,9 +8,8 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 
+	"github.com/schparky/keygo/db"
 	"github.com/schparky/keygo/http"
 )
 
@@ -30,11 +29,7 @@ func main() {
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))))
 
 	// Gorm DB Middleware
-	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
-	if err != nil {
-		panic("error opening database, " + err.Error())
-	}
-	e.Use(http.Transaction(db))
+	e.Use(http.Transaction(db.DB))
 
 	// Authn Middleware
 	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{

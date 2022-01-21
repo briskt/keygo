@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	// Stores the current logged in user in the context.
+	// Stores the current logged-in user in the context.
 	userContextKey = "user"
 )
 
@@ -16,14 +16,14 @@ func NewContextWithUser(ctx echo.Context, user User) echo.Context {
 	return ctx
 }
 
-// UserFromContext returns the current logged in user.
+// UserFromContext returns the current logged-in user.
 func UserFromContext(ctx echo.Context) User {
 	user, _ := ctx.Get(userContextKey).(User)
 	return user
 }
 
 // UserIDFromContext is a helper function that returns the ID of the current
-// logged in user. Returns zero if no user is logged in.
+// logged-in user. Returns zero if no user is logged in.
 func UserIDFromContext(ctx echo.Context) uuid.UUID {
 	user := UserFromContext(ctx)
 	return user.ID

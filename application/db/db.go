@@ -3,11 +3,24 @@ package db
 import (
 	"database/sql/driver"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
+
+var DB *gorm.DB
+
+func init() {
+	var err error
+	dsn := os.Getenv("DATABASE_URL")
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic("couldn't open database '" + dsn + "': " + err.Error())
+	}
+}
 
 // FormatLimitOffset returns a SQL string for a given limit & offset.
 // Clauses are only added if limit and/or offset are greater than zero.
