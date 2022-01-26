@@ -18,6 +18,15 @@ type User struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+// Validate returns an error if the user contains invalid fields.
+// This only performs basic validation.
+func (u *User) Validate() error {
+	if u.FirstName == "" {
+		return Errorf(ERR_INVALID, "User first name required")
+	}
+	return nil
+}
+
 // UserService represents a service for managing users
 type UserService interface {
 	// FindUserByID retrieves a user by ID
@@ -27,7 +36,7 @@ type UserService interface {
 	FindUsers(echo.Context, UserFilter) ([]User, int, error)
 
 	// CreateUser creates a new user
-	CreateUser(echo.Context, User) error
+	CreateUser(echo.Context, User) (User, error)
 
 	// UpdateUser updates a user object
 	UpdateUser(echo.Context, uuid.UUID, UserUpdate) (User, error)

@@ -1,6 +1,9 @@
 app: db adminer
 	docker-compose up -d app
 
+test:
+	docker-compose run --rm test
+
 bounce:
 	docker-compose kill app && docker-compose up -d app
 

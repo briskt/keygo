@@ -23,12 +23,37 @@ services:
       - db
     working_dir: /src
 
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./application:/src
+    env_file:
+      - test.env
+    environment:
+      DATABASE_URL: postgres://keygo:keygo@testdb:5432/keygo?sslmode=disable
+      GO_ENV: test
+    depends_on:
+      - testdb
+    working_dir: /src
+    command: go test ./...
+
   db:
     image: postgres:11.6
     volumes:
       - ./db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: keygo
+      POSTGRES_PASSWORD: keygo
+      POSTGRES_DB: keygo
+
+  testdb:
+    image: postgres:11.6
+    volumes:
+      - ./db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
     environment:
       POSTGRES_USER: keygo
       POSTGRES_PASSWORD: keygo

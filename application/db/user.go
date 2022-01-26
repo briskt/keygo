@@ -27,6 +27,16 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+// Validate returns an error if any fields are invalid on the User object.
+func (u *User) Validate() error {
+	if u.FirstName == "" {
+		return keygo.Errorf(keygo.ERR_INVALID, "FirstName required.")
+	} else if u.Email == "" {
+		return keygo.Errorf(keygo.ERR_INVALID, "Email required.")
+	}
+	return nil
+}
+
 // Ensure service implements interface.
 var _ keygo.UserService = (*UserService)(nil)
 
@@ -62,8 +72,8 @@ func (s *UserService) FindUsers(ctx echo.Context, filter keygo.UserFilter) ([]ke
 }
 
 // CreateUser creates a new user.
-func (s *UserService) CreateUser(ctx echo.Context, user keygo.User) error {
-	_, err := createUser(ctx, User{
+func (s *UserService) CreateUser(ctx echo.Context, user keygo.User) (keygo.User, error) {
+	newUser, err := createUser(ctx, User{
 		ID:        user.ID,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
@@ -73,7 +83,7 @@ func (s *UserService) CreateUser(ctx echo.Context, user keygo.User) error {
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	})
-	return err
+	return convertUser(newUser), err
 }
 
 // UpdateUser updates a user object.
@@ -121,6 +131,9 @@ func findUsers(ctx echo.Context, filter keygo.UserFilter) ([]User, int, error) {
 // createUser creates a new user. Sets the new database ID to user.ID and sets
 // the timestamps to the current time.
 func createUser(ctx echo.Context, user User) (User, error) {
+	if err := user.Validate(); err != nil {
+		return User{}, err
+	}
 	result := Tx(ctx).Create(&user)
 	return user, result.Error
 }
