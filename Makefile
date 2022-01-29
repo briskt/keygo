@@ -8,7 +8,6 @@ bounce:
 	docker-compose kill app && docker-compose up -d app
 
 migrate: db
-	#docker-compose run --rm app migrate
 	docker-compose run --rm app bash -c "goose -dir migrations postgres postgres://keygo:keygo@db:5432/keygo?sslmode=disable up"
 
 migratedown: db

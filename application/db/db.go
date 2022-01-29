@@ -9,17 +9,26 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/schparky/keygo"
 )
 
 var DB *gorm.DB
 
 func init() {
-	var err error
+	DB = OpenDB()
+}
+
+func OpenDB() *gorm.DB {
 	dsn := os.Getenv("DATABASE_URL")
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic("couldn't open database '" + dsn + "': " + err.Error())
+	if dsn == "" {
+		panic("required environment variable DATABASE_URL is not set")
 	}
+	conn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic("failed to open database '" + dsn + "': " + err.Error())
+	}
+	return conn
 }
 
 // FormatLimitOffset returns a SQL string for a given limit & offset.
@@ -36,7 +45,7 @@ func FormatLimitOffset(limit, offset int) string {
 }
 
 func Tx(ctx echo.Context) *gorm.DB {
-	tmp := ctx.Get("tx")
+	tmp := ctx.Get(keygo.ContextKeyTx)
 	tx, ok := tmp.(*gorm.DB)
 	if !ok {
 		panic("no transaction found in context")

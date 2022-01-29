@@ -1,30 +1,51 @@
 package db_test
 
 import (
-	"os"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"gorm.io/driver/postgres"
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 
+	"github.com/schparky/keygo"
+	"github.com/schparky/keygo/db"
 	"github.com/schparky/keygo/migrations"
 )
 
-// Ensure the test database can open & close.
-func TestDB(t *testing.T) {
-	_ = MustOpenDB(t)
+// TestSuite contains common setup and configuration for tests
+type TestSuite struct {
+	suite.Suite
+	*require.Assertions
+	ctx echo.Context
+	DB  *gorm.DB
 }
 
-// MustOpenDB returns a new, open DB. Fatal on error.
-func MustOpenDB(tb testing.TB) *gorm.DB {
-	tb.Helper()
-
-	tx, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
-	if err != nil {
-		panic("error opening database, " + err.Error())
+// SetupTest runs before every test function
+func (ts *TestSuite) SetupTest() {
+	if sqlDB, err := ts.DB.DB(); err != nil {
+		panic(err.Error())
+	} else {
+		migrations.Fresh(sqlDB)
 	}
+	ts.Assertions = require.New(ts.T())
+}
 
-	migrations.MigrateDown()
-	migrations.MigrateUp()
-	return tx
+// Test_ModelSuite runs the test suite
+func Test_ModelSuite(t *testing.T) {
+	suite.Run(t, &TestSuite{
+		ctx: testContext(db.DB),
+		DB:  db.DB,
+	})
+}
+
+func testContext(tx *gorm.DB) echo.Context {
+	req := httptest.NewRequest(http.MethodGet, "/", strings.NewReader(""))
+	rec := httptest.NewRecorder()
+	ctx := echo.New().NewContext(req, rec)
+	ctx.Set(keygo.ContextKeyTx, tx)
+	return ctx
 }

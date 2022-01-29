@@ -18,6 +18,4 @@ ADD ./application .
 
 RUN go get ./...
 
-RUN go build -o /bin/migrate migrations/migrate.go
-
 CMD ["air"]

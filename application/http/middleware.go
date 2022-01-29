@@ -5,9 +5,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
-)
 
-const ContextKeyTx = "tx"
+	"github.com/schparky/keygo"
+)
 
 func Transaction(db *gorm.DB) echo.MiddlewareFunc {
 	errNotOK := errors.New("http error caught in transaction middleware")
@@ -15,7 +15,7 @@ func Transaction(db *gorm.DB) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			err := db.Transaction(func(tx *gorm.DB) error {
-				c.Set(ContextKeyTx, tx)
+				c.Set(keygo.ContextKeyTx, tx)
 
 				if err := next(c); err != nil {
 					return err

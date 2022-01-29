@@ -2,9 +2,9 @@ version: "3.7"
 
 services:
   app:
+    image: keygo
     build:
       context: .
-      dockerfile: Dockerfile
     volumes:
       - ./application:/src
     ports:
@@ -24,9 +24,7 @@ services:
     working_dir: /src
 
   test:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: keygo
     volumes:
       - ./application:/src
     env_file:
@@ -78,15 +76,15 @@ services:
     volumes:
       - ./application/:/app
     working_dir: /app
-
-  redoc:
-    build:
-      context: ./application
-      dockerfile: Dockerfile-redoc-cli
-    volumes:
-      - ./application/swagger:/data
-
-  docs:
-    build:
-      context: ./application
-      dockerfile: Dockerfile-api-docs
+#
+#  redoc:
+#    build:
+#      context: ./application
+#      dockerfile: Dockerfile-redoc-cli
+#    volumes:
+#      - ./application/swagger:/data
+#
+#  docs:
+#    build:
+#      context: ./application
+#      dockerfile: Dockerfile-api-docs
