@@ -30,9 +30,10 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 // Validate returns an error if any fields are invalid on the User object.
 func (u *User) Validate() error {
 	if u.FirstName == "" {
-		return keygo.Errorf(keygo.ERR_INVALID, "FirstName required.")
-	} else if u.Email == "" {
-		return keygo.Errorf(keygo.ERR_INVALID, "Email required.")
+		return keygo.Errorf(keygo.ERR_INVALID, "FirstName required")
+	}
+	if u.Email == "" {
+		return keygo.Errorf(keygo.ERR_INVALID, "Email required")
 	}
 	return nil
 }

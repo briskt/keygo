@@ -26,8 +26,8 @@ type Token struct {
 	Auth   Auth
 	AuthID uuid.UUID
 
-	Hash  string
-	Token string `gorm:"-"`
+	Hash      string
+	PlainText string `gorm:"-"`
 
 	LastLoginAt time.Time
 	ExpiresAt   time.Time
@@ -45,7 +45,8 @@ func (t *Token) BeforeCreate(tx *gorm.DB) error {
 func (t *Token) Validate() error {
 	if t.AuthID == uuid.Nil {
 		return keygo.Errorf(keygo.ERR_INVALID, "AuthID required.")
-	} else if t.Hash == "" {
+	}
+	if t.Hash == "" {
 		return keygo.Errorf(keygo.ERR_INVALID, "Hash required.")
 	}
 	return nil
@@ -56,8 +57,8 @@ func (t *Token) Validate() error {
 func (t *Token) create(ctx echo.Context, clientID string) error {
 	t.ExpiresAt = time.Now().Add(tokenLifetime)
 	t.LastLoginAt = time.Now()
-	t.Token = getRandomToken()
-	t.Hash = hashToken(clientID + t.Token)
+	t.PlainText = getRandomToken()
+	t.Hash = hashToken(clientID + t.PlainText)
 
 	if err := t.Validate(); err != nil {
 		return err
@@ -131,7 +132,8 @@ func (t TokenService) FindToken(ctx echo.Context, raw string) (keygo.Token, erro
 	token, err := findToken(ctx, raw)
 	if err != nil {
 		return keygo.Token{}, err
-	} else if err = token.loadAuth(ctx); err != nil {
+	}
+	if err = token.loadAuth(ctx); err != nil {
 		return keygo.Token{}, err
 	}
 
@@ -161,7 +163,7 @@ func convertToken(token Token) keygo.Token {
 		ID:          token.ID,
 		Auth:        convertAuth(token.Auth),
 		AuthID:      token.AuthID,
-		Token:       token.Token,
+		PlainText:   token.PlainText,
 		LastLoginAt: token.LastLoginAt,
 		ExpiresAt:   token.ExpiresAt,
 		CreatedAt:   token.CreatedAt,

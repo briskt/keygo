@@ -41,8 +41,6 @@ services:
     image: postgres:11.6
     volumes:
       - ./db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: keygo
       POSTGRES_PASSWORD: keygo
@@ -52,6 +50,8 @@ services:
     image: postgres:11.6
     volumes:
       - ./db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_USER: keygo
       POSTGRES_PASSWORD: keygo

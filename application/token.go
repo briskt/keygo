@@ -13,7 +13,7 @@ type Token struct {
 	Auth   Auth      `json:"auth"`
 	AuthID uuid.UUID `json:"authID"`
 
-	Token string `json:"token"`
+	PlainText string `json:"plainText"`
 
 	LastLoginAt time.Time `json:"lastLoginAt"`
 	ExpiresAt   time.Time `json:"expiresAt"`

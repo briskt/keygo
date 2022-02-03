@@ -26,8 +26,10 @@ type Auth struct {
 	UserID uuid.UUID `json:"userID"`
 	User   User      `json:"user"`
 
-	// The authentication provider & the provider's user ID
-	Provider   string `json:"provider"`
+	// The authentication provider
+	Provider string `json:"provider"`
+
+	// The user's ID for the provider
 	ProviderID string `json:"providerID"`
 
 	// Timestamps of creation & last update

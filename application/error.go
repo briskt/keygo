@@ -36,7 +36,7 @@ type Error struct {
 
 // Error implements the error interface. Not used by the application otherwise.
 func (e *Error) Error() string {
-	return fmt.Sprintf("keygo error: code=%s message=%s", e.Code, e.Message)
+	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
 }
 
 // ErrorCode unwraps an application error and returns its code.
@@ -45,7 +45,8 @@ func ErrorCode(err error) string {
 	var e *Error
 	if err == nil {
 		return ""
-	} else if errors.As(err, &e) {
+	}
+	if errors.As(err, &e) {
 		return e.Code
 	}
 	return ERR_INTERNAL
@@ -57,7 +58,8 @@ func ErrorMessage(err error) string {
 	var e *Error
 	if err == nil {
 		return ""
-	} else if errors.As(err, &e) {
+	}
+	if errors.As(err, &e) {
 		return e.Message
 	}
 	return "Internal error"

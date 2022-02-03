@@ -38,11 +38,13 @@ func (a *Auth) BeforeCreate(tx *gorm.DB) error {
 // Validate returns an error if any fields are invalid on the Auth object.
 func (a *Auth) Validate() error {
 	if a.UserID == uuid.Nil {
-		return keygo.Errorf(keygo.ERR_INVALID, "User required.")
-	} else if a.Provider == "" {
-		return keygo.Errorf(keygo.ERR_INVALID, "Provider required.")
-	} else if a.ProviderID == "" {
-		return keygo.Errorf(keygo.ERR_INVALID, "Provider ID required.")
+		return keygo.Errorf(keygo.ERR_INVALID, "user required")
+	}
+	if a.Provider == "" {
+		return keygo.Errorf(keygo.ERR_INVALID, "provider required")
+	}
+	if a.ProviderID == "" {
+		return keygo.Errorf(keygo.ERR_INVALID, "provider ID required")
 	}
 	return nil
 }
@@ -64,7 +66,8 @@ func (s *AuthService) FindAuthByID(ctx echo.Context, id uuid.UUID) (keygo.Auth, 
 	auth, err := findAuthByID(ctx, id)
 	if err != nil {
 		return keygo.Auth{}, err
-	} else if err = auth.loadUser(ctx); err != nil {
+	}
+	if err = auth.loadUser(ctx); err != nil {
 		return keygo.Auth{}, err
 	}
 
@@ -92,9 +95,8 @@ func (s *AuthService) FindAuths(ctx echo.Context, filter keygo.AuthFilter) ([]ke
 	return keygoAuths, n, nil
 }
 
-// CreateAuth Creates a new authentication object If a User is attached to auth,
-// then the auth object is linked to an existing user, otherwise a new user
-// object is created.
+// CreateAuth Creates a new auth object. If a User is attached to the provided auth, then the created
+// auth object is linked to the existing user, otherwise a new user object is created and linked.
 //
 // On success, the auth.ID is set to the new authentication ID
 func (s *AuthService) CreateAuth(ctx echo.Context, keygoAuth keygo.Auth) (keygo.Auth, error) {
@@ -123,7 +125,7 @@ func (s *AuthService) CreateAuth(ctx echo.Context, keygoAuth keygo.Auth) (keygo.
 			auth.User = user
 		} else if keygo.ErrorCode(err) == keygo.ERR_NOTFOUND { // user does not exist
 			if auth.User, err = createUser(ctx, auth.User); err != nil {
-				return keygo.Auth{}, fmt.Errorf("cannot create user: %w", err)
+				return keygo.Auth{}, fmt.Errorf("could not create user for auth: %w", err)
 			}
 		} else {
 			return keygo.Auth{}, fmt.Errorf("cannot find user by email: %w", err)

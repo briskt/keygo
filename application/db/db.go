@@ -3,12 +3,14 @@ package db
 import (
 	"database/sql/driver"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/schparky/keygo"
 )
@@ -24,7 +26,17 @@ func OpenDB() *gorm.DB {
 	if dsn == "" {
 		panic("required environment variable DATABASE_URL is not set")
 	}
-	conn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+	config := gorm.Config{Logger: logger.New(
+		log.New(os.Stdout, "", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Silent,
+			IgnoreRecordNotFoundError: true,
+			Colorful:                  false,
+		},
+	)}
+	conn, err := gorm.Open(postgres.Open(dsn), &config)
 	if err != nil {
 		panic("failed to open database '" + dsn + "': " + err.Error())
 	}
@@ -36,9 +48,11 @@ func OpenDB() *gorm.DB {
 func FormatLimitOffset(limit, offset int) string {
 	if limit > 0 && offset > 0 {
 		return fmt.Sprintf(`LIMIT %d OFFSET %d`, limit, offset)
-	} else if limit > 0 {
+	}
+	if limit > 0 {
 		return fmt.Sprintf(`LIMIT %d`, limit)
-	} else if offset > 0 {
+	}
+	if offset > 0 {
 		return fmt.Sprintf(`OFFSET %d`, offset)
 	}
 	return ""
@@ -62,8 +76,9 @@ func (n *NullTime) Scan(value interface{}) error {
 	if value == nil {
 		*(*time.Time)(n) = time.Time{}
 		return nil
-	} else if value, ok := value.(string); ok {
-		*(*time.Time)(n), _ = time.Parse(time.RFC3339, value)
+	}
+	if s, ok := value.(string); ok {
+		*(*time.Time)(n), _ = time.Parse(time.RFC3339, s)
 		return nil
 	}
 	return fmt.Errorf("NullTime: cannot scan to time.Time: %T", value)

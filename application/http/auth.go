@@ -121,7 +121,6 @@ func authCallback(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ClientIDSessionKey+" not found in session")
 	}
-	fmt.Printf("client ID: %s\n", clientID)
 
 	authUser, err := gothic.CompleteUserAuth(c.Response(), c.Request())
 
@@ -143,7 +142,7 @@ func authCallback(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
-	return c.Redirect(http.StatusFound, loginURL(token.Token))
+	return c.Redirect(http.StatusFound, loginURL(token.PlainText))
 }
 
 func loginURL(token string) string {
