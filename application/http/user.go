@@ -14,8 +14,11 @@ func RegisterUserRoutes(e *echo.Echo) {
 }
 
 func userHandler(c echo.Context) error {
-	i := c.Get("token")
-	token := i.(keygo.Token)
+	i := c.Get(keygo.ContextKeyToken)
+	token, ok := i.(keygo.Token)
+	if !ok {
+		return c.JSON(http.StatusBadRequest, "no token")
+	}
 
 	return c.JSON(http.StatusOK, token.Auth.User)
 }

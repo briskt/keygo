@@ -165,6 +165,7 @@ func AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
 		}
 		return false, nil
 	}
+	c.Set(keygo.ContextKeyToken, token)
 	return true, nil
 }
 

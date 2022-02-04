@@ -10,6 +10,9 @@ const (
 
 	// ContextKeyTx stores the database transaction
 	ContextKeyTx = "tx"
+
+	// ContextKeyToken stores the Token passed by the client
+	ContextKeyToken = "token"
 )
 
 // NewContextWithUser returns a new context with the given user.
