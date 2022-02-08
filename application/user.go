@@ -22,7 +22,10 @@ type User struct {
 // This only performs basic validation.
 func (u *User) Validate() error {
 	if u.FirstName == "" {
-		return Errorf(ERR_INVALID, "User first name required")
+		return Errorf(ERR_INVALID, "FirstName required")
+	}
+	if u.Email == "" {
+		return Errorf(ERR_INVALID, "Email required")
 	}
 	return nil
 }
