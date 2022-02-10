@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"github.com/schparky/keygo"
 )
 
-func Transaction(db *gorm.DB) echo.MiddlewareFunc {
+func TxMiddleware(db *gorm.DB) echo.MiddlewareFunc {
 	errNotOK := errors.New("http error caught in transaction middleware")
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {

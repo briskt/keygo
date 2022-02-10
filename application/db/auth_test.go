@@ -90,7 +90,7 @@ func (ts *TestSuite) SameAuth(expected keygo.Auth, actual keygo.Auth, msgAndArgs
 	ts.Equal(expected, actual, msgAndArgs...)
 }
 
-// MustCreateAuth creates an auth in the database. Fatal on error.
+// CreateAuth creates an auth in the database. Fatal on error.
 func (ts *TestSuite) CreateAuth() keygo.Auth {
 	ts.T().Helper()
 

@@ -34,8 +34,7 @@ func (ts *TestSuite) SetupTest() {
 	ts.Assertions = require.New(ts.T())
 }
 
-// Test_ModelSuite runs the test suite
-func Test_ModelSuite(t *testing.T) {
+func Test_RunSuite(t *testing.T) {
 	suite.Run(t, &TestSuite{
 		ctx: testContext(db.DB),
 		DB:  db.DB,

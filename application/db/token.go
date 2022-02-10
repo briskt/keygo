@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	tokenLifetime = time.Hour
+	tokenLifetime = time.Hour * 24
 	tokenBytes    = 32
 )
 

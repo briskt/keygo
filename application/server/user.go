@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"net/http"
@@ -9,7 +9,6 @@ import (
 )
 
 func RegisterUserRoutes(e *echo.Echo) {
-	// Route => handler
 	e.GET("/user", userHandler)
 }
 
@@ -20,5 +19,5 @@ func userHandler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "no token")
 	}
 
-	return c.JSON(http.StatusOK, token.Auth.User)
+	return c.JSON(http.StatusCreated, token.Auth.User)
 }
