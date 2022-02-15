@@ -8,11 +8,16 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
+	"github.com/schparky/keygo"
 	"github.com/schparky/keygo/db"
 )
 
 type Server struct {
 	*echo.Echo
+
+	TokenService keygo.TokenService
+	AuthService  keygo.AuthService
+	UserService  keygo.UserService
 }
 
 var svr *Server
@@ -21,9 +26,8 @@ func New() *Server {
 	if svr != nil {
 		return svr
 	}
-
-	// Echo instance
 	e := echo.New()
+	svr = &Server{Echo: e}
 
 	// Logger Middleware
 	e.Use(middleware.Logger())
@@ -40,7 +44,7 @@ func New() *Server {
 	// Authn Middleware
 	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
 		Skipper:   AuthnSkipper,
-		Validator: AuthnMiddleware,
+		Validator: svr.AuthnMiddleware,
 	}))
 
 	// CORS
@@ -50,10 +54,23 @@ func New() *Server {
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
 	}))
 
-	RegisterAuthRoutes(e)
-	RegisterFormRoutes(e)
-	RegisterUserRoutes(e)
+	if os.Getenv("GO_ENV") == "development" {
+		e.Debug = true
+	}
 
-	svr = &Server{Echo: e}
+	svr.registerRoutes()
+	svr.getServices()
 	return svr
+}
+
+func (s *Server) registerRoutes() {
+	s.registerAuthRoutes()
+	// s.registerFormRoutes()
+	s.registerUserRoutes()
+}
+
+func (s *Server) getServices() {
+	s.UserService = db.NewUserService()
+	s.AuthService = db.NewAuthService()
+	s.TokenService = db.NewTokenService()
 }

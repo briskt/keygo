@@ -74,13 +74,14 @@ func init() {
 	}
 }
 
-func RegisterAuthRoutes(e *echo.Echo) {
-	e.GET("/auth/login", authLogin)
-	e.GET(AuthCallbackPath, authCallback)
-	e.GET("/auth/logout", authLogout)
+func (s *Server) registerAuthRoutes() {
+	e := s.Echo
+	e.GET("/auth/login", s.authLogin)
+	e.GET(AuthCallbackPath, s.authCallback)
+	e.GET("/auth/logout", s.authLogout)
 }
 
-func authLogin(c echo.Context) error {
+func (s *Server) authLogin(c echo.Context) error {
 	clientID := c.QueryParam(ClientIDParam)
 	if clientID == "" {
 		return c.JSON(http.StatusBadRequest, ClientIDParam+" is required to login")
@@ -108,7 +109,7 @@ func authLogin(c echo.Context) error {
 	return c.JSON(http.StatusOK, options)
 }
 
-func authLogout(c echo.Context) error {
+func (s *Server) authLogout(c echo.Context) error {
 	err := gothic.Logout(c.Response(), c.Request())
 	if err != nil {
 		return err
@@ -116,7 +117,7 @@ func authLogout(c echo.Context) error {
 	return c.Redirect(http.StatusTemporaryRedirect, os.Getenv("UI_URL"))
 }
 
-func authCallback(c echo.Context) error {
+func (s *Server) authCallback(c echo.Context) error {
 	clientID, err := sessionGetString(c, ClientIDSessionKey)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ClientIDSessionKey+" not found in session")
@@ -124,7 +125,7 @@ func authCallback(c echo.Context) error {
 
 	authUser, err := gothic.CompleteUserAuth(c.Response(), c.Request())
 
-	auth, err := db.NewAuthService().CreateAuth(c, keygo.Auth{
+	auth, err := s.AuthService.CreateAuth(c, keygo.Auth{
 		Provider:   authUser.Provider,
 		ProviderID: authUser.UserID,
 		User: keygo.User{
@@ -138,7 +139,7 @@ func authCallback(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	token, err := db.NewTokenService().CreateToken(c, auth.ID, clientID)
+	token, err := s.TokenService.CreateToken(c, auth.ID, clientID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
@@ -149,9 +150,8 @@ func loginURL(token string) string {
 	return fmt.Sprintf("%s?token=%s", os.Getenv("UI_URL"), token)
 }
 
-func AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
-	tokenSvc := db.NewTokenService()
-	token, err := tokenSvc.FindToken(c, tokenString)
+func (s *Server) AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
+	token, err := s.TokenService.FindToken(c, tokenString)
 	if err != nil {
 		return false, err
 	}
@@ -160,7 +160,7 @@ func AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
 
 		// bypass the transaction so the middleware doesn't roll back the token delete
 		c.Set(keygo.ContextKeyTx, db.DB)
-		if err = tokenSvc.DeleteToken(c, token.ID); err != nil {
+		if err = s.TokenService.DeleteToken(c, token.ID); err != nil {
 			return false, fmt.Errorf("failed to delete expired token %s, %s", token.ID, err)
 		}
 		return false, nil

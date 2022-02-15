@@ -8,7 +8,8 @@ import (
 	"github.com/schparky/keygo"
 )
 
-func RegisterUserRoutes(e *echo.Echo) {
+func (s *Server) registerUserRoutes() {
+	e := s.Echo
 	e.GET("/user", userHandler)
 }
 
