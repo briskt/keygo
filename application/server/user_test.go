@@ -33,7 +33,7 @@ func (ts *TestSuite) Test_GetUser() {
 		PlainText: "12345",
 		ExpiresAt: time.Now().Add(time.Minute),
 	}
-	ts.server.TokenService.(*mock.TokenService).Init(fakeToken, clientID)
+	ts.server.TokenService.(*mock.TokenService).Init([]keygo.Token{fakeToken}, []string{clientID})
 
 	req := httptest.NewRequest(http.MethodGet, "/user", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
