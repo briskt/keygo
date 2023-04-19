@@ -1,4 +1,4 @@
-app: db adminer
+app: db migrate adminer
 	docker-compose up -d app
 
 test:
@@ -14,7 +14,7 @@ migratedown: db
 	docker-compose run --rm app bash -c "goose -dir migrations postgres postgres://keygo:keygo@db:5432/keygo?sslmode=disable down"
 
 new-migration: db
-	bash -c "cd application/migrations && goose create change_me sql"
+	docker-compose run --rm app bash -c "cd migrations && goose create change_me sql"
 
 db:
 	docker-compose up -d db

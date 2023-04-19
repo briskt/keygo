@@ -14,8 +14,17 @@ RUN curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh 
 
 RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 
-ADD ./application .
+RUN useradd user && mkdir /home/user && chown user.user /home/user && chown user.user /src
+USER user
+ENV GOPATH /home/user/go
 
-RUN go get ./...
+# Copy the Go Modules manifests
+# cache deps before building and copying source so that we don't need to re-download as much
+# and so that source changes don't invalidate our downloaded layer
+COPY --chown=user application/go.mod go.mod
+COPY --chown=user application/go.sum go.sum
+RUN go mod download
+
+COPY --chown=user ./application .
 
 CMD ["air"]
