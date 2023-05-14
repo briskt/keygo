@@ -8,14 +8,14 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id"`
-	FirstName string    `json:"firstName"`
-	LastName  string    `json:"lastName"`
-	Email     string    `json:"email"`
-	AvatarURL string    `json:"avatarURL"`
-	Role      string    `json:"role"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        uuid.UUID
+	FirstName string
+	LastName  string
+	Email     string
+	AvatarURL string
+	Role      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // Validate returns an error if the user contains invalid fields.

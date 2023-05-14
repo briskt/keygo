@@ -1,5 +1,8 @@
-app: db migrate adminer
+app: db migrate adminer ui-app
 	docker-compose up -d app
+
+ui-app:
+	docker-compose up -d ui-app
 
 test:
 	docker-compose run --rm test
@@ -27,4 +30,7 @@ fresh:
 adminer:
 	docker-compose up -d adminer
 
-.PHONY: app bounce migrate migratedown new-migration adminer
+install-js-deps:
+	docker-compose run --rm ui-app npm install
+
+.PHONY: app ui-app test bounce migrate migratedown new-migration db fresh adminer install-js-deps
