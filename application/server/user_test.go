@@ -35,7 +35,7 @@ func (ts *TestSuite) Test_GetUser() {
 	}
 	ts.server.TokenService.(*mock.TokenService).Init([]keygo.Token{fakeToken}, []string{clientID})
 
-	req := httptest.NewRequest(http.MethodGet, "/user", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/user", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer "+clientID+fakeToken.PlainText)
 	res := httptest.NewRecorder()

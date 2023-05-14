@@ -23,6 +23,16 @@ services:
       - db
     working_dir: /src
 
+  ui-app:
+    image: node:18
+    volumes:
+      - ./application:/app
+    working_dir: /app
+    ports:
+      - "35729:35729"
+    command: npm run docker-dev
+    user: 1000:1000
+
   test:
     image: keygo
     volumes:

@@ -1,19 +1,19 @@
-FROM golang:1.17
+FROM golang:1.20
 
 WORKDIR /src
 
-RUN apt-get update && apt-get install -y \
-    curl \
-    netcat \
-    && apt-get clean
-
+# silintl/docker-whenavail is little script that uses netcat to wait for a service to be ready
+RUN apt-get update && apt-get install -y curl netcat && apt-get clean
 RUN curl -o /usr/local/bin/whenavail https://bitbucket.org/silintl/docker-whenavail/raw/1.0.2/whenavail \
      && chmod a+x /usr/local/bin/whenavail
 
-RUN curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+# cosmtrk/air is a project auto-build tool
+RUN go install github.com/cosmtrek/air@v1.43.0
 
-RUN go install github.com/pressly/goose/v3/cmd/goose@latest
+# pressly/goose is a database migrations tool
+RUN go install github.com/pressly/goose/v3/cmd/goose@v3.11.2
 
+# set up to run as a normal user
 RUN useradd user && mkdir /home/user && chown user.user /home/user && chown user.user /src
 USER user
 ENV GOPATH /home/user/go

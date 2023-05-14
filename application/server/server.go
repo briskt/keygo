@@ -41,22 +41,14 @@ func New() *Server {
 	// DB Transaction Middleware
 	e.Use(TxMiddleware(db.DB))
 
-	// Authn Middleware
-	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-		Skipper:   AuthnSkipper,
-		Validator: svr.AuthnMiddleware,
-	}))
-
-	// CORS
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowCredentials: true,
-		AllowOrigins:     []string{os.Getenv("UI_URL")},
-		AllowHeaders:     []string{"Authorization", "Content-Type"},
-	}))
-
 	if os.Getenv("GO_ENV") == "development" {
 		e.Debug = true
 	}
+
+	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Root:   "public",
+		Browse: false,
+	}))
 
 	svr.registerRoutes()
 	svr.getServices()
@@ -64,9 +56,17 @@ func New() *Server {
 }
 
 func (s *Server) registerRoutes() {
-	s.registerAuthRoutes()
-	// s.registerFormRoutes()
-	s.registerUserRoutes()
+	api := s.Group("/api", middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		Skipper:   AuthnSkipper,
+		Validator: s.AuthnMiddleware,
+	}))
+	api.GET("/auth", s.authStatus)
+	api.GET("/auth/login", s.authLogin)
+	api.GET("/auth/callback", s.authCallback)
+	api.GET("/auth/logout", s.authLogout)
+	api.GET("/users/:id", s.userHandler)
+
+	s.registerUiRoutes()
 }
 
 func (s *Server) getServices() {

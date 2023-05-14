@@ -1,0 +1,20 @@
+{
+  "extends": "./node_modules/@tsconfig/svelte/tsconfig.json",
+
+  "include": ["assets/**/*", "assets/*", "assets/node_modules"],
+  "exclude": ["node_modules/*", "__sapper__/*", "public/*"],
+  "compilerOptions": {
+    "types": ["node", "svelte"],
+    "typeRoots": ["./assets/customTypes", "./node_modules/@types"],
+    "paths": {
+      "components": ["./assets/components/"],
+      "components/*": ["./assets/components/*"],
+      "data": ["./assets/data/"],
+      "data/*": ["./assets/data/*"],
+      "helpers/*": ["./assets/helpers/*"],
+      "assets": ["./assets/"]
+    },
+    "resolveJsonModule": true,
+    "strict": true
+  }
+}

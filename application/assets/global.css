@@ -1,0 +1,71 @@
+:root {
+	--body-text-color: hsl(0, 0%, 0%);
+	--danger-message-background: hsla(358, 72%, 61%, 10%); /* Based on --mdc-theme-status-error */
+	--mdc-theme-background: hsl(0, 0%, 100%);
+	--mdc-theme-primary: hsl(210, 100%, 36%);
+	--mdc-theme-status-error: hsl(358, 72%, 61%);
+}
+:root form {
+	--mdc-layout-grid-gutter-desktop: 8px;
+	--mdc-layout-grid-gutter-tablet: 8px;
+	--mdc-layout-grid-gutter-phone: 8px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin-bottom: revert;
+}
+
+fieldset,
+input,
+label,
+select {
+	margin: revert;
+	padding: revert;
+}
+
+fieldset,
+label,
+select {
+	display: block;
+}
+
+input {
+	display: inline-block;
+}
+
+p {
+	margin: 0.75rem 0;
+}
+
+button,
+.button {
+	cursor: pointer;
+}
+button:is(:focus, :hover),
+.button:is(:focus, :hover) {
+	background-color: var(--neutral-8);
+}
+
+button.mdc-tab,
+.button.mdc-tab {
+	border-radius: unset;
+}
+
+.back-link {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: smaller;
+}
+
+.muted {
+	opacity: 0.5;
+}
+
+.white-background {
+  background-color: white;
+}
+
+.danger {
+  border-color: var(--mdc-theme-status-error);
+  color: var(--mdc-theme-status-error);
+}

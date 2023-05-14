@@ -18,7 +18,7 @@ import (
 	"github.com/schparky/keygo/db"
 )
 
-const AuthCallbackPath = "/auth/callback"
+const AuthCallbackPath = "/api/auth/callback"
 
 const ClientIDParam = "client_id"
 
@@ -74,20 +74,26 @@ func init() {
 	}
 }
 
-func (s *Server) registerAuthRoutes() {
-	e := s.Echo
-	e.GET("/auth/login", s.authLogin)
-	e.GET(AuthCallbackPath, s.authCallback)
-	e.GET("/auth/logout", s.authLogout)
+func (s *Server) authStatus(c echo.Context) error {
+	var status keygo.AuthStatus
+
+	token, ok := c.Get(keygo.ContextKeyToken).(keygo.Token)
+	if ok {
+		status.IsAuthenticated = true
+		status.UserID = token.Auth.UserID
+		status.Expiry = token.ExpiresAt
+	}
+
+	return c.JSON(http.StatusOK, status)
 }
 
 func (s *Server) authLogin(c echo.Context) error {
 	clientID := c.QueryParam(ClientIDParam)
 	if clientID == "" {
-		return c.JSON(http.StatusBadRequest, ClientIDParam+" is required to login")
+		return c.JSON(http.StatusBadRequest, AuthError{Error: ClientIDParam + " is required to login"})
 	}
 	if err := sessionSetValue(c, ClientIDSessionKey, clientID); err != nil {
-		return c.JSON(http.StatusInternalServerError, "error saving clientID into session, "+err.Error())
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: "error saving clientID into session, " + err.Error()})
 	}
 
 	options := make([]ProviderOption, 0)
@@ -120,7 +126,7 @@ func (s *Server) authLogout(c echo.Context) error {
 func (s *Server) authCallback(c echo.Context) error {
 	clientID, err := sessionGetString(c, ClientIDSessionKey)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, ClientIDSessionKey+" not found in session")
+		return c.JSON(http.StatusBadRequest, AuthError{Error: ClientIDSessionKey + " not found in session"})
 	}
 
 	authUser, err := gothic.CompleteUserAuth(c.Response(), c.Request())
@@ -136,18 +142,18 @@ func (s *Server) authCallback(c echo.Context) error {
 		},
 	})
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	token, err := s.TokenService.CreateToken(c, auth.ID, clientID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 	return c.Redirect(http.StatusFound, loginURL(token.PlainText))
 }
 
 func loginURL(token string) string {
-	return fmt.Sprintf("%s?token=%s", os.Getenv("UI_URL"), token)
+	return fmt.Sprintf("http://localhost:1323/?token=%s", token)
 }
 
 func (s *Server) AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
@@ -170,9 +176,17 @@ func (s *Server) AuthnMiddleware(tokenString string, c echo.Context) (bool, erro
 }
 
 func AuthnSkipper(c echo.Context) bool {
-	if strings.HasPrefix(c.Request().RequestURI, "/auth") {
+	if strings.HasPrefix(c.Request().RequestURI, "/assets") {
 		return true
 	}
+
+	var skipURLs = append(uiRoutes, "/auth/login", "/auth/callback", "/auth/logout")
+	for i := range skipURLs {
+		if c.Request().RequestURI == skipURLs[i] {
+			return true
+		}
+	}
+
 	if c.Request().Method == http.MethodOptions {
 		return true
 	}
