@@ -1,14 +1,6 @@
 <script lang="ts">
-import {refreshPageTitle} from 'data/store/page-title'
-import {onMount, tick} from 'svelte'
+import { DASHBOARD } from 'helpers/routes'
+import { redirect } from '@roxi/routify'
 
-onMount(async () => {
-  await tick()
-  refreshPageTitle()
-})
+$redirect(DASHBOARD)
 </script>
-
-
-<h1>
-  Hello, world!
-</h1>

@@ -8,3 +8,7 @@ export type User = {
   LastName: string
   Role: string
 }
+
+export const isAdmin = (user: User) => user.Role == Admin
+
+const Admin = 'Admin'

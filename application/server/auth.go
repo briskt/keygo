@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -83,7 +82,6 @@ func (s *Server) authStatus(c echo.Context) error {
 		status.UserID = token.Auth.UserID
 		status.Expiry = token.ExpiresAt
 	}
-
 	return c.JSON(http.StatusOK, status)
 }
 
@@ -149,6 +147,8 @@ func (s *Server) authCallback(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
+
+	c.Set(keygo.ContextKeyToken, token)
 	return c.Redirect(http.StatusFound, loginURL(token.PlainText))
 }
 
@@ -156,7 +156,7 @@ func loginURL(token string) string {
 	return fmt.Sprintf("http://localhost:1323/?token=%s", token)
 }
 
-func (s *Server) AuthnMiddleware(tokenString string, c echo.Context) (bool, error) {
+func (s *Server) AuthnValidator(tokenString string, c echo.Context) (bool, error) {
 	token, err := s.TokenService.FindToken(c, tokenString)
 	if err != nil {
 		return false, err
@@ -171,18 +171,15 @@ func (s *Server) AuthnMiddleware(tokenString string, c echo.Context) (bool, erro
 		}
 		return false, nil
 	}
+
 	c.Set(keygo.ContextKeyToken, token)
 	return true, nil
 }
 
 func AuthnSkipper(c echo.Context) bool {
-	if strings.HasPrefix(c.Request().RequestURI, "/assets") {
-		return true
-	}
-
-	var skipURLs = append(uiRoutes, "/auth/login", "/auth/callback", "/auth/logout")
-	for i := range skipURLs {
-		if c.Request().RequestURI == skipURLs[i] {
+	var skipURLs = []string{"/api/auth/login", "/api/auth/callback", "/api/auth/logout"}
+	for _, u := range skipURLs {
+		if c.Path() == u {
 			return true
 		}
 	}

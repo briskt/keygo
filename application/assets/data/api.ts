@@ -1,4 +1,4 @@
-import { getToken } from 'data/api/auth'
+import { getToken } from 'data/store/auth'
 import { ResponseError } from './error'
 import { setNotice } from '@silintl/ui-components'
 
