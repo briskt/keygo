@@ -153,7 +153,7 @@ func (s *Server) authCallback(c echo.Context) error {
 }
 
 func loginURL(token string) string {
-	return fmt.Sprintf("http://localhost:1323/?token=%s", token)
+	return os.Getenv("HOST") + "?token=" + token
 }
 
 func (s *Server) AuthnValidator(tokenString string, c echo.Context) (bool, error) {

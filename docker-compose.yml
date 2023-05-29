@@ -14,7 +14,6 @@ services:
       - .env
     environment:
       ADDR: 0.0.0.0
-      HOST: http://localhost:1323
       APP_NAME: keygo
       DATABASE_URL: postgres://keygo:keygo@db:5432/keygo?sslmode=disable
       GO_ENV: development
@@ -100,3 +99,12 @@ services:
 #    build:
 #      context: ./application
 #      dockerfile: Dockerfile-api-docs
+
+# Start this container to use https for development. Set variables in proxy.env and change HOST in .env
+  proxy:
+    image: silintl/traefik-https-proxy:latest
+    ports:
+    - "80:80"
+    - "443:443"
+    env_file:
+    - ./proxy.env
