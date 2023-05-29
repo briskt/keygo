@@ -53,10 +53,6 @@ $: menuItems = [
 ]
 </script>
 
-<AppDrawer
-  {menuItems}
-  role={$user.Role}
-  {userIsAnonymous}
->
+<AppDrawer {menuItems}>
   <slot />
 </AppDrawer>
