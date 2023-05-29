@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const sessionName = "keygo_session"
+const sessionName = "session"
 
 func sessionSetValue(c echo.Context, key, value interface{}) error {
 	sess, err := getSession(c)
