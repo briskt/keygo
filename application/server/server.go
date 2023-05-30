@@ -30,7 +30,9 @@ func New() *Server {
 	svr = &Server{Echo: e}
 
 	// Logger Middleware
-	e.Use(middleware.Logger())
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "${time_rfc3339} ${status} ${method} ${uri} ${error}\n",
+	}))
 
 	// Recover Middleware
 	e.Use(middleware.Recover())
