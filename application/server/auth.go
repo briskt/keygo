@@ -22,6 +22,7 @@ const AuthCallbackPath = "/api/auth/callback"
 const ClientIDParam = "client_id"
 
 const ClientIDSessionKey = "ClientID"
+const TokenSessionKey = "Token"
 
 type AuthError struct {
 	Error string
@@ -76,12 +77,18 @@ func init() {
 func (s *Server) authStatus(c echo.Context) error {
 	var status keygo.AuthStatus
 
-	token, ok := c.Get(keygo.ContextKeyToken).(keygo.Token)
-	if ok {
-		status.IsAuthenticated = true
-		status.UserID = token.Auth.UserID
-		status.Expiry = token.ExpiresAt
+	token, err := s.getTokenFromSession(c)
+	if err != nil {
+		s.Logger.Errorf("error getting token from session: %s", err)
+		return c.JSON(http.StatusOK, status)
 	}
+
+	if token.ExpiresAt.After(time.Now()) {
+		status.IsAuthenticated = true
+	}
+	status.UserID = token.Auth.UserID
+	status.Expiry = token.ExpiresAt
+
 	return c.JSON(http.StatusOK, status)
 }
 
@@ -129,6 +136,8 @@ func (s *Server) authCallback(c echo.Context) error {
 
 	authUser, err := gothic.CompleteUserAuth(c.Response(), c.Request())
 
+	s.Logger.Infof("authCallback authUser = %+v", authUser)
+
 	auth, err := s.AuthService.CreateAuth(c, keygo.Auth{
 		Provider:   authUser.Provider,
 		ProviderID: authUser.UserID,
@@ -148,19 +157,17 @@ func (s *Server) authCallback(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
-	c.Set(keygo.ContextKeyToken, token)
-	return c.Redirect(http.StatusFound, loginURL(token.PlainText))
-}
+	s.Logger.Infof("created token: %s, '%s'", token.ID, token.PlainText)
 
-func loginURL(token string) string {
-	return os.Getenv("HOST") + "?token=" + token
+	if err = sessionSetValue(c, TokenSessionKey, token.PlainText); err != nil {
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
+
+	return c.Redirect(http.StatusFound, "/")
 }
 
 func (s *Server) AuthnValidator(tokenString string, c echo.Context) (bool, error) {
-	token, err := s.TokenService.FindToken(c, tokenString)
-	if err != nil {
-		return false, err
-	}
+	token, err := s.getTokenFromSession(c)
 	if token.ExpiresAt.Before(time.Now()) {
 		log.Printf("token expired at %s\n", token.ExpiresAt)
 
@@ -177,7 +184,7 @@ func (s *Server) AuthnValidator(tokenString string, c echo.Context) (bool, error
 }
 
 func AuthnSkipper(c echo.Context) bool {
-	var skipURLs = []string{"/api/auth/login", "/api/auth/callback", "/api/auth/logout"}
+	var skipURLs = []string{"/api/auth", "/api/auth/login", "/api/auth/callback", "/api/auth/logout"}
 	for _, u := range skipURLs {
 		if c.Path() == u {
 			return true
@@ -188,4 +195,24 @@ func AuthnSkipper(c echo.Context) bool {
 		return true
 	}
 	return false
+}
+
+func (s *Server) getTokenFromSession(c echo.Context) (keygo.Token, error) {
+	tokenInterface, err := sessionGetValue(c, TokenSessionKey)
+	if err != nil {
+		s.Logger.Infof("no token in session: %w\n", err)
+		return keygo.Token{}, nil
+	}
+
+	tokenPlainText, ok := tokenInterface.(string)
+	if !ok {
+		return keygo.Token{}, fmt.Errorf("token in session is not a string\n")
+	}
+
+	token, err := s.TokenService.FindToken(c, tokenPlainText)
+	if err != nil {
+		return keygo.Token{}, fmt.Errorf("could not find token '%s' in DB: %w\n", tokenPlainText, err)
+	}
+
+	return token, nil
 }

@@ -58,7 +58,7 @@ func (t *Token) create(ctx echo.Context, clientID string) error {
 	t.ExpiresAt = time.Now().Add(tokenLifetime)
 	t.LastLoginAt = time.Now()
 	t.PlainText = getRandomToken()
-	t.Hash = hashToken(clientID + t.PlainText)
+	t.Hash = hashToken(t.PlainText)
 
 	if err := t.Validate(); err != nil {
 		return err
