@@ -58,10 +58,8 @@ func New() *Server {
 }
 
 func (s *Server) registerRoutes() {
-	api := s.Group("/api", middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-		Skipper:   AuthnSkipper,
-		Validator: s.AuthnValidator,
-	}))
+	api := s.Group("/api", s.AuthnMiddleware)
+
 	api.GET("/auth", s.authStatus)
 	api.GET("/auth/login", s.authLogin)
 	api.GET("/auth/callback", s.authCallback)

@@ -165,6 +165,26 @@ func (s *Server) authCallback(c echo.Context) error {
 
 	return c.Redirect(http.StatusFound, "/")
 }
+func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if AuthnSkipper(c) {
+			return next(c)
+		}
+
+		token, err := s.getTokenFromSession(c)
+		if err != nil {
+			s.Logger.Error(err.Error())
+		}
+		if token.ExpiresAt.Before(time.Now()) {
+			log.Printf("token expired at %s\n", token.ExpiresAt)
+			return c.JSON(http.StatusNotFound, AuthError{"not found"})
+		}
+
+		c.Set(keygo.ContextKeyToken, token)
+
+		return next(c)
+	}
+}
 
 func (s *Server) AuthnValidator(tokenString string, c echo.Context) (bool, error) {
 	token, err := s.getTokenFromSession(c)
