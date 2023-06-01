@@ -31,7 +31,7 @@ type TokenService interface {
 	// CreateToken creates a new token object
 	//
 	// On success, the token.ID is set to the new token ID
-	CreateToken(ctx echo.Context, authID uuid.UUID, clientID string) (Token, error)
+	CreateToken(ctx echo.Context, authID uuid.UUID) (Token, error)
 
 	// DeleteToken permanently deletes a token object from the system by ID.
 	// The parent user object is not removed.

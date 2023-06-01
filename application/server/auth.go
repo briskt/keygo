@@ -14,14 +14,10 @@ import (
 	"github.com/markbates/goth/providers/google"
 
 	"github.com/schparky/keygo"
-	"github.com/schparky/keygo/db"
 )
 
 const AuthCallbackPath = "/api/auth/callback"
 
-const ClientIDParam = "client_id"
-
-const ClientIDSessionKey = "ClientID"
 const TokenSessionKey = "Token"
 
 type AuthError struct {
@@ -93,14 +89,6 @@ func (s *Server) authStatus(c echo.Context) error {
 }
 
 func (s *Server) authLogin(c echo.Context) error {
-	clientID := c.QueryParam(ClientIDParam)
-	if clientID == "" {
-		return c.JSON(http.StatusBadRequest, AuthError{Error: ClientIDParam + " is required to login"})
-	}
-	if err := sessionSetValue(c, ClientIDSessionKey, clientID); err != nil {
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: "error saving clientID into session, " + err.Error()})
-	}
-
 	options := make([]ProviderOption, 0)
 	for _, p := range providers {
 		if p.secret == "" || p.authKey == "" {
@@ -129,11 +117,6 @@ func (s *Server) authLogout(c echo.Context) error {
 }
 
 func (s *Server) authCallback(c echo.Context) error {
-	clientID, err := sessionGetString(c, ClientIDSessionKey)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, AuthError{Error: ClientIDSessionKey + " not found in session"})
-	}
-
 	authUser, err := gothic.CompleteUserAuth(c.Response(), c.Request())
 
 	s.Logger.Infof("authCallback authUser = %+v", authUser)
@@ -152,7 +135,7 @@ func (s *Server) authCallback(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
-	token, err := s.TokenService.CreateToken(c, auth.ID, clientID)
+	token, err := s.TokenService.CreateToken(c, auth.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
@@ -165,6 +148,7 @@ func (s *Server) authCallback(c echo.Context) error {
 
 	return c.Redirect(http.StatusFound, "/")
 }
+
 func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if AuthnSkipper(c) {
@@ -186,23 +170,6 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func (s *Server) AuthnValidator(tokenString string, c echo.Context) (bool, error) {
-	token, err := s.getTokenFromSession(c)
-	if token.ExpiresAt.Before(time.Now()) {
-		log.Printf("token expired at %s\n", token.ExpiresAt)
-
-		// bypass the transaction so the middleware doesn't roll back the token delete
-		c.Set(keygo.ContextKeyTx, db.DB)
-		if err = s.TokenService.DeleteToken(c, token.ID); err != nil {
-			return false, fmt.Errorf("failed to delete expired token %s, %s", token.ID, err)
-		}
-		return false, nil
-	}
-
-	c.Set(keygo.ContextKeyToken, token)
-	return true, nil
-}
-
 func AuthnSkipper(c echo.Context) bool {
 	var skipURLs = []string{"/api/auth", "/api/auth/login", "/api/auth/callback", "/api/auth/logout"}
 	for _, u := range skipURLs {
@@ -220,7 +187,7 @@ func AuthnSkipper(c echo.Context) bool {
 func (s *Server) getTokenFromSession(c echo.Context) (keygo.Token, error) {
 	tokenInterface, err := sessionGetValue(c, TokenSessionKey)
 	if err != nil {
-		s.Logger.Infof("no token in session: %w\n", err)
+		s.Logger.Infof("no token in session: %s", err)
 		return keygo.Token{}, nil
 	}
 

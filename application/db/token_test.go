@@ -13,7 +13,7 @@ func (ts *TestSuite) TestTokenService_CreateToken() {
 	auth := ts.CreateAuth()
 
 	// Create new record and check generated fields
-	newToken, err := s.CreateToken(ts.ctx, auth.ID, "abc123")
+	newToken, err := s.CreateToken(ts.ctx, auth.ID)
 
 	ts.NoError(err)
 	ts.False(newToken.ID == uuid.Nil, "ID is not set")
@@ -23,7 +23,7 @@ func (ts *TestSuite) TestTokenService_CreateToken() {
 	ts.False(newToken.UpdatedAt.IsZero(), "expected UpdatedAt")
 
 	// Query database and compare
-	fromDB, err := s.FindToken(ts.ctx, "abc123"+newToken.PlainText)
+	fromDB, err := s.FindToken(ts.ctx, newToken.PlainText)
 	ts.NoError(err, "couldn't find created token %s", newToken.PlainText)
 	fromDB.PlainText = newToken.PlainText
 	fromDB.LastLoginAt = newToken.LastLoginAt
@@ -31,7 +31,7 @@ func (ts *TestSuite) TestTokenService_CreateToken() {
 	ts.SameToken(newToken, fromDB)
 
 	// Expect validation error
-	_, err = s.CreateToken(ts.ctx, uuid.UUID{}, "abc123")
+	_, err = s.CreateToken(ts.ctx, uuid.UUID{})
 	ts.Error(err, "expected validation error")
 	ts.Equal(keygo.ERR_INVALID, keygo.ErrorCode(err))
 	ts.Equal(`AuthID required.`, keygo.ErrorMessage(err), "unexpected error")

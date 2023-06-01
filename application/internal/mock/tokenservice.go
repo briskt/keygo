@@ -12,7 +12,7 @@ import (
 )
 
 type TokenService struct {
-	tokens map[string]keygo.Token // key is clientID+timestamp
+	tokens map[string]keygo.Token // key is timestamp
 }
 
 func NewTokenService() keygo.TokenService {
@@ -20,13 +20,10 @@ func NewTokenService() keygo.TokenService {
 }
 
 // Init preloads the mock "database" with tokens
-func (m *TokenService) Init(fakeTokens []keygo.Token, clientIDs []string) {
-	if len(fakeTokens) != len(clientIDs) {
-		panic("fake tokens must be same length as client IDs")
-	}
+func (m *TokenService) Init(fakeTokens []keygo.Token) {
 	m.tokens = make(map[string]keygo.Token, len(fakeTokens))
-	for i, c := range clientIDs {
-		m.tokens[c+fakeTokens[i].PlainText] = fakeTokens[i]
+	for i := range fakeTokens {
+		m.tokens[fakeTokens[i].PlainText] = fakeTokens[i]
 	}
 }
 
@@ -37,7 +34,7 @@ func (m *TokenService) FindToken(ctx echo.Context, raw string) (keygo.Token, err
 	return keygo.Token{}, fmt.Errorf("token %s not found", raw)
 }
 
-func (m *TokenService) CreateToken(ctx echo.Context, authID uuid.UUID, clientID string) (keygo.Token, error) {
+func (m *TokenService) CreateToken(ctx echo.Context, authID uuid.UUID) (keygo.Token, error) {
 	if m.tokens == nil {
 		m.tokens = make(map[string]keygo.Token)
 	}
@@ -47,7 +44,7 @@ func (m *TokenService) CreateToken(ctx echo.Context, authID uuid.UUID, clientID 
 		PlainText: mockRandomToken,
 		ExpiresAt: time.Now().Add(time.Minute),
 	}
-	m.tokens[clientID+mockRandomToken] = newToken
+	m.tokens[mockRandomToken] = newToken
 	return newToken, nil
 }
 
