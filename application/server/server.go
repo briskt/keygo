@@ -20,6 +20,8 @@ type Server struct {
 	UserService  keygo.UserService
 }
 
+const loggerFormat = "${time_rfc3339} ${status} ${method} ${uri} ${error}\n"
+
 var svr *Server
 
 func New() *Server {
@@ -30,9 +32,7 @@ func New() *Server {
 	svr = &Server{Echo: e}
 
 	// Logger Middleware
-	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format: "${time_rfc3339} ${status} ${method} ${uri} ${error}\n",
-	}))
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{Format: loggerFormat}))
 
 	// Recover Middleware
 	e.Use(middleware.Recover())
