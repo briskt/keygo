@@ -3,8 +3,7 @@ version: "3.7"
 services:
   app:
     image: keygo
-    build:
-      context: .
+    build: .
     volumes:
       - ./application:/src
     ports:
@@ -33,6 +32,7 @@ services:
     user: 1000:1000
 
   test:
+    build: .
     image: keygo
     volumes:
       - ./application:/src
