@@ -38,7 +38,7 @@ func sessionGetString(c echo.Context, key interface{}) (string, error) {
 func sessionGetValue(c echo.Context, key interface{}) (interface{}, error) {
 	sess, err := getSession(c)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get value from session: %w", err)
 	}
 	if v, ok := sess.Values[key]; !ok {
 		return nil, fmt.Errorf("key '%s' not found in session", key)
@@ -49,7 +49,7 @@ func sessionGetValue(c echo.Context, key interface{}) (interface{}, error) {
 
 func getSession(c echo.Context) (*sessions.Session, error) {
 	if sess, err := session.Get(sessionName, c); err != nil {
-		return nil, fmt.Errorf("error getting session from context, %w", err)
+		return nil, fmt.Errorf("error getting session from context: %w", err)
 	} else {
 		return sess, nil
 	}

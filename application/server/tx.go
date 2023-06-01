@@ -10,7 +10,7 @@ import (
 )
 
 func TxMiddleware(db *gorm.DB) echo.MiddlewareFunc {
-	errNotOK := errors.New("http error caught in transaction middleware")
+	errNotOK := errors.New("http error, rolling back transaction")
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -23,7 +23,8 @@ func TxMiddleware(db *gorm.DB) echo.MiddlewareFunc {
 
 				// If the status is not a "success", roll back transaction by returning an error
 				res := c.Response()
-				// let 200-series through
+
+				// let 200s and 300s through
 				if res.Status < 200 || res.Status >= 400 {
 					return errNotOK
 				}
