@@ -1,5 +1,4 @@
 import api from 'data/api'
-import {getClientID} from '../store/auth'
 import type {AuthStatus, Provider} from '../types/auth'
 
 export const getAuthStatus = async (): Promise<AuthStatus> => {
@@ -17,6 +16,6 @@ export const getAuthStatus = async (): Promise<AuthStatus> => {
 }
 
 export const getLoginProviders = async (): Promise<Provider[]> => {
-  const response = await api.get(`/api/auth/login?client_id=${getClientID()}`)
+  const response = await api.get(`/api/auth/login`)
   return response.json()
 }

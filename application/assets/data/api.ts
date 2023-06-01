@@ -1,4 +1,3 @@
-import { getToken } from 'data/store/auth'
 import { ResponseError } from './error'
 import { setNotice } from '@silintl/ui-components'
 
@@ -13,7 +12,6 @@ type Method = 'delete' | 'get' | 'put' | 'post'
  */
 const call = async (method: Method, urlPath: string, data = null, showError = true): Promise<Response> => {
   const headers = {
-    Authorization: 'Bearer ' + getToken(),
     'Content-Type': 'application/json',
   }
 

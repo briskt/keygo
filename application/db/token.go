@@ -54,7 +54,7 @@ func (t *Token) Validate() error {
 
 // create a new token object in the database. On success, the ID is set to the new database
 // ID & timestamp fields are set to the current time
-func (t *Token) create(ctx echo.Context, clientID string) error {
+func (t *Token) create(ctx echo.Context) error {
 	t.ExpiresAt = time.Now().Add(tokenLifetime)
 	t.LastLoginAt = time.Now()
 	t.PlainText = getRandomToken()
@@ -140,11 +140,11 @@ func (t TokenService) FindToken(ctx echo.Context, raw string) (keygo.Token, erro
 	return convertToken(token), nil
 }
 
-func (t TokenService) CreateToken(ctx echo.Context, authID uuid.UUID, clientID string) (keygo.Token, error) {
+func (t TokenService) CreateToken(ctx echo.Context, authID uuid.UUID) (keygo.Token, error) {
 	token := Token{
 		AuthID: authID,
 	}
-	if err := token.create(ctx, clientID); err != nil {
+	if err := token.create(ctx); err != nil {
 		return keygo.Token{}, err
 	}
 
