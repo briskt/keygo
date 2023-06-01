@@ -181,7 +181,7 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		c.Set(keygo.ContextKeyToken, token)
-
+		c.Set(keygo.ContextKeyUser, token.Auth.User)
 		return next(c)
 	}
 }
