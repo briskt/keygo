@@ -103,8 +103,7 @@ func deleteToken(ctx echo.Context, id uuid.UUID) error {
 	//	return keygo.Errorf(keygo.ERR_UNAUTHORIZED, "You are not allowed to delete this token")
 	//}
 
-	token := keygo.Token{ID: id}
-	result := Tx(ctx).Delete(&token)
+	result := Tx(ctx).Where("id = ?", id).Delete(&Token{})
 	return result.Error
 }
 

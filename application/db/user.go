@@ -151,8 +151,7 @@ func updateUser(ctx echo.Context, id uuid.UUID, upd keygo.UserUpdate) (User, err
 
 // deleteUser permanently removes a user by ID.
 func deleteUser(ctx echo.Context, id uuid.UUID) error {
-	user := User{ID: id}
-	result := Tx(ctx).Delete(&user)
+	result := Tx(ctx).Where("id = ?", id).Delete(&User{})
 	return result.Error
 }
 

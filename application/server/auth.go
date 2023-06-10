@@ -1,6 +1,9 @@
 package server
 
 import (
+	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,65 +11,44 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/markbates/goth"
-	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/auth0"
-	"github.com/markbates/goth/providers/google"
 
 	"github.com/schparky/keygo"
+	"github.com/schparky/keygo/server/oauth"
 )
 
 const AuthCallbackPath = "/api/auth/callback"
 
-const TokenSessionKey = "Token"
+const (
+	SessionKeyAuthID   = "AuthID"
+	SessionKeyToken    = "Token"
+	SessionKeyReturnTo = "ReturnTo"
+	SessionKeyState    = "State"
+)
 
+const (
+	ParamReturnTo = "returnTo"
+	ParamCode     = "code"
+	DefaultUIPath = "/"
+)
+
+// TODO: make a connection between error responses and the logger, so all errors get logged
 type AuthError struct {
 	Error string
 }
 
-type ProviderOption struct {
-	Key         string
-	Name        string
-	RedirectURL string
-}
-
-type providerConfig struct {
-	key         string
-	name        string
-	authKey     string
-	secret      string
-	callbackURL string
-	domain      string
-}
-
-var providers = []providerConfig{
-	{
-		key:         "auth0",
-		name:        "Auth0",
-		authKey:     os.Getenv("AUTH0_KEY"),
-		secret:      os.Getenv("AUTH0_SECRET"),
-		callbackURL: os.Getenv("HOST") + AuthCallbackPath + "?provider=auth0",
-		domain:      os.Getenv("AUTH0_DOMAIN"),
-	}, {
-		key:         "google",
-		name:        "Google",
-		authKey:     os.Getenv("GOOGLE_KEY"),
-		secret:      os.Getenv("GOOGLE_SECRET"),
-		callbackURL: os.Getenv("HOST") + AuthCallbackPath + "?provider=google",
-	},
-}
-
 func init() {
-	for _, p := range providers {
-		if p.secret == "" || p.authKey == "" {
-			continue
-		}
-		switch p.key {
-		case "auth0":
-			goth.UseProviders(auth0.New(p.authKey, p.secret, p.callbackURL, p.domain))
-		case "google":
-			goth.UseProviders(google.New(p.authKey, p.secret, p.callbackURL))
-		}
+	config := oauth.Config{
+		Issuer:       os.Getenv("OAUTH_ISSUER_URL"),
+		ClientID:     os.Getenv("OAUTH_CLIENT_ID"),
+		ClientSecret: os.Getenv("OAUTH_CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("OAUTH_REDIRECT_URL"),
+		Scopes:       os.Getenv("OAUTH_OPENID_SCOPES"),
+	}
+
+	// TODO: check here for missing config
+
+	if err := oauth.Init(config); err != nil {
+		log.Fatalf("error initializing authenticator: %s", err)
 	}
 }
 
@@ -75,7 +57,7 @@ func (s *Server) authStatus(c echo.Context) error {
 
 	token, err := s.getTokenFromSession(c)
 	if err != nil {
-		s.Logger.Errorf("error getting token from session: %s", err)
+		s.Logger.Warnf("error getting token from session: %s", err)
 		return c.JSON(http.StatusOK, status)
 	}
 
@@ -89,46 +71,96 @@ func (s *Server) authStatus(c echo.Context) error {
 }
 
 func (s *Server) authLogin(c echo.Context) error {
-	options := make([]ProviderOption, 0)
-	for _, p := range providers {
-		if p.secret == "" || p.authKey == "" {
-			continue
-		}
-		gothic.GetProviderName = func(req *http.Request) (string, error) { return p.key, nil }
-		url, err := gothic.GetAuthURL(c.Response(), c.Request())
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
-		}
-		options = append(options, ProviderOption{
-			Key:         p.key,
-			Name:        p.name,
-			RedirectURL: url,
-		})
+	authenticator := oauth.Get()
+	if authenticator == nil {
+		err := fmt.Errorf("authenticator is not initialized")
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
-	return c.JSON(http.StatusOK, options)
+
+	returnToPath, err := getReturnTo(c)
+	if err != nil {
+		s.Logger.Warnf("getting return path: %w", err)
+		returnToPath = DefaultUIPath
+	}
+
+	if err := sessionSetValue(c, SessionKeyReturnTo, returnToPath); err != nil {
+		err = fmt.Errorf("setting return path: %w", err)
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
+
+	state := generateRandomState()
+	if err := sessionSetValue(c, SessionKeyState, state); err != nil {
+		err = fmt.Errorf("generating state key: %w", err)
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
+
+	url := oauth.AuthCodeURL(state)
+	s.Logger.Infof("redirecting to auth provider: %s", url)
+	return c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+func getReturnTo(c echo.Context) (string, error) {
+	if path := c.Param(ParamReturnTo); path != "" {
+		return path, nil
+	}
+
+	path, err := sessionGetString(c, SessionKeyReturnTo)
+	if err != nil {
+		return "", fmt.Errorf("failed to get %s from session: %w", SessionKeyReturnTo, err)
+	}
+	return path, nil
+}
+
+func generateRandomState() string {
+	b := make([]byte, 32)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic("failed to generate session state, rand.Read returned error: " + err.Error())
+	}
+
+	state := base64.StdEncoding.EncodeToString(b)
+
+	return state
 }
 
 func (s *Server) authLogout(c echo.Context) error {
-	err := gothic.Logout(c.Response(), c.Request())
+	token, err := s.getTokenFromSession(c)
 	if err != nil {
-		return err
+		s.Logger.Error(err.Error())
 	}
-	return c.Redirect(http.StatusTemporaryRedirect, os.Getenv("UI_URL"))
+	if err := s.TokenService.DeleteToken(c, token.ID); err != nil {
+		s.Logger.Errorf("failed to delete user token: %s", err)
+	}
+	return c.Redirect(http.StatusTemporaryRedirect, DefaultUIPath)
 }
 
 func (s *Server) authCallback(c echo.Context) error {
-	authUser, err := gothic.CompleteUserAuth(c.Response(), c.Request())
+	if authError := c.QueryParam("error"); authError != "" {
+		errDescription := c.QueryParam("error_description")
+		err := fmt.Errorf("auth error: %s, description: %s", authError, errDescription)
+		s.Logger.Errorf("auth error %s: %s", authError, errDescription)
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
 
-	s.Logger.Infof("authCallback authUser = %+v", authUser)
+	profile, err := getAuthProfile(c)
+	if err != nil {
+		err = fmt.Errorf("auth profile error: %w", err)
+		s.Logger.Errorf(err.Error())
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
+
+	if err := sessionSetValue(c, SessionKeyAuthID, profile.ID); err != nil {
+		err = fmt.Errorf("setting authID: %w", err)
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
+
+	s.Logger.Infof("user authenticated, profile=%+v", profile)
 
 	auth, err := s.AuthService.CreateAuth(c, keygo.Auth{
-		Provider:   authUser.Provider,
-		ProviderID: authUser.UserID,
+		Provider:   "oauth",
+		ProviderID: profile.ID,
 		User: keygo.User{
-			FirstName: authUser.FirstName,
-			LastName:  authUser.LastName,
-			Email:     authUser.Email,
-			AvatarURL: authUser.AvatarURL,
+			Email: profile.Email,
 		},
 	})
 	if err != nil {
@@ -142,11 +174,17 @@ func (s *Server) authCallback(c echo.Context) error {
 
 	s.Logger.Infof("created token: %s, '%s'", token.ID, token.PlainText)
 
-	if err = sessionSetValue(c, TokenSessionKey, token.PlainText); err != nil {
+	if err = sessionSetValue(c, SessionKeyToken, token.PlainText); err != nil {
 		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
-	return c.Redirect(http.StatusFound, "/")
+	returnTo, err := getReturnTo(c)
+	if err != nil {
+		err = fmt.Errorf("getting return path: %w", err)
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, returnTo)
 }
 
 func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -171,7 +209,7 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func AuthnSkipper(c echo.Context) bool {
-	var skipURLs = []string{"/api/auth", "/api/auth/login", "/api/auth/callback", "/api/auth/logout"}
+	skipURLs := []string{"/api/auth", "/api/auth/login", "/api/auth/callback", "/api/auth/logout"}
 	for _, u := range skipURLs {
 		if c.Path() == u {
 			return true
@@ -185,7 +223,7 @@ func AuthnSkipper(c echo.Context) bool {
 }
 
 func (s *Server) getTokenFromSession(c echo.Context) (keygo.Token, error) {
-	tokenInterface, err := sessionGetValue(c, TokenSessionKey)
+	tokenInterface, err := sessionGetValue(c, SessionKeyToken)
 	if err != nil {
 		s.Logger.Infof("no token in session: %s", err)
 		return keygo.Token{}, nil
@@ -202,4 +240,57 @@ func (s *Server) getTokenFromSession(c echo.Context) (keygo.Token, error) {
 	}
 
 	return token, nil
+}
+
+// getAuthProfile retrieves the user's profile from the authorization code provided by Auth0. This code is based on the
+// Auth0 Quick Start at https://auth0.com/docs/quickstart/webapp/golang/interactive
+func getAuthProfile(c echo.Context) (oauth.Profile, error) {
+	var ap oauth.Profile
+
+	authenticator := oauth.Get()
+	if authenticator == nil {
+		err := fmt.Errorf("authenticator is not initialized")
+		return ap, err
+	}
+
+	// Exchange an authorization code for a token.
+	token, err := authenticator.Exchange(context.TODO(), c.QueryParam(ParamCode)) // TODO: need a real Context?
+	if err != nil {
+		err = fmt.Errorf("failed to create an access token from the authorization code: %w", err)
+		return ap, err
+	}
+
+	idToken, err := authenticator.VerifyIDToken(context.TODO(), token) // TODO: need a real context?
+	if err != nil {
+		err = fmt.Errorf("failed to verify ID Token: %w", err)
+		return ap, err
+	}
+
+	var profile map[string]any
+	if err = idToken.Claims(&profile); err != nil {
+		err = fmt.Errorf("failed to get profile from token: %w", err)
+		return ap, err
+	}
+
+	var ok bool
+
+	ap.ID, ok = profile["sub"].(string)
+	if !ok {
+		err = fmt.Errorf("no 'sub' key (AuthID) found in the user profile")
+		return ap, err
+	}
+
+	ap.Email, ok = profile["email"].(string)
+	if !ok {
+		err = fmt.Errorf("no email address found in the user profile")
+		return ap, err
+	}
+
+	ap.Verified, ok = profile["email_verified"].(bool)
+	if !ok {
+		err = fmt.Errorf("invalid email_verified in the user profile")
+		return ap, err
+	}
+
+	return ap, nil
 }
