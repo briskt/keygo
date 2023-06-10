@@ -1,12 +1,5 @@
 <script lang="ts">
-    import { getAuthStatus } from 'data/api/auth'
-    import { onMount } from 'svelte'
+    import {authStatus} from 'data/api/auth'
 
-    onMount(async () => {
-        const status = await getAuthStatus()
-
-        if (status.IsAuthenticated) {
-            location.replace('/api/auth/logout')
-        }
-    })
+    $: $authStatus.IsAuthenticated && location.replace('/api/auth/logout')
 </script>

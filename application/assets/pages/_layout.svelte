@@ -1,20 +1,13 @@
 <script lang="ts">
-import {getAuthStatus} from 'data/api/auth'
+import {authStatus} from 'data/api/auth'
 import {user} from 'data/store/user'
 import { AppDrawer } from 'components'
 import {isAdmin} from 'data/types/user'
 import * as routes from 'helpers/routes'
-import {afterUpdate} from 'svelte'
-
-let userIsAnonymous: boolean
-
-afterUpdate(async () => {
-  const status = await getAuthStatus()
-  userIsAnonymous = !status.IsAuthenticated
-})
 
 $: userIsAdmin = isAdmin($user)
 $: userNotAdmin = !userIsAdmin || userIsAnonymous
+$: userIsAnonymous = !($authStatus).IsAuthenticated
 
 $: menuItems = [
   {},
@@ -22,9 +15,9 @@ $: menuItems = [
   // Admin menu items
   {
     url: routes.DASHBOARD,
-    urlPattern: /\/home$/,
+    urlPattern: /\/dashboard$/,
     icon: 'home',
-    label: 'Home',
+    label: 'Dashboard',
     hide: !userIsAdmin,
   },
 
