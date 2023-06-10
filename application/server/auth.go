@@ -37,15 +37,14 @@ type AuthError struct {
 }
 
 func init() {
+	const required = true
 	config := oauth.Config{
-		Issuer:       os.Getenv("OAUTH_ISSUER_URL"),
-		ClientID:     os.Getenv("OAUTH_CLIENT_ID"),
-		ClientSecret: os.Getenv("OAUTH_CLIENT_SECRET"),
-		RedirectURL:  os.Getenv("OAUTH_REDIRECT_URL"),
-		Scopes:       os.Getenv("OAUTH_OPENID_SCOPES"),
+		Issuer:       env("OAUTH_ISSUER_URL", required),
+		ClientID:     env("OAUTH_CLIENT_ID", required),
+		ClientSecret: env("OAUTH_CLIENT_SECRET", required),
+		RedirectURL:  env("OAUTH_REDIRECT_URL", required),
+		Scopes:       env("OAUTH_OPENID_SCOPES", required),
 	}
-
-	// TODO: check here for missing config
 
 	if err := oauth.Init(config); err != nil {
 		log.Fatalf("error initializing authenticator: %s", err)
@@ -293,4 +292,12 @@ func getAuthProfile(c echo.Context) (oauth.Profile, error) {
 	}
 
 	return ap, nil
+}
+
+func env(key string, required bool) string {
+	v := os.Getenv(key)
+	if v == "" && required {
+		panic("required environment variable '" + key + "' is not defined")
+	}
+	return v
 }
