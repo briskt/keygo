@@ -12,8 +12,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/schparky/keygo"
-	"github.com/schparky/keygo/server/oauth"
+	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/server/oauth"
 )
 
 const AuthCallbackPath = "/api/auth/callback"

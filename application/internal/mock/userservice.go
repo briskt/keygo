@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
-	"github.com/schparky/keygo"
+	"github.com/briskt/keygo"
 )
 
 type UserService struct{}

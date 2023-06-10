@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 
-	"github.com/schparky/keygo"
-	"github.com/schparky/keygo/db"
-	"github.com/schparky/keygo/migrations"
+	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/db"
+	"github.com/briskt/keygo/migrations"
 )
 
 // TestSuite contains common setup and configuration for tests

@@ -5,7 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/schparky/keygo"
+	"github.com/briskt/keygo"
 )
 
 func (s *Server) userHandler(c echo.Context) error {

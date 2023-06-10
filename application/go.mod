@@ -1,4 +1,4 @@
-module github.com/schparky/keygo
+module github.com/briskt/keygo
 
 go 1.20
 

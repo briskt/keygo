@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/schparky/keygo/internal/mock"
-	"github.com/schparky/keygo/server"
+	"github.com/briskt/keygo/internal/mock"
+	"github.com/briskt/keygo/server"
 )
 
 // TestSuite contains common setup and configuration for tests

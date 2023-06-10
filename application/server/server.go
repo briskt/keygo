@@ -8,8 +8,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"github.com/schparky/keygo"
-	"github.com/schparky/keygo/db"
+	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/db"
 )
 
 type Server struct {

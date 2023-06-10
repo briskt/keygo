@@ -5,7 +5,7 @@ import (
 
 	"github.com/labstack/gommon/log"
 
-	"github.com/schparky/keygo/server"
+	"github.com/briskt/keygo/server"
 )
 
 func main() {

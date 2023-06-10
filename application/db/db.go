@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/schparky/keygo"
+	"github.com/briskt/keygo"
 )
 
 var DB *gorm.DB

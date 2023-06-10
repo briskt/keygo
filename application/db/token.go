@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-	"github.com/schparky/keygo"
+	"github.com/briskt/keygo"
 )
 
 const (

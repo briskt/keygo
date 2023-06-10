@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/schparky/keygo"
-	"github.com/schparky/keygo/db"
+	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/db"
 )
 
 func (ts *TestSuite) TestAuthService_CreateAuth() {

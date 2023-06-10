@@ -10,9 +10,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
-	"github.com/schparky/keygo"
-	"github.com/schparky/keygo/db"
-	"github.com/schparky/keygo/internal/mock"
+	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/db"
+	"github.com/briskt/keygo/internal/mock"
 )
 
 var (
