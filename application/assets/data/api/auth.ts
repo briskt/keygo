@@ -14,8 +14,3 @@ export const getAuthStatus = async (): Promise<AuthStatus> => {
     });
   }
 }
-
-export const getLoginProviders = async (): Promise<Provider[]> => {
-  const response = await api.get(`/api/auth/login`)
-  return response.json()
-}

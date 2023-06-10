@@ -1,1 +1,1 @@
-<h1>Terms of Use</h1>
+<h1>Terms of Service</h1>

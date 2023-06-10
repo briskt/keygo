@@ -222,8 +222,7 @@ func deleteAuth(ctx echo.Context, id uuid.UUID) error {
 	//	return keygo.Errorf(keygo.ERR_UNAUTHORIZED, "You are not allowed to delete this auth")
 	//}
 
-	auth := keygo.Auth{ID: id}
-	result := Tx(ctx).Delete(&auth)
+	result := Tx(ctx).Where("id = ?", id).Delete(&Auth{})
 	return result.Error
 }
 
