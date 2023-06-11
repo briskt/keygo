@@ -1,7 +1,6 @@
 package mock
 
 import (
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo"
@@ -15,7 +14,7 @@ func NewAuthService() keygo.AuthService {
 	return &AuthService{}
 }
 
-func (m *AuthService) FindAuthByID(context echo.Context, uuid uuid.UUID) (keygo.Auth, error) {
+func (m *AuthService) FindAuthByID(context echo.Context, id string) (keygo.Auth, error) {
 	panic("implement AuthService FindAuthByID")
 }
 
@@ -31,6 +30,6 @@ func (m *AuthService) CreateAuth(context echo.Context, auth keygo.Auth) (keygo.A
 	return auth, nil
 }
 
-func (m *AuthService) DeleteAuth(context echo.Context, uuid uuid.UUID) error {
+func (m *AuthService) DeleteAuth(context echo.Context, id string) error {
 	panic("implement AuthService DeleteAuth")
 }

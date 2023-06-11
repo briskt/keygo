@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/jaevor/go-nanoid"
 	"github.com/labstack/echo/v4"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -17,8 +18,11 @@ import (
 
 var DB *gorm.DB
 
+var newID func() string
+
 func init() {
 	DB = OpenDB()
+	newID, _ = nanoid.Standard(21)
 }
 
 func OpenDB() *gorm.DB {

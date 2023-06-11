@@ -1,8 +1,8 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE "tokens" (
-     id uuid NOT NULL,
-     auth_id uuid NOT NULL,
+     id text NOT NULL,
+     auth_id text NOT NULL,
      hash text NOT NULL,
      last_login_at timestamp,
      expires_at timestamp,

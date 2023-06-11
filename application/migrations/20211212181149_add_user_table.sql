@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE "users" (
-    id uuid NOT NULL,
+    id text NOT NULL,
     first_name text NOT NULL,
     last_name text NOT NULL,
     role text NOT NULL,

@@ -1,8 +1,6 @@
 package db_test
 
 import (
-	"github.com/google/uuid"
-
 	"github.com/briskt/keygo"
 	"github.com/briskt/keygo/db"
 )
@@ -19,7 +17,7 @@ func (ts *TestSuite) TestUserService_CreateUser() {
 	// Create new record and check generated fields
 	newUser, err := s.CreateUser(ts.ctx, u)
 	ts.NoError(err)
-	ts.False(newUser.ID == uuid.Nil, "ID is not set")
+	ts.False(newUser.ID == "", "ID is not set")
 	ts.False(newUser.CreatedAt.IsZero(), "expected CreatedAt")
 	ts.False(newUser.UpdatedAt.IsZero(), "expected UpdatedAt")
 
@@ -50,4 +48,18 @@ func (ts *TestSuite) CreateUser(user keygo.User) keygo.User {
 		ts.Fail("failed to create user: " + err.Error())
 	}
 	return newUser
+}
+
+func (ts *TestSuite) Test_FindUserByID() {
+	s := db.NewUserService()
+
+	user, err := s.CreateUser(ts.ctx, keygo.User{FirstName: "joe", Email: "joe@example.com"})
+	ts.NoError(err)
+
+	found, err := s.FindUserByID(ts.ctx, user.ID)
+	ts.NoError(err)
+
+	ts.Equal(user.ID, found.ID)
+	ts.Equal(user.FirstName, found.FirstName)
+	ts.Equal(user.Email, found.Email)
 }

@@ -2,8 +2,8 @@
 -- +goose StatementBegin
 
 CREATE TABLE "auths" (
-    id uuid NOT NULL,
-    user_id uuid NOT NULL,
+    id text NOT NULL,
+    user_id text NOT NULL,
     provider text NOT NULL,
     provider_id text NOT NULL,
     created_at timestamp NOT NULL,

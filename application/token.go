@@ -3,15 +3,14 @@ package keygo
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 type Token struct {
-	ID uuid.UUID `json:"id"`
+	ID string `json:"id"`
 
-	Auth   Auth      `json:"auth"`
-	AuthID uuid.UUID `json:"authID"`
+	Auth   Auth   `json:"auth"`
+	AuthID string `json:"authID"`
 
 	PlainText string `json:"plainText"`
 
@@ -31,9 +30,9 @@ type TokenService interface {
 	// CreateToken creates a new token object
 	//
 	// On success, the token.ID is set to the new token ID
-	CreateToken(ctx echo.Context, authID uuid.UUID) (Token, error)
+	CreateToken(ctx echo.Context, authID string) (Token, error)
 
 	// DeleteToken permanently deletes a token object from the system by ID.
 	// The parent user object is not removed.
-	DeleteToken(ctx echo.Context, tokenID uuid.UUID) error
+	DeleteToken(ctx echo.Context, tokenID string) error
 }

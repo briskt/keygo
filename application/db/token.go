@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
@@ -21,10 +20,10 @@ const (
 )
 
 type Token struct {
-	ID uuid.UUID `gorm:"type:uuid;primary_key;"`
+	ID string `gorm:"primaryKey"`
 
 	Auth   Auth
-	AuthID uuid.UUID
+	AuthID string
 
 	Hash      string
 	PlainText string `gorm:"-"`
@@ -37,13 +36,13 @@ type Token struct {
 }
 
 func (t *Token) BeforeCreate(tx *gorm.DB) error {
-	t.ID = uuid.New()
+	t.ID = newID()
 	return nil
 }
 
 // Validate returns an error if any fields are invalid on the Token object.
 func (t *Token) Validate() error {
-	if t.AuthID == uuid.Nil {
+	if t.AuthID == "" {
 		return keygo.Errorf(keygo.ERR_INVALID, "AuthID required.")
 	}
 	if t.Hash == "" {
@@ -95,7 +94,7 @@ func findToken(ctx echo.Context, raw string) (Token, error) {
 }
 
 // deleteToken permanently removes a token object by ID
-func deleteToken(ctx echo.Context, id uuid.UUID) error {
+func deleteToken(ctx echo.Context, id string) error {
 	// Verify object exists & that the user is the owner of the token
 	//if token, err := findTokenByID(tx, id); err != nil {
 	//	return err
@@ -139,7 +138,7 @@ func (t TokenService) FindToken(ctx echo.Context, raw string) (keygo.Token, erro
 	return convertToken(token), nil
 }
 
-func (t TokenService) CreateToken(ctx echo.Context, authID uuid.UUID) (keygo.Token, error) {
+func (t TokenService) CreateToken(ctx echo.Context, authID string) (keygo.Token, error) {
 	token := Token{
 		AuthID: authID,
 	}
@@ -153,7 +152,7 @@ func (t TokenService) CreateToken(ctx echo.Context, authID uuid.UUID) (keygo.Tok
 	return convertToken(token), nil
 }
 
-func (t TokenService) DeleteToken(ctx echo.Context, id uuid.UUID) error {
+func (t TokenService) DeleteToken(ctx echo.Context, id string) error {
 	return deleteToken(ctx, id)
 }
 

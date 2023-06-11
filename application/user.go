@@ -3,12 +3,11 @@ package keygo
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 type User struct {
-	ID        uuid.UUID
+	ID        string
 	FirstName string
 	LastName  string
 	Email     string
@@ -33,7 +32,7 @@ func (u *User) Validate() error {
 // UserService represents a service for managing users
 type UserService interface {
 	// FindUserByID retrieves a user by ID
-	FindUserByID(echo.Context, uuid.UUID) (User, error)
+	FindUserByID(echo.Context, string) (User, error)
 
 	// FindUsers retrieves a list of users by filter
 	FindUsers(echo.Context, UserFilter) ([]User, int, error)
@@ -42,18 +41,18 @@ type UserService interface {
 	CreateUser(echo.Context, User) (User, error)
 
 	// UpdateUser updates a user object
-	UpdateUser(echo.Context, uuid.UUID, UserUpdate) (User, error)
+	UpdateUser(echo.Context, string, UserUpdate) (User, error)
 
 	// DeleteUser permanently deletes a user and all child objects
-	DeleteUser(echo.Context, uuid.UUID) error
+	DeleteUser(echo.Context, string) error
 }
 
 // UserFilter represents a filter passed to FindUsers()
 type UserFilter struct {
 	// Filtering fields.
-	ID     *uuid.UUID `json:"id"`
-	Email  *string    `json:"email"`
-	APIKey *string    `json:"apiKey"`
+	ID     *string `json:"id"`
+	Email  *string `json:"email"`
+	APIKey *string `json:"apiKey"`
 
 	// Restrict to subset of results.
 	Offset int `json:"offset"`

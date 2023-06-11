@@ -1,7 +1,6 @@
 package mock
 
 import (
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo"
@@ -13,7 +12,7 @@ func NewUserService() keygo.UserService {
 	return &UserService{}
 }
 
-func (m *UserService) FindUserByID(context echo.Context, uuid uuid.UUID) (keygo.User, error) {
+func (m *UserService) FindUserByID(context echo.Context, id string) (keygo.User, error) {
 	panic("implement UserService FindUserByID")
 }
 
@@ -25,10 +24,10 @@ func (m *UserService) CreateUser(context echo.Context, user keygo.User) (keygo.U
 	panic("implement UserService CreateUser")
 }
 
-func (m *UserService) UpdateUser(context echo.Context, uuid uuid.UUID, update keygo.UserUpdate) (keygo.User, error) {
+func (m *UserService) UpdateUser(context echo.Context, id string, update keygo.UserUpdate) (keygo.User, error) {
 	panic("implement UserService UpdateUser")
 }
 
-func (m *UserService) DeleteUser(context echo.Context, uuid uuid.UUID) error {
+func (m *UserService) DeleteUser(context echo.Context, id string) error {
 	panic("implement UserService DeleteUser")
 }

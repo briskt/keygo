@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
@@ -13,11 +12,11 @@ import (
 )
 
 type Auth struct {
-	ID uuid.UUID `gorm:"type:uuid;primary_key;"`
+	ID string `gorm:"primaryKey"`
 
 	// User can have one or more methods of authentication
 	// However, only one per provider is allowed per user
-	UserID uuid.UUID
+	UserID string
 	User   User
 
 	// The authentication provider & the provider's user ID
@@ -31,13 +30,13 @@ type Auth struct {
 }
 
 func (a *Auth) BeforeCreate(tx *gorm.DB) error {
-	a.ID = uuid.New()
+	a.ID = newID()
 	return nil
 }
 
 // Validate returns an error if any fields are invalid on the Auth object.
 func (a *Auth) Validate() error {
-	if a.UserID == uuid.Nil {
+	if a.UserID == "" {
 		return keygo.Errorf(keygo.ERR_INVALID, "user required")
 	}
 	if a.Provider == "" {
@@ -62,7 +61,7 @@ func NewAuthService() *AuthService {
 
 // FindAuthByID retrieves an authentication object by ID along with the associated user.
 // Returns ERR_NOTFOUND if ID does not exist.
-func (s *AuthService) FindAuthByID(ctx echo.Context, id uuid.UUID) (keygo.Auth, error) {
+func (s *AuthService) FindAuthByID(ctx echo.Context, id string) (keygo.Auth, error) {
 	auth, err := findAuthByID(ctx, id)
 	if err != nil {
 		return keygo.Auth{}, err
@@ -118,7 +117,7 @@ func (s *AuthService) CreateAuth(ctx echo.Context, keygoAuth keygo.Auth) (keygo.
 
 	// Check if auth has a new user object passed in. It is considered "new" if
 	// the caller doesn't know the database ID for the user.
-	if auth.UserID == uuid.Nil {
+	if auth.UserID == "" {
 		// Look up the user by email address. If no user can be found then
 		// create a new user with the auth.User object passed in.
 		if user, err := findUserByEmail(ctx, auth.User.Email); err == nil { // user exists
@@ -150,15 +149,15 @@ func (s *AuthService) CreateAuth(ctx echo.Context, keygoAuth keygo.Auth) (keygo.
 
 // DeleteAuth permanently deletes an authentication object from the system by ID
 // The parent user object is not removed
-func (s *AuthService) DeleteAuth(ctx echo.Context, id uuid.UUID) error {
+func (s *AuthService) DeleteAuth(ctx echo.Context, id string) error {
 	return deleteAuth(ctx, id)
 }
 
 // findAuthByID is a helper function to return an auth object by ID
 // Returns ERR_NOTFOUND if auth doesn't exist
-func findAuthByID(ctx echo.Context, id uuid.UUID) (Auth, error) {
+func findAuthByID(ctx echo.Context, id string) (Auth, error) {
 	var auth Auth
-	result := Tx(ctx).Preload("User").Find(&auth, id)
+	result := Tx(ctx).Preload("User").Find(&auth, "id = ?", id)
 	if result.Error == sql.ErrNoRows {
 		return Auth{}, &keygo.Error{Code: keygo.ERR_NOTFOUND, Message: "Auth not found"}
 	}
@@ -198,7 +197,7 @@ func (a *Auth) create(ctx echo.Context) error {
 
 // updateAuth updates tokens & expiry on exist auth object
 // Returns new state of the auth object
-func updateAuth(ctx echo.Context, id uuid.UUID) (Auth, error) {
+func updateAuth(ctx echo.Context, id string) (Auth, error) {
 	// Fetch current object state.
 	auth, err := findAuthByID(ctx, id)
 	if err != nil {
@@ -214,7 +213,7 @@ func updateAuth(ctx echo.Context, id uuid.UUID) (Auth, error) {
 }
 
 // deleteAuth permanently removes an auth object by ID
-func deleteAuth(ctx echo.Context, id uuid.UUID) error {
+func deleteAuth(ctx echo.Context, id string) error {
 	// Verify object exists & that the user is the owner of the auth
 	//if auth, err := findAuthByID(tx, id); err != nil {
 	//	return err

@@ -3,7 +3,6 @@ package keygo
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
@@ -19,12 +18,12 @@ const (
 // on some providers don't provide their public email so we may not be able to link them
 // by email address.
 type Auth struct {
-	ID uuid.UUID `json:"id"`
+	ID string `json:"id"`
 
 	// User can have one or more methods of authentication
 	// However, only one per provider is allowed per user
-	UserID uuid.UUID `json:"userID"`
-	User   User      `json:"user"`
+	UserID string `json:"userID"`
+	User   User   `json:"user"`
 
 	// The authentication provider
 	Provider string `json:"provider"`
@@ -41,7 +40,7 @@ type Auth struct {
 type AuthService interface {
 	// FindAuthByID looks up an authentication object by ID along with the associated user
 	// Returns ERR_NOTFOUND if ID does not exist
-	FindAuthByID(echo.Context, uuid.UUID) (Auth, error)
+	FindAuthByID(echo.Context, string) (Auth, error)
 
 	// FindAuths retrieves authentication objects based on a filter. Also returns the
 	// total number of objects that match the filter. This may differ from the
@@ -57,7 +56,7 @@ type AuthService interface {
 
 	// DeleteAuth permanently deletes an authentication object from the system by ID.
 	// The parent user object is not removed.
-	DeleteAuth(echo.Context, uuid.UUID) error
+	DeleteAuth(echo.Context, string) error
 }
 
 // AuthFilter represents a filter accepted by FindAuths()
@@ -84,7 +83,5 @@ type AuthStatus struct {
 	Expiry time.Time `json:"Expiry"`
 
 	// UserID is the ID of the authenticated user. It is invalid if `IsAuthenticated` is false.
-	//
-	// swagger:strfmt uuid4
-	UserID uuid.UUID `json:"UserID"`
+	UserID string `json:"UserID"`
 }

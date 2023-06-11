@@ -3,7 +3,6 @@ package db
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
@@ -11,7 +10,7 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
+	ID        string `gorm:"primaryKey;type:string"`
 	FirstName string
 	LastName  string
 	Email     string
@@ -23,7 +22,7 @@ type User struct {
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
-	u.ID = uuid.New()
+	u.ID = newID()
 	return nil
 }
 
@@ -39,7 +38,7 @@ func NewUserService() *UserService {
 }
 
 // FindUserByID retrieves a user by ID along with their associated auth objects.
-func (s *UserService) FindUserByID(ctx echo.Context, id uuid.UUID) (keygo.User, error) {
+func (s *UserService) FindUserByID(ctx echo.Context, id string) (keygo.User, error) {
 	user, err := findUserByID(ctx, id)
 	if err != nil {
 		return keygo.User{}, err
@@ -80,7 +79,7 @@ func (s *UserService) CreateUser(ctx echo.Context, user keygo.User) (keygo.User,
 }
 
 // UpdateUser updates a user object.
-func (s *UserService) UpdateUser(ctx echo.Context, id uuid.UUID, upd keygo.UserUpdate) (keygo.User, error) {
+func (s *UserService) UpdateUser(ctx echo.Context, id string, upd keygo.UserUpdate) (keygo.User, error) {
 	user, err := updateUser(ctx, id, upd)
 	if err != nil {
 		return keygo.User{}, err
@@ -89,7 +88,7 @@ func (s *UserService) UpdateUser(ctx echo.Context, id uuid.UUID, upd keygo.UserU
 }
 
 // DeleteUser permanently deletes a user and all child objects
-func (s *UserService) DeleteUser(ctx echo.Context, id uuid.UUID) error {
+func (s *UserService) DeleteUser(ctx echo.Context, id string) error {
 	if err := deleteUser(ctx, id); err != nil {
 		return err
 	}
@@ -97,9 +96,9 @@ func (s *UserService) DeleteUser(ctx echo.Context, id uuid.UUID) error {
 }
 
 // findUserByID is a helper function to fetch a user by ID.
-func findUserByID(ctx echo.Context, id uuid.UUID) (User, error) {
+func findUserByID(ctx echo.Context, id string) (User, error) {
 	var user User
-	result := Tx(ctx).First(&user, id)
+	result := Tx(ctx).First(&user, "id = ?", id)
 	return user, result.Error
 }
 
@@ -129,7 +128,7 @@ func createUser(ctx echo.Context, user User) (User, error) {
 }
 
 // updateUser updates fields on a user object.
-func updateUser(ctx echo.Context, id uuid.UUID, upd keygo.UserUpdate) (User, error) {
+func updateUser(ctx echo.Context, id string, upd keygo.UserUpdate) (User, error) {
 	user, err := findUserByID(ctx, id)
 	if err != nil {
 		return User{}, err
@@ -150,7 +149,7 @@ func updateUser(ctx echo.Context, id uuid.UUID, upd keygo.UserUpdate) (User, err
 }
 
 // deleteUser permanently removes a user by ID.
-func deleteUser(ctx echo.Context, id uuid.UUID) error {
+func deleteUser(ctx echo.Context, id string) error {
 	result := Tx(ctx).Where("id = ?", id).Delete(&User{})
 	return result.Error
 }

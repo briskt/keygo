@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/briskt/keygo"
 	"github.com/briskt/keygo/db"
 )
@@ -65,10 +63,10 @@ func (ts *TestSuite) TestAuthService_CreateAuth() {
 			}
 
 			ts.NoError(err)
-			ts.False(newAuth.ID == uuid.Nil, "ID is not set")
+			ts.False(newAuth.ID == "", "ID is not set")
 			ts.WithinDuration(now, newAuth.CreatedAt, time.Second, "CreatedAt is not set")
 			ts.WithinDuration(now, newAuth.UpdatedAt, time.Second, "UpdatedAt is not set")
-			ts.False(newAuth.UserID == uuid.Nil, "UserID is not set")
+			ts.False(newAuth.UserID == "", "UserID is not set")
 			ts.Equal(newAuth.User.ID, newAuth.UserID, "User.ID is not set")
 
 			// Query database and compare

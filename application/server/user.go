@@ -12,7 +12,7 @@ func (s *Server) userHandler(c echo.Context) error {
 	user := keygo.CurrentUser(c)
 
 	id := c.Param("id")
-	if id != user.ID.String() {
+	if id != user.ID {
 		return c.JSON(http.StatusNotFound, AuthError{Error: "not found"})
 	}
 

@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo"
@@ -34,7 +33,7 @@ func (m *TokenService) FindToken(ctx echo.Context, raw string) (keygo.Token, err
 	return keygo.Token{}, fmt.Errorf("token %s not found", raw)
 }
 
-func (m *TokenService) CreateToken(ctx echo.Context, authID uuid.UUID) (keygo.Token, error) {
+func (m *TokenService) CreateToken(ctx echo.Context, authID string) (keygo.Token, error) {
 	if m.tokens == nil {
 		m.tokens = make(map[string]keygo.Token)
 	}
@@ -48,6 +47,6 @@ func (m *TokenService) CreateToken(ctx echo.Context, authID uuid.UUID) (keygo.To
 	return newToken, nil
 }
 
-func (m *TokenService) DeleteToken(ctx echo.Context, tokenID uuid.UUID) error {
+func (m *TokenService) DeleteToken(ctx echo.Context, tokenID string) error {
 	panic("implement TokenService DeleteToken")
 }

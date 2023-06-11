@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo"
@@ -17,7 +16,7 @@ import (
 
 var (
 	mockDB = map[string]*db.User{
-		"jon@labstack.com": {ID: uuid.New(), Email: "jon@labstack.com"},
+		"jon@labstack.com": {ID: "xyz", Email: "jon@labstack.com"},
 	}
 	userJSON = `{"name":"Jon Snow","email":"jon@labstack.com"}`
 )
