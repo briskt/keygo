@@ -1,5 +1,6 @@
 
 export type AuthStatus = {
+  IsValid: boolean
   IsAuthenticated: boolean
   Expiry: string // date
   UserID: string

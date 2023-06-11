@@ -8,11 +8,13 @@ export const getAuthStatus = async (): Promise<AuthStatus> => {
   try {
     const response = await api.get('/api/auth')
     const updatedAuthStatus = await response.json()
+    updatedAuthStatus.IsValid = true
     authStatus.set(updatedAuthStatus)
     return updatedAuthStatus
   } catch {
     const notAuth = <AuthStatus>{
-      IsAuthenticated: false
+      IsValid: true,
+      IsAuthenticated: false,
     };
     authStatus.set(notAuth)
     return new Promise<AuthStatus>((resolve, reject) => {

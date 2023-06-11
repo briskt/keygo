@@ -7,7 +7,7 @@ import * as routes from 'helpers/routes'
 
 $: userIsAdmin = isAdmin($user)
 $: userNotAdmin = !userIsAdmin || userIsAnonymous
-$: userIsAnonymous = !($authStatus).IsAuthenticated
+$: userIsAnonymous = $authStatus.IsValid && !$authStatus.IsAuthenticated
 
 $: menuItems = [
   {},
