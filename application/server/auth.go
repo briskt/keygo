@@ -42,7 +42,7 @@ func init() {
 		Issuer:       env("OAUTH_ISSUER_URL", required),
 		ClientID:     env("OAUTH_CLIENT_ID", required),
 		ClientSecret: env("OAUTH_CLIENT_SECRET", required),
-		RedirectURL:  env("OAUTH_REDIRECT_URL", required),
+		RedirectURL:  env("HOST", required) + env("OAUTH_REDIRECT_PATH", required),
 		Scopes:       env("OAUTH_OPENID_SCOPES", required),
 	}
 
