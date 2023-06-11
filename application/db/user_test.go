@@ -63,3 +63,22 @@ func (ts *TestSuite) Test_FindUserByID() {
 	ts.Equal(user.FirstName, found.FirstName)
 	ts.Equal(user.Email, found.Email)
 }
+
+func (ts *TestSuite) Test_FindUsers() {
+	s := db.NewUserService()
+
+	joe, err := s.CreateUser(ts.ctx, keygo.User{FirstName: "joe", Email: "joe@example.com"})
+	ts.NoError(err)
+	sally, err := s.CreateUser(ts.ctx, keygo.User{FirstName: "sally", Email: "sally@example.com"})
+	ts.NoError(err)
+
+	found, n, err := s.FindUsers(ts.ctx, keygo.UserFilter{})
+	ts.NoError(err)
+
+	ts.Equal(2, n)
+	ids := make([]string, len(found))
+	for i := range found {
+		ids[i] = found[i].ID
+	}
+	ts.EqualValues([]string{joe.ID, sally.ID}, ids)
+}

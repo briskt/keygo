@@ -8,6 +8,22 @@ import (
 	"github.com/briskt/keygo"
 )
 
+func (s *Server) usersListHandler(c echo.Context) error {
+	user := keygo.CurrentUser(c)
+	if user.Role != "Admin" {
+		return c.JSON(http.StatusNotFound, AuthError{Error: "not found"})
+	}
+
+	users, n, err := s.UserService.FindUsers(c, keygo.UserFilter{})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
+
+	s.Logger.Infof("found %d users", n)
+
+	return c.JSON(http.StatusOK, users)
+}
+
 func (s *Server) userHandler(c echo.Context) error {
 	user := keygo.CurrentUser(c)
 
