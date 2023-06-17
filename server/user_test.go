@@ -9,7 +9,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/db"
 	"github.com/briskt/keygo/internal/mock"
 )
@@ -24,16 +24,16 @@ var (
 func (ts *TestSuite) Test_GetUser() {
 	ts.T().Skip("authorization can't be tested yet")
 
-	fakeToken := keygo.Token{
-		Auth: keygo.Auth{
-			User: keygo.User{
+	fakeToken := app.Token{
+		Auth: app.Auth{
+			User: app.User{
 				Email: "test@example.com",
 			},
 		},
 		PlainText: "12345",
 		ExpiresAt: time.Now().Add(time.Minute),
 	}
-	ts.server.TokenService.(*mock.TokenService).Init([]keygo.Token{fakeToken})
+	ts.server.TokenService.(*mock.TokenService).Init([]app.Token{fakeToken})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/user", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -46,7 +46,7 @@ func (ts *TestSuite) Test_GetUser() {
 	// Assertions
 	ts.Equal(http.StatusOK, res.Code, "incorrect http status, body: \n%s", body)
 
-	var user keygo.User
+	var user app.User
 	ts.NoError(json.Unmarshal(body, &user))
 	ts.Equal(fakeToken.Auth.User, user, "incorrect user data, body: \n%s", body)
 }

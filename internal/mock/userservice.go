@@ -3,28 +3,28 @@ package mock
 import (
 	"github.com/labstack/echo/v4"
 
-	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/app"
 )
 
 type UserService struct{}
 
-func NewUserService() keygo.UserService {
+func NewUserService() app.UserService {
 	return &UserService{}
 }
 
-func (m *UserService) FindUserByID(context echo.Context, id string) (keygo.User, error) {
+func (m *UserService) FindUserByID(context echo.Context, id string) (app.User, error) {
 	panic("implement UserService FindUserByID")
 }
 
-func (m *UserService) FindUsers(context echo.Context, filter keygo.UserFilter) ([]keygo.User, int, error) {
+func (m *UserService) FindUsers(context echo.Context, filter app.UserFilter) ([]app.User, int, error) {
 	panic("implement UserService FindUsers")
 }
 
-func (m *UserService) CreateUser(context echo.Context, user keygo.User) (keygo.User, error) {
+func (m *UserService) CreateUser(context echo.Context, user app.User) (app.User, error) {
 	panic("implement UserService CreateUser")
 }
 
-func (m *UserService) UpdateUser(context echo.Context, id string, update keygo.UserUpdate) (keygo.User, error) {
+func (m *UserService) UpdateUser(context echo.Context, id string, update app.UserUpdate) (app.User, error) {
 	panic("implement UserService UpdateUser")
 }
 

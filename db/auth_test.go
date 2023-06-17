@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/db"
 )
 
@@ -12,30 +12,30 @@ func (ts *TestSuite) TestAuthService_CreateAuth() {
 	s := db.NewAuthService()
 	now := time.Now()
 
-	newUser := keygo.User{
+	newUser := app.User{
 		FirstName: "Joe",
 		Email:     "joe@example.com",
 	}
 
-	existingUser := ts.CreateUser(keygo.User{FirstName: "Clark", Email: "clark@example.com"})
+	existingUser := ts.CreateUser(app.User{FirstName: "Clark", Email: "clark@example.com"})
 
 	tests := []struct {
 		name        string
-		auth        keygo.Auth
+		auth        app.Auth
 		wantErr     string
 		wantErrCode string
 	}{
 		{
 			name: "validation error",
-			auth: keygo.Auth{
+			auth: app.Auth{
 				User: newUser,
 			},
 			wantErr:     "provider required",
-			wantErrCode: keygo.ERR_INVALID,
+			wantErrCode: app.ERR_INVALID,
 		},
 		{
 			name: "new user",
-			auth: keygo.Auth{
+			auth: app.Auth{
 				Provider:   "provider1",
 				ProviderID: "xyz1234",
 				User:       newUser,
@@ -43,7 +43,7 @@ func (ts *TestSuite) TestAuthService_CreateAuth() {
 		},
 		{
 			name: "existing user",
-			auth: keygo.Auth{
+			auth: app.Auth{
 				Provider:   "provider2",
 				ProviderID: "1",
 				User:       existingUser,
@@ -57,8 +57,8 @@ func (ts *TestSuite) TestAuthService_CreateAuth() {
 
 			if tt.wantErr != "" {
 				ts.Error(err, "didn't get expected error")
-				ts.Equal(tt.wantErr, keygo.ErrorMessage(err), "unexpected error")
-				ts.Equal(tt.wantErrCode, keygo.ErrorCode(err), "unexpected error code")
+				ts.Equal(tt.wantErr, app.ErrorMessage(err), "unexpected error")
+				ts.Equal(tt.wantErrCode, app.ErrorCode(err), "unexpected error code")
 				return
 			}
 
@@ -82,17 +82,17 @@ func (ts *TestSuite) TestAuthService_CreateAuth() {
 }
 
 // SameAuth verifies two Auth objects are the same except for the timestamps
-func (ts *TestSuite) SameAuth(expected keygo.Auth, actual keygo.Auth, msgAndArgs ...interface{}) {
+func (ts *TestSuite) SameAuth(expected app.Auth, actual app.Auth, msgAndArgs ...interface{}) {
 	actual.CreatedAt = expected.CreatedAt
 	actual.UpdatedAt = expected.UpdatedAt
 	ts.Equal(expected, actual, msgAndArgs...)
 }
 
 // CreateAuth creates an auth in the database. Fatal on error.
-func (ts *TestSuite) CreateAuth() keygo.Auth {
+func (ts *TestSuite) CreateAuth() app.Auth {
 	ts.T().Helper()
 
-	auth := keygo.Auth{Provider: "a", ProviderID: "a", User: keygo.User{FirstName: "a", Email: "a"}}
+	auth := app.Auth{Provider: "a", ProviderID: "a", User: app.User{FirstName: "a", Email: "a"}}
 	newAuth, err := db.NewAuthService().CreateAuth(ts.ctx, auth)
 	if err != nil {
 		ts.Fail("failed to create auth: " + err.Error())

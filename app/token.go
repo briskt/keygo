@@ -1,4 +1,4 @@
-package keygo
+package app
 
 import (
 	"time"

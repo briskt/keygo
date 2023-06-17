@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/app"
 )
 
 var DB *gorm.DB
@@ -63,7 +63,7 @@ func FormatLimitOffset(limit, offset int) string {
 }
 
 func Tx(ctx echo.Context) *gorm.DB {
-	tmp := ctx.Get(keygo.ContextKeyTx)
+	tmp := ctx.Get(app.ContextKeyTx)
 	tx, ok := tmp.(*gorm.DB)
 	if !ok {
 		panic("no transaction found in context")

@@ -6,7 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/app"
 )
 
 func TxMiddleware(db *gorm.DB) echo.MiddlewareFunc {
@@ -15,7 +15,7 @@ func TxMiddleware(db *gorm.DB) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			err := db.Transaction(func(tx *gorm.DB) error {
-				c.Set(keygo.ContextKeyTx, tx)
+				c.Set(app.ContextKeyTx, tx)
 
 				if err := next(c); err != nil {
 					return err
