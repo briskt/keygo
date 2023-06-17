@@ -21,8 +21,8 @@ ENV GOPATH /home/user/go
 # Copy the Go Modules manifests
 # cache deps before building and copying source so that we don't need to re-download as much
 # and so that source changes don't invalidate our downloaded layer
-COPY --chown=user application/go.mod go.mod
-COPY --chown=user application/go.sum go.sum
+COPY --chown=user ./application/go.mod go.mod
+COPY --chown=user ./application/go.sum go.sum
 RUN go mod download
 
 COPY --chown=user ./application .
