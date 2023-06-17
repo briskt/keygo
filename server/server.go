@@ -8,16 +8,16 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/db"
 )
 
 type Server struct {
 	*echo.Echo
 
-	TokenService keygo.TokenService
-	AuthService  keygo.AuthService
-	UserService  keygo.UserService
+	TokenService app.TokenService
+	AuthService  app.AuthService
+	UserService  app.UserService
 }
 
 const loggerFormat = "${time_rfc3339} ${status} ${method} ${uri} ${error}\n"
