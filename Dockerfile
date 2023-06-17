@@ -3,7 +3,7 @@ FROM golang:1.20
 WORKDIR /src
 
 # silintl/docker-whenavail is little script that uses netcat to wait for a service to be ready
-RUN apt-get update && apt-get install -y curl netcat && apt-get clean
+RUN apt-get update && apt-get install -y curl netcat-traditional && apt-get clean
 RUN curl -o /usr/local/bin/whenavail https://bitbucket.org/silintl/docker-whenavail/raw/1.0.2/whenavail \
      && chmod a+x /usr/local/bin/whenavail
 
