@@ -33,4 +33,7 @@ adminer:
 install-js-deps:
 	docker-compose run --rm ui-app npm install
 
-.PHONY: app ui-app test bounce migrate migratedown new-migration db fresh adminer install-js-deps
+proxy:
+	docker-compose up -d proxy
+
+.PHONY: app ui-app test bounce migrate migratedown new-migration db fresh adminer install-js-deps proxy
