@@ -15,9 +15,10 @@ import (
 type Server struct {
 	*echo.Echo
 
-	TokenService app.TokenService
-	AuthService  app.AuthService
-	UserService  app.UserService
+	AuthService   app.AuthService
+	TenantService app.TenantService
+	TokenService  app.TokenService
+	UserService   app.UserService
 }
 
 const loggerFormat = "${time_rfc3339} ${status} ${method} ${uri} ${error}\n"
@@ -64,6 +65,7 @@ func (s *Server) registerRoutes() {
 	api.GET("/auth/login", s.authLogin)
 	api.GET("/auth/callback", s.authCallback)
 	api.GET("/auth/logout", s.authLogout)
+	api.GET("/tenants", s.tenantsListHandler)
 	api.GET("/users", s.usersListHandler)
 	api.GET("/users/:id", s.userHandler)
 
@@ -71,7 +73,8 @@ func (s *Server) registerRoutes() {
 }
 
 func (s *Server) getServices() {
-	s.UserService = db.NewUserService()
 	s.AuthService = db.NewAuthService()
+	s.TenantService = db.NewTenantService()
 	s.TokenService = db.NewTokenService()
+	s.UserService = db.NewUserService()
 }
