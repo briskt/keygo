@@ -73,7 +73,7 @@ func (s *Server) authLogin(c echo.Context) error {
 	authenticator := oauth.Get()
 	if authenticator == nil {
 		err := fmt.Errorf("authenticator is not initialized")
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	returnToPath, err := getReturnTo(c)
@@ -84,13 +84,13 @@ func (s *Server) authLogin(c echo.Context) error {
 
 	if err := sessionSetValue(c, SessionKeyReturnTo, returnToPath); err != nil {
 		err = fmt.Errorf("setting return path: %w", err)
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	state := generateRandomState()
 	if err := sessionSetValue(c, SessionKeyState, state); err != nil {
 		err = fmt.Errorf("generating state key: %w", err)
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	url := oauth.AuthCodeURL(state)
@@ -138,19 +138,19 @@ func (s *Server) authCallback(c echo.Context) error {
 		errDescription := c.QueryParam("error_description")
 		err := fmt.Errorf("auth error: %s, description: %s", authError, errDescription)
 		s.Logger.Errorf("auth error %s: %s", authError, errDescription)
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	profile, err := getAuthProfile(c)
 	if err != nil {
 		err = fmt.Errorf("auth profile error: %w", err)
 		s.Logger.Errorf(err.Error())
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	if err := sessionSetValue(c, SessionKeyAuthID, profile.ID); err != nil {
 		err = fmt.Errorf("setting authID: %w", err)
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	s.Logger.Infof("user authenticated, profile=%+v", profile)
@@ -163,24 +163,24 @@ func (s *Server) authCallback(c echo.Context) error {
 		},
 	})
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	token, err := s.TokenService.CreateToken(c, auth.ID)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	s.Logger.Infof("created token: %s, '%s'", token.ID, token.PlainText)
 
 	if err = sessionSetValue(c, SessionKeyToken, token.PlainText); err != nil {
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	returnTo, err := getReturnTo(c)
 	if err != nil {
 		err = fmt.Errorf("getting return path: %w", err)
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	return c.Redirect(http.StatusTemporaryRedirect, returnTo)
@@ -198,7 +198,7 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		if token.ExpiresAt.Before(time.Now()) {
 			log.Printf("token expired at %s\n", token.ExpiresAt)
-			return c.JSON(http.StatusNotFound, AuthError{"not found"})
+			return echo.NewHTTPError(status, authError)
 		}
 
 		c.Set(app.ContextKeyToken, token)

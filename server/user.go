@@ -11,12 +11,12 @@ import (
 func (s *Server) usersListHandler(c echo.Context) error {
 	user := app.CurrentUser(c)
 	if user.Role != "Admin" {
-		return c.JSON(http.StatusNotFound, AuthError{Error: "not found"})
+		return echo.NewHTTPError(http.StatusNotFound, AuthError{Error: "not found"})
 	}
 
 	users, n, err := s.UserService.FindUsers(c, app.UserFilter{})
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, AuthError{Error: err.Error()})
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
 	s.Logger.Infof("found %d users", n)
@@ -29,7 +29,7 @@ func (s *Server) userHandler(c echo.Context) error {
 
 	id := c.Param("id")
 	if id != user.ID {
-		return c.JSON(http.StatusNotFound, AuthError{Error: "not found"})
+		return echo.NewHTTPError(http.StatusNotFound, AuthError{Error: "not found"})
 	}
 
 	return c.JSON(http.StatusOK, user)
