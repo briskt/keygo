@@ -16,8 +16,8 @@ type Tenant struct {
 // Validate returns an error if the tenant contains invalid fields.
 // This only performs basic validation.
 func (u *Tenant) Validate() error {
-	if u.Name == "" {
-		return Errorf(ERR_INVALID, "Name required")
+	if len(u.Name) < 3 {
+		return Errorf(ERR_INVALID, "Tenant name is required")
 	}
 	return nil
 }
