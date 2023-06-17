@@ -6,7 +6,8 @@ CREATE TABLE "tenants" (
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
   deleted_at timestamp,
-  PRIMARY KEY(id)
+  PRIMARY KEY(id),
+  UNIQUE (name)
 );
 CREATE TABLE "tenant_users" (
   id text NOT NULL,
