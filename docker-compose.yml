@@ -5,7 +5,7 @@ services:
     image: keygo
     build: .
     volumes:
-      - ./application:/src
+      - .:/src
     ports:
       - "1323:1323"
       - "2345:2345"
@@ -24,7 +24,7 @@ services:
   ui-app:
     image: node:18
     volumes:
-      - ./application:/app
+      - .:/app
     working_dir: /app
     ports:
       - "35729:35729"
@@ -35,7 +35,7 @@ services:
     build: .
     image: keygo
     volumes:
-      - ./application:/src
+      - .:/src
     env_file:
       - test.env
     environment:
@@ -85,19 +85,19 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./application/:/app
+      - .:/app
     working_dir: /app
 #
 #  redoc:
 #    build:
-#      context: ./application
+#      context: .
 #      dockerfile: Dockerfile-redoc-cli
 #    volumes:
-#      - ./application/swagger:/data
+#      - ./swagger:/data
 #
 #  docs:
 #    build:
-#      context: ./application
+#      context: .
 #      dockerfile: Dockerfile-api-docs
 
 # Start this container to use https for development. Set variables in proxy.env and change HOST in .env

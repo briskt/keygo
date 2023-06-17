@@ -2,6 +2,7 @@
 tmp/
 bin/
 *.env
+!test.env
 node_modules/
 .routify/
-application/public/assets/
+public/assets/
