@@ -196,8 +196,14 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if err != nil {
 			s.Logger.Error(err.Error())
 		}
+
+		status := http.StatusUnauthorized
+		authError := AuthError{"not authorized"}
+		if token.ID == "" {
+			return echo.NewHTTPError(status, authError)
+		}
 		if token.ExpiresAt.Before(time.Now()) {
-			log.Printf("token expired at %s\n", token.ExpiresAt)
+			s.Logger.Infof("token expired at %s\n", token.ExpiresAt)
 			return echo.NewHTTPError(status, authError)
 		}
 
