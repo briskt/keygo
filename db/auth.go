@@ -56,7 +56,6 @@ type AuthService struct{}
 
 // NewAuthService returns a new instance of AuthService
 func NewAuthService() *AuthService {
-	OpenDB()
 	return &AuthService{}
 }
 

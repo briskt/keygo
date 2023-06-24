@@ -16,19 +16,13 @@ import (
 	"github.com/briskt/keygo/app"
 )
 
-var DB *gorm.DB
-
 var newID func() string
 
 func init() {
 	newID, _ = nanoid.Standard(21)
 }
 
-func OpenDB() {
-	if DB != nil {
-		return
-	}
-
+func OpenDB() *gorm.DB {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		panic("required environment variable DATABASE_URL is not set")
@@ -47,7 +41,7 @@ func OpenDB() {
 	if err != nil {
 		panic("failed to open database '" + dsn + "': " + err.Error())
 	}
-	DB = conn
+	return conn
 }
 
 // FormatLimitOffset returns a SQL string for a given limit & offset.

@@ -30,7 +30,6 @@ type TenantService struct{}
 
 // NewTenantService returns a new instance of TenantService.
 func NewTenantService() *TenantService {
-	OpenDB()
 	return &TenantService{}
 }
 

@@ -123,7 +123,6 @@ type TokenService struct{}
 
 // NewTokenService returns a new instance of TokenService
 func NewTokenService() *TokenService {
-	OpenDB()
 	return &TokenService{}
 }
 

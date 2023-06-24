@@ -7,14 +7,15 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"gorm.io/gorm"
 
 	"github.com/briskt/keygo/app"
-	"github.com/briskt/keygo/db"
 )
 
 type Server struct {
 	*echo.Echo
 	app.DataServices
+	db *gorm.DB
 }
 
 const loggerFormat = "${time_rfc3339} ${status} ${method} ${uri} ${error}\n"
@@ -26,6 +27,12 @@ type Option func(*Server)
 func WithDataServices(services app.DataServices) Option {
 	return func(s *Server) {
 		s.DataServices = services
+	}
+}
+
+func WithDataBase(db *gorm.DB) Option {
+	return func(s *Server) {
+		s.db = db
 	}
 }
 
@@ -50,7 +57,7 @@ func New(options ...Option) *Server {
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))))
 
 	// DB Transaction Middleware
-	e.Use(TxMiddleware(db.DB))
+	e.Use(TxMiddleware(svr.db))
 
 	if os.Getenv("GO_ENV") == "development" {
 		e.Debug = true
