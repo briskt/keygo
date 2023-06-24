@@ -23,7 +23,7 @@ $: menuItems = [
   {
     url: routes.PROFILE,
     urlPattern: /\/user$/,
-    icon: 'user',
+    icon: 'account_circle',
     label: 'Profile',
     hide: userIsAnonymous,
   },
