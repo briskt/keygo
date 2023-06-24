@@ -9,6 +9,6 @@
   })
 </script>
 
-<h1>Admin Home</h1>
+<h1>Home</h1>
 
 Total number of users: {userCount || ''}
