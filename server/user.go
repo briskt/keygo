@@ -11,7 +11,7 @@ import (
 func (s *Server) usersListHandler(c echo.Context) error {
 	user := app.CurrentUser(c)
 	if user.Role != "Admin" {
-		return echo.NewHTTPError(http.StatusNotFound, AuthError{Error: "not found"})
+		return echo.NewHTTPError(http.StatusOK, []app.User{})
 	}
 
 	users, n, err := s.UserService.FindUsers(c, app.UserFilter{})
