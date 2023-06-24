@@ -14,12 +14,8 @@ import (
 
 type Server struct {
 	*echo.Echo
+	app.DataServices
 	mode string
-
-	AuthService   app.AuthService
-	TenantService app.TenantService
-	TokenService  app.TokenService
-	UserService   app.UserService
 }
 
 const loggerFormat = "${time_rfc3339} ${status} ${method} ${uri} ${error}\n"
@@ -36,6 +32,12 @@ func TestMode() Option {
 	}
 }
 
+func WithDataServices(services app.DataServices) Option {
+	return func(s *Server) {
+		s.DataServices = services
+	}
+}
+
 func New(options ...Option) *Server {
 	if svr != nil {
 		return svr
@@ -45,10 +47,6 @@ func New(options ...Option) *Server {
 
 	for _, opt := range options {
 		opt(svr)
-	}
-
-	if svr.mode != test {
-		svr.getServices()
 	}
 
 	// Logger Middleware
@@ -91,11 +89,4 @@ func (s *Server) registerRoutes() {
 	api.GET("/users/:id", s.userHandler)
 
 	s.registerUiRoutes()
-}
-
-func (s *Server) getServices() {
-	s.AuthService = db.NewAuthService()
-	s.TenantService = db.NewTenantService()
-	s.TokenService = db.NewTokenService()
-	s.UserService = db.NewUserService()
 }
