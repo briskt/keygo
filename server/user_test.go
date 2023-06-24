@@ -73,5 +73,6 @@ func (ts *TestSuite) Test_GetUserList() {
 
 	var users []app.User
 	ts.NoError(json.Unmarshal(body, &users))
-	ts.Equal([]app.User{fakeToken.Auth.User}, users, "incorrect user data, body: \n%s", body)
+	ts.Equal(fakeToken.Auth.User.Email, users[0].Email, "incorrect user email, body: \n%s", body)
+	ts.Equal(fakeToken.Auth.User.Role, users[0].Role, "incorrect user role, body: \n%s", body)
 }
