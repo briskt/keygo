@@ -28,7 +28,7 @@ func (ts *TestSuite) SetupTest() {
 }
 
 func Test_RunSuite(t *testing.T) {
-	svr := server.New()
+	svr := server.New(server.TestMode())
 	svr.AuthService = mock.NewAuthService()
 	svr.UserService = mock.NewUserService()
 	svr.TokenService = mock.NewTokenService()

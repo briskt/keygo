@@ -14,6 +14,7 @@ import (
 
 type Server struct {
 	*echo.Echo
+	mode string
 
 	AuthService   app.AuthService
 	TenantService app.TenantService
@@ -23,14 +24,32 @@ type Server struct {
 
 const loggerFormat = "${time_rfc3339} ${status} ${method} ${uri} ${error}\n"
 
+const test = "test"
+
 var svr *Server
 
-func New() *Server {
+type Option func(*Server)
+
+func TestMode() Option {
+	return func(s *Server) {
+		s.mode = test
+	}
+}
+
+func New(options ...Option) *Server {
 	if svr != nil {
 		return svr
 	}
 	e := echo.New()
 	svr = &Server{Echo: e}
+
+	for _, opt := range options {
+		opt(svr)
+	}
+
+	if svr.mode != test {
+		svr.getServices()
+	}
 
 	// Logger Middleware
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{Format: loggerFormat}))
@@ -41,8 +60,10 @@ func New() *Server {
 	// Session Middleware
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))))
 
-	// DB Transaction Middleware
-	e.Use(TxMiddleware(db.DB))
+	if svr.mode != test {
+		// DB Transaction Middleware
+		e.Use(TxMiddleware(db.DB))
+	}
 
 	if os.Getenv("GO_ENV") == "development" {
 		e.Debug = true
@@ -54,7 +75,6 @@ func New() *Server {
 	}))
 
 	svr.registerRoutes()
-	svr.getServices()
 	return svr
 }
 

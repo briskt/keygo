@@ -21,11 +21,14 @@ var DB *gorm.DB
 var newID func() string
 
 func init() {
-	DB = OpenDB()
 	newID, _ = nanoid.Standard(21)
 }
 
-func OpenDB() *gorm.DB {
+func OpenDB() {
+	if DB != nil {
+		return
+	}
+
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		panic("required environment variable DATABASE_URL is not set")
@@ -44,7 +47,7 @@ func OpenDB() *gorm.DB {
 	if err != nil {
 		panic("failed to open database '" + dsn + "': " + err.Error())
 	}
-	return conn
+	DB = conn
 }
 
 // FormatLimitOffset returns a SQL string for a given limit & offset.

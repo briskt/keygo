@@ -34,6 +34,7 @@ type UserService struct{}
 
 // NewUserService returns a new instance of UserService.
 func NewUserService() *UserService {
+	OpenDB()
 	return &UserService{}
 }
 
