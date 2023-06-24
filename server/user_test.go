@@ -57,7 +57,8 @@ func (ts *TestSuite) Test_GetUserList() {
 		ExpiresAt: time.Now().Add(time.Minute),
 	}
 	ts.server.TokenService.(*mock.TokenService).Init([]app.Token{fakeToken})
-	ts.server.UserService.CreateUser(ts.ctx, fakeToken.Auth.User)
+	createdUser, err := ts.server.UserService.CreateUser(ts.ctx, fakeToken.Auth.User)
+	ts.NoError(err)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -73,6 +74,7 @@ func (ts *TestSuite) Test_GetUserList() {
 
 	var users []app.User
 	ts.NoError(json.Unmarshal(body, &users))
+	ts.Equal(createdUser.ID, users[0].ID, "incorrect user ID, body: \n%s", body)
 	ts.Equal(fakeToken.Auth.User.Email, users[0].Email, "incorrect user email, body: \n%s", body)
 	ts.Equal(fakeToken.Auth.User.Role, users[0].Role, "incorrect user role, body: \n%s", body)
 }
