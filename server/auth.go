@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -194,7 +195,11 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		token, err := s.getTokenFromSession(c)
 		if err != nil {
-			s.Logger.Error(err.Error())
+			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("getTokenFromSession: %s", err))
+		}
+
+		if token.ID == "" {
+			token, _ = s.TokenService.FindToken(c, getBearerToken(c))
 		}
 
 		status := http.StatusUnauthorized
@@ -211,6 +216,19 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		c.Set(app.ContextKeyUser, token.Auth.User)
 		return next(c)
 	}
+}
+
+func getBearerToken(c echo.Context) (token string) {
+	for _, h := range c.Request().Header["Authorization"] {
+		parts := strings.Split(h, " ")
+		if len(parts) != 2 {
+			continue
+		}
+		if strings.ToLower(parts[0]) == "bearer" {
+			token = parts[1]
+		}
+	}
+	return token
 }
 
 func AuthnSkipper(c echo.Context) bool {
