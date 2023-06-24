@@ -22,11 +22,11 @@ var (
 )
 
 func (ts *TestSuite) Test_GetUser() {
-	ts.T().Skip("authorization can't be tested yet")
-
 	fakeToken := app.Token{
+		ID: "1",
 		Auth: app.Auth{
 			User: app.User{
+				ID:    "1",
 				Email: "test@example.com",
 			},
 		},
@@ -35,8 +35,9 @@ func (ts *TestSuite) Test_GetUser() {
 	}
 	ts.server.TokenService.(*mock.TokenService).Init([]app.Token{fakeToken})
 
-	req := httptest.NewRequest(http.MethodGet, "/api/user", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/users/"+fakeToken.Auth.User.ID, nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+fakeToken.PlainText)
 
 	res := httptest.NewRecorder()
 	ts.server.ServeHTTP(res, req)
