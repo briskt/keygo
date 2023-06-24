@@ -14,6 +14,9 @@ func TxMiddleware(db *gorm.DB) echo.MiddlewareFunc {
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			if db == nil {
+				return next(c)
+			}
 			err := db.Transaction(func(tx *gorm.DB) error {
 				c.Set(app.ContextKeyTx, tx)
 

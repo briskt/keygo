@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/internal/mock"
 	"github.com/briskt/keygo/server"
 )
@@ -28,10 +29,13 @@ func (ts *TestSuite) SetupTest() {
 }
 
 func Test_RunSuite(t *testing.T) {
-	svr := server.New()
-	svr.AuthService = mock.NewAuthService()
-	svr.UserService = mock.NewUserService()
-	svr.TokenService = mock.NewTokenService()
+	s := app.DataServices{
+		AuthService:   mock.NewAuthService(),
+		TenantService: nil,
+		TokenService:  mock.NewTokenService(),
+		UserService:   mock.NewUserService(),
+	}
+	svr := server.New(server.WithDataServices(s))
 	suite.Run(t, &TestSuite{
 		server: svr,
 		ctx:    testContext(),

@@ -35,9 +35,10 @@ func (ts *TestSuite) SetupTest() {
 }
 
 func Test_RunSuite(t *testing.T) {
+	dbConnection := db.OpenDB()
 	suite.Run(t, &TestSuite{
-		ctx: testContext(db.DB),
-		DB:  db.DB,
+		ctx: testContext(dbConnection),
+		DB:  dbConnection,
 	})
 }
 

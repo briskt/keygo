@@ -10,15 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo/app"
-	"github.com/briskt/keygo/db"
 	"github.com/briskt/keygo/internal/mock"
-)
-
-var (
-	mockDB = map[string]*db.User{
-		"jon@labstack.com": {ID: "xyz", Email: "jon@labstack.com"},
-	}
-	userJSON = `{"name":"Jon Snow","email":"jon@labstack.com"}`
 )
 
 func (ts *TestSuite) Test_GetUser() {

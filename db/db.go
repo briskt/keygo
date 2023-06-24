@@ -16,12 +16,9 @@ import (
 	"github.com/briskt/keygo/app"
 )
 
-var DB *gorm.DB
-
 var newID func() string
 
 func init() {
-	DB = OpenDB()
 	newID, _ = nanoid.Standard(21)
 }
 
