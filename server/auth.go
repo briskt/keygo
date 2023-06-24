@@ -12,7 +12,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/server/oauth"
 )
 
@@ -52,7 +52,7 @@ func init() {
 }
 
 func (s *Server) authStatus(c echo.Context) error {
-	var status keygo.AuthStatus
+	var status app.AuthStatus
 
 	token, err := s.getTokenFromSession(c)
 	if err != nil {
@@ -155,10 +155,10 @@ func (s *Server) authCallback(c echo.Context) error {
 
 	s.Logger.Infof("user authenticated, profile=%+v", profile)
 
-	auth, err := s.AuthService.CreateAuth(c, keygo.Auth{
+	auth, err := s.AuthService.CreateAuth(c, app.Auth{
 		Provider:   "oauth",
 		ProviderID: profile.ID,
-		User: keygo.User{
+		User: app.User{
 			Email: profile.Email,
 		},
 	})
@@ -201,8 +201,8 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(http.StatusNotFound, AuthError{"not found"})
 		}
 
-		c.Set(keygo.ContextKeyToken, token)
-		c.Set(keygo.ContextKeyUser, token.Auth.User)
+		c.Set(app.ContextKeyToken, token)
+		c.Set(app.ContextKeyUser, token.Auth.User)
 		return next(c)
 	}
 }
@@ -221,21 +221,21 @@ func AuthnSkipper(c echo.Context) bool {
 	return false
 }
 
-func (s *Server) getTokenFromSession(c echo.Context) (keygo.Token, error) {
+func (s *Server) getTokenFromSession(c echo.Context) (app.Token, error) {
 	tokenInterface, err := sessionGetValue(c, SessionKeyToken)
 	if err != nil {
 		s.Logger.Infof("no token in session: %s", err)
-		return keygo.Token{}, nil
+		return app.Token{}, nil
 	}
 
 	tokenPlainText, ok := tokenInterface.(string)
 	if !ok {
-		return keygo.Token{}, fmt.Errorf("token in session is not a string\n")
+		return app.Token{}, fmt.Errorf("token in session is not a string\n")
 	}
 
 	token, err := s.TokenService.FindToken(c, tokenPlainText)
 	if err != nil {
-		return keygo.Token{}, fmt.Errorf("could not find token '%s' in DB: %w\n", tokenPlainText, err)
+		return app.Token{}, fmt.Errorf("could not find token '%s' in DB: %w\n", tokenPlainText, err)
 	}
 
 	return token, nil

@@ -1,7 +1,7 @@
 package db_test
 
 import (
-	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/db"
 )
 
@@ -31,12 +31,12 @@ func (ts *TestSuite) TestTokenService_CreateToken() {
 	// Expect validation error
 	_, err = s.CreateToken(ts.ctx, "")
 	ts.Error(err, "expected validation error")
-	ts.Equal(keygo.ERR_INVALID, keygo.ErrorCode(err))
-	ts.Equal(`AuthID required.`, keygo.ErrorMessage(err), "unexpected error")
+	ts.Equal(app.ERR_INVALID, app.ErrorCode(err))
+	ts.Equal(`AuthID required.`, app.ErrorMessage(err), "unexpected error")
 }
 
 // SameToken verifies two Token objects are the same except for the timestamps
-func (ts *TestSuite) SameToken(expected keygo.Token, actual keygo.Token, msgAndArgs ...interface{}) {
+func (ts *TestSuite) SameToken(expected app.Token, actual app.Token, msgAndArgs ...interface{}) {
 	actual.CreatedAt = expected.CreatedAt
 	actual.UpdatedAt = expected.UpdatedAt
 	ts.Equal(expected, actual, msgAndArgs...)

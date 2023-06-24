@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 
-	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/db"
 	"github.com/briskt/keygo/migrations"
 )
@@ -45,6 +45,6 @@ func testContext(tx *gorm.DB) echo.Context {
 	req := httptest.NewRequest(http.MethodGet, "/", strings.NewReader(""))
 	rec := httptest.NewRecorder()
 	ctx := echo.New().NewContext(req, rec)
-	ctx.Set(keygo.ContextKeyTx, tx)
+	ctx.Set(app.ContextKeyTx, tx)
 	return ctx
 }

@@ -1,14 +1,14 @@
 package db_test
 
 import (
-	"github.com/briskt/keygo"
+	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/db"
 )
 
 func (ts *TestSuite) TestUserService_CreateUser() {
 	s := db.NewUserService()
 
-	u := keygo.User{
+	u := app.User{
 		FirstName: "susy",
 		LastName:  "smith",
 		Email:     "susy@example.com",
@@ -27,21 +27,21 @@ func (ts *TestSuite) TestUserService_CreateUser() {
 	ts.SameUser(newUser, fromDB)
 
 	// Expect a validation error
-	_, err = s.CreateUser(ts.ctx, keygo.User{})
+	_, err = s.CreateUser(ts.ctx, app.User{})
 	ts.Error(err)
-	ts.Equal(keygo.ErrorCode(err), keygo.ERR_INVALID)
-	ts.Equal(`FirstName required`, keygo.ErrorMessage(err))
+	ts.Equal(app.ErrorCode(err), app.ERR_INVALID)
+	ts.Equal(`FirstName required`, app.ErrorMessage(err))
 }
 
 // SameUser verifies two User objects are the same except for the timestamps
-func (ts *TestSuite) SameUser(expected keygo.User, actual keygo.User, msgAndArgs ...interface{}) {
+func (ts *TestSuite) SameUser(expected app.User, actual app.User, msgAndArgs ...interface{}) {
 	actual.CreatedAt = expected.CreatedAt
 	actual.UpdatedAt = expected.UpdatedAt
 	ts.Equal(expected, actual, msgAndArgs...)
 }
 
 // CreateUser creates a user in the database. Fatal on error.
-func (ts *TestSuite) CreateUser(user keygo.User) keygo.User {
+func (ts *TestSuite) CreateUser(user app.User) app.User {
 	ts.T().Helper()
 	newUser, err := db.NewUserService().CreateUser(ts.ctx, user)
 	if err != nil {
@@ -53,7 +53,7 @@ func (ts *TestSuite) CreateUser(user keygo.User) keygo.User {
 func (ts *TestSuite) Test_FindUserByID() {
 	s := db.NewUserService()
 
-	user, err := s.CreateUser(ts.ctx, keygo.User{FirstName: "joe", Email: "joe@example.com"})
+	user, err := s.CreateUser(ts.ctx, app.User{FirstName: "joe", Email: "joe@example.com"})
 	ts.NoError(err)
 
 	found, err := s.FindUserByID(ts.ctx, user.ID)
@@ -67,12 +67,12 @@ func (ts *TestSuite) Test_FindUserByID() {
 func (ts *TestSuite) Test_FindUsers() {
 	s := db.NewUserService()
 
-	joe, err := s.CreateUser(ts.ctx, keygo.User{FirstName: "joe", Email: "joe@example.com"})
+	joe, err := s.CreateUser(ts.ctx, app.User{FirstName: "joe", Email: "joe@example.com"})
 	ts.NoError(err)
-	sally, err := s.CreateUser(ts.ctx, keygo.User{FirstName: "sally", Email: "sally@example.com"})
+	sally, err := s.CreateUser(ts.ctx, app.User{FirstName: "sally", Email: "sally@example.com"})
 	ts.NoError(err)
 
-	found, n, err := s.FindUsers(ts.ctx, keygo.UserFilter{})
+	found, n, err := s.FindUsers(ts.ctx, app.UserFilter{})
 	ts.NoError(err)
 
 	ts.Equal(2, n)
