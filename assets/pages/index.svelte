@@ -1,6 +1,6 @@
 <script lang="ts">
-import { DASHBOARD } from 'helpers/routes'
+import { ADMIN } from 'helpers/routes'
 import { redirect } from '@roxi/routify'
 
-$redirect(DASHBOARD)
+$redirect(ADMIN)
 </script>

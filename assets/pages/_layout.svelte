@@ -12,10 +12,10 @@ $: userIsAnonymous = $authStatus.IsValid && !$authStatus.IsAuthenticated
 $: menuItems = [
   // Admin menu items
   {
-    url: routes.DASHBOARD,
-    urlPattern: /\/dashboard$/,
-    icon: 'home',
-    label: 'Dashboard',
+    url: routes.ADMIN,
+    urlPattern: /\/admin$/,
+    icon: 'admin_panel_settings',
+    label: 'Admin',
     hide: !userIsAdmin,
   },
 

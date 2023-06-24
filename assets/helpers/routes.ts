@@ -1,5 +1,5 @@
 export const ROOT = '/'
-export const DASHBOARD = '/dashboard'
+export const ADMIN = '/admin'
 export const PROFILE = '/user'
 export const LOGOUT = '/logout'
 export const EXIT = '/exit'
