@@ -15,22 +15,13 @@ import (
 type Server struct {
 	*echo.Echo
 	app.DataServices
-	mode string
 }
 
 const loggerFormat = "${time_rfc3339} ${status} ${method} ${uri} ${error}\n"
 
-const test = "test"
-
 var svr *Server
 
 type Option func(*Server)
-
-func TestMode() Option {
-	return func(s *Server) {
-		s.mode = test
-	}
-}
 
 func WithDataServices(services app.DataServices) Option {
 	return func(s *Server) {
@@ -58,10 +49,8 @@ func New(options ...Option) *Server {
 	// Session Middleware
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))))
 
-	if svr.mode != test {
-		// DB Transaction Middleware
-		e.Use(TxMiddleware(db.DB))
-	}
+	// DB Transaction Middleware
+	e.Use(TxMiddleware(db.DB))
 
 	if os.Getenv("GO_ENV") == "development" {
 		e.Debug = true

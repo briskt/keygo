@@ -35,7 +35,7 @@ func Test_RunSuite(t *testing.T) {
 		TokenService:  mock.NewTokenService(),
 		UserService:   mock.NewUserService(),
 	}
-	svr := server.New(server.TestMode(), server.WithDataServices(s))
+	svr := server.New(server.WithDataServices(s))
 	suite.Run(t, &TestSuite{
 		server: svr,
 		ctx:    testContext(),
