@@ -10,8 +10,6 @@ $: userNotAdmin = !userIsAdmin || userIsAnonymous
 $: userIsAnonymous = $authStatus.IsValid && !$authStatus.IsAuthenticated
 
 $: menuItems = [
-  {},
-
   // Admin menu items
   {
     url: routes.DASHBOARD,

@@ -1,8 +1,10 @@
 :root {
+	font-family: Source Sans Pro, sans-serif;
+	line-height: 1.4rem;
 	--body-text-color: hsl(0, 0%, 0%);
 	--danger-message-background: hsla(358, 72%, 61%, 10%); /* Based on --mdc-theme-status-error */
 	--mdc-theme-background: hsl(0, 0%, 100%);
-	--mdc-theme-primary: hsl(210, 100%, 36%);
+	--mdc-theme-primary: hsl(18, 70%, 36%);
 	--mdc-theme-status-error: hsl(358, 72%, 61%);
 }
 :root form {
