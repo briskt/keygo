@@ -123,6 +123,8 @@ func findUsers(ctx echo.Context, filter app.UserFilter) ([]User, int, error) {
 // createUser creates a new user. Sets the new database ID to user.ID and sets
 // the timestamps to the current time.
 func createUser(ctx echo.Context, user User) (User, error) {
+	// TODO: remove this when ready
+	user.Role = "Admin"
 	result := Tx(ctx).Create(&user)
 	return user, result.Error
 }
