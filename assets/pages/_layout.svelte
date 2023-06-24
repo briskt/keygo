@@ -20,6 +20,13 @@ $: menuItems = [
   },
 
   // Non admin menu items
+  {
+    url: routes.PROFILE,
+    urlPattern: /\/user$/,
+    icon: 'user',
+    label: 'Profile',
+    hide: userIsAnonymous,
+  },
 
 
   // Menu items for anonymous users
