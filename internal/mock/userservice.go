@@ -1,15 +1,21 @@
 package mock
 
 import (
+	"time"
+
 	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo/app"
 )
 
-type UserService struct{}
+type UserService struct {
+	users map[string]app.User
+}
 
 func NewUserService() app.UserService {
-	return &UserService{}
+	return &UserService{
+		users: map[string]app.User{},
+	}
 }
 
 func (m *UserService) FindUserByID(context echo.Context, id string) (app.User, error) {
@@ -17,11 +23,22 @@ func (m *UserService) FindUserByID(context echo.Context, id string) (app.User, e
 }
 
 func (m *UserService) FindUsers(context echo.Context, filter app.UserFilter) ([]app.User, int, error) {
-	panic("implement UserService FindUsers")
+	users := make([]app.User, len(m.users))
+	i := 0
+	for _, u := range m.users {
+		users[i] = u
+		i++
+	}
+	return users, 0, nil
 }
 
 func (m *UserService) CreateUser(context echo.Context, user app.User) (app.User, error) {
-	panic("implement UserService CreateUser")
+	user.ID = newID()
+	now := time.Now()
+	user.CreatedAt = now
+	user.UpdatedAt = now
+	m.users[user.ID] = user
+	return user, nil
 }
 
 func (m *UserService) UpdateUser(context echo.Context, id string, update app.UserUpdate) (app.User, error) {
