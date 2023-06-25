@@ -3,7 +3,6 @@ package db
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/base64"
 	"fmt"
 	"time"
@@ -22,9 +21,10 @@ const (
 type Token struct {
 	ID string `gorm:"primaryKey"`
 
-	Auth   Auth
-	AuthID string
+	User   User
+	UserID string
 
+	AuthID    string // OAuth sub (subject)
 	Hash      string
 	PlainText string `gorm:"-"`
 
@@ -42,6 +42,9 @@ func (t *Token) BeforeCreate(tx *gorm.DB) error {
 
 // Validate returns an error if any fields are invalid on the Token object.
 func (t *Token) Validate() error {
+	if t.UserID == "" {
+		return app.Errorf(app.ERR_INVALID, "UserID required.")
+	}
 	if t.AuthID == "" {
 		return app.Errorf(app.ERR_INVALID, "AuthID required.")
 	}
@@ -63,7 +66,7 @@ func (t *Token) create(ctx echo.Context) error {
 		return err
 	}
 
-	err := Tx(ctx).Create(t).Error
+	err := Tx(ctx).Omit("User").Create(t).Error
 	return err
 }
 
@@ -87,10 +90,35 @@ func hashToken(accessToken string) string {
 func findToken(ctx echo.Context, raw string) (Token, error) {
 	var token Token
 	err := Tx(ctx).Where("hash = ?", hashToken(raw)).First(&token).Error
-	if err == sql.ErrNoRows {
+	if err == gorm.ErrRecordNotFound {
 		return Token{}, &app.Error{Code: app.ERR_NOTFOUND, Message: "Token not found"}
 	}
 	return token, err
+}
+
+// findToken is a helper function to return a token object by AuthID
+// Returns ERR_NOTFOUND if record doesn't exist
+func findTokenByAuthID(ctx echo.Context, authID string) (Token, error) {
+	var token Token
+	err := Tx(ctx).Where("auth_id = ?", authID).First(&token).Error
+	if err == gorm.ErrRecordNotFound {
+		return Token{}, &app.Error{Code: app.ERR_NOTFOUND, Message: "Token not found"}
+	}
+	return token, err
+}
+
+// updateToken updates expires_at and last_login_at on existing token object
+// Returns new state of the token object
+func updateToken(ctx echo.Context, token Token) (Token, error) {
+	if err := token.Validate(); err != nil {
+		return token, err
+	}
+
+	token.ExpiresAt = time.Now().Add(tokenLifetime)
+	token.LastLoginAt = time.Now()
+
+	result := Tx(ctx).Omit("User").Save(&token)
+	return token, result.Error
 }
 
 // deleteToken permanently removes a token object by ID
@@ -106,11 +134,11 @@ func deleteToken(ctx echo.Context, id string) error {
 	return result.Error
 }
 
-// loadAuth is a helper function to fetch & attach the associated Auth
+// loadUser is a helper function to fetch & attach the associated User
 // to the token object.
-func (t *Token) loadAuth(ctx echo.Context) (err error) {
-	if t.Auth, err = findAuthByID(ctx, t.AuthID); err != nil {
-		return fmt.Errorf("attach token auth: %w", err)
+func (t *Token) loadUser(ctx echo.Context) (err error) {
+	if t.User, err = findUserByID(ctx, t.UserID); err != nil {
+		return fmt.Errorf("attach token user: %w", err)
 	}
 	return nil
 }
@@ -131,24 +159,63 @@ func (t TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error)
 	if err != nil {
 		return app.Token{}, err
 	}
-	if err = token.loadAuth(ctx); err != nil {
+	if err = token.loadUser(ctx); err != nil {
 		return app.Token{}, err
 	}
 
 	return convertToken(token), nil
 }
 
-func (t TokenService) CreateToken(ctx echo.Context, authID string) (app.Token, error) {
-	token := Token{
-		AuthID: authID,
+// CreateToken creates a new token object. If a User is attached to the provided token, then the created
+// token object is linked to the existing user, otherwise a new user object is created and linked.
+//
+// On success, the token.ID is set to the new token ID
+func (t TokenService) CreateToken(ctx echo.Context, appToken app.Token) (app.Token, error) {
+	token := convertAppToken(appToken)
+
+	// Check to see if a token already exists for the user
+	if other, err := findTokenByAuthID(ctx, token.AuthID); err == nil {
+		// If an token already exists for the source user, update it
+		if other, err = updateToken(ctx, other); err != nil {
+			return app.Token{}, fmt.Errorf("cannot create token: id=%s err=%w", other.ID, err)
+		} else if err = other.loadUser(ctx); err != nil {
+			return app.Token{}, err
+		}
+
+		return convertToken(other), nil
+	} else if app.ErrorCode(err) != app.ERR_NOTFOUND {
+		return app.Token{}, fmt.Errorf("error while searching for a token: %w", err)
 	}
-	if err := token.create(ctx); err != nil {
+
+	// Check if token has a new user object passed in. It is considered "new" if
+	// the caller doesn't know the database ID for the user.
+	if token.UserID == "" {
+		// Look up the user by email address. If no user can be found then
+		// create a new user with the token.User object passed in.
+		if user, err := findUserByEmail(ctx, token.User.Email); err == nil { // user exists
+			token.User = user
+		} else if app.ErrorCode(err) == app.ERR_NOTFOUND { // user does not exist
+			if token.User, err = createUser(ctx, token.User); err != nil {
+				return app.Token{}, fmt.Errorf("could not create user for token: %w", err)
+			}
+		} else {
+			return app.Token{}, fmt.Errorf("cannot find user by email: %w", err)
+		}
+
+		// Assign the created/found user ID back to the token object.
+		token.UserID = token.User.ID
+	}
+
+	// Create new token object & attach associated user.
+	err := token.create(ctx)
+	if err != nil {
 		return app.Token{}, err
 	}
 
-	if err := token.loadAuth(ctx); err != nil {
+	if err = token.loadUser(ctx); err != nil {
 		return app.Token{}, err
 	}
+
 	return convertToken(token), nil
 }
 
@@ -159,7 +226,22 @@ func (t TokenService) DeleteToken(ctx echo.Context, id string) error {
 func convertToken(token Token) app.Token {
 	return app.Token{
 		ID:          token.ID,
-		Auth:        convertAuth(token.Auth),
+		User:        convertUser(token.User),
+		UserID:      token.UserID,
+		AuthID:      token.AuthID,
+		PlainText:   token.PlainText,
+		LastLoginAt: token.LastLoginAt,
+		ExpiresAt:   token.ExpiresAt,
+		CreatedAt:   token.CreatedAt,
+		UpdatedAt:   token.UpdatedAt,
+	}
+}
+
+func convertAppToken(token app.Token) Token {
+	return Token{
+		ID:          token.ID,
+		User:        convertKeygoUser(token.User),
+		UserID:      token.UserID,
 		AuthID:      token.AuthID,
 		PlainText:   token.PlainText,
 		LastLoginAt: token.LastLoginAt,

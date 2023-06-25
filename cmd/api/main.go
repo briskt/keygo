@@ -15,7 +15,6 @@ func main() {
 
 	dbConnection := db.OpenDB()
 	services := app.DataServices{
-		AuthService:   db.NewAuthService(),
 		TenantService: db.NewTenantService(),
 		TokenService:  db.NewTokenService(),
 		UserService:   db.NewUserService(),

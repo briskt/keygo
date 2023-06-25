@@ -33,13 +33,13 @@ func (m *TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error
 	return app.Token{}, fmt.Errorf("token %s not found", raw)
 }
 
-func (m *TokenService) CreateToken(ctx echo.Context, authID string) (app.Token, error) {
+func (m *TokenService) CreateToken(ctx echo.Context, token app.Token) (app.Token, error) {
 	if m.tokens == nil {
 		m.tokens = make(map[string]app.Token)
 	}
 	mockRandomToken := strconv.Itoa(int(time.Now().Unix()))
 	newToken := app.Token{
-		AuthID:    authID,
+		AuthID:    token.AuthID,
 		PlainText: mockRandomToken,
 		ExpiresAt: time.Now().Add(time.Minute),
 	}

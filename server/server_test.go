@@ -30,7 +30,6 @@ func (ts *TestSuite) SetupTest() {
 
 func Test_RunSuite(t *testing.T) {
 	s := app.DataServices{
-		AuthService:   mock.NewAuthService(),
 		TenantService: nil,
 		TokenService:  mock.NewTokenService(),
 		UserService:   mock.NewUserService(),
