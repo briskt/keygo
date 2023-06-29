@@ -166,7 +166,7 @@ func (s *Server) authCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
-	s.Logger.Infof("created token: %s, '%s'", token.ID, token.PlainText)
+	s.Logger.Infof("created token: %s", token.ID)
 
 	if err = sessionSetValue(c, SessionKeyToken, token.PlainText); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
@@ -253,7 +253,7 @@ func (s *Server) getTokenFromSession(c echo.Context) (app.Token, error) {
 
 	token, err := s.TokenService.FindToken(c, tokenPlainText)
 	if err != nil {
-		return app.Token{}, fmt.Errorf("could not find token '%s' in DB: %w\n", tokenPlainText, err)
+		return app.Token{}, fmt.Errorf("could not find token in DB: %w\n", err)
 	}
 
 	return token, nil
