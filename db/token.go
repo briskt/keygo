@@ -173,20 +173,6 @@ func (t TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error)
 func (t TokenService) CreateToken(ctx echo.Context, appToken app.Token) (app.Token, error) {
 	token := convertAppToken(appToken)
 
-	// Check to see if a token already exists for the user
-	if other, err := findTokenByAuthID(ctx, token.AuthID); err == nil {
-		// If an token already exists for the source user, update it
-		if other, err = updateToken(ctx, other); err != nil {
-			return app.Token{}, fmt.Errorf("cannot create token: id=%s err=%w", other.ID, err)
-		} else if err = other.loadUser(ctx); err != nil {
-			return app.Token{}, err
-		}
-
-		return convertToken(other), nil
-	} else if app.ErrorCode(err) != app.ERR_NOTFOUND {
-		return app.Token{}, fmt.Errorf("error while searching for a token: %w", err)
-	}
-
 	// Check if token has a new user object passed in. It is considered "new" if
 	// the caller doesn't know the database ID for the user.
 	if token.UserID == "" {
@@ -194,7 +180,8 @@ func (t TokenService) CreateToken(ctx echo.Context, appToken app.Token) (app.Tok
 		// create a new user with the token.User object passed in.
 		if user, err := findUserByEmail(ctx, token.User.Email); err == nil { // user exists
 			token.User = user
-		} else if app.ErrorCode(err) == app.ERR_NOTFOUND { // user does not exist
+		} else if app.ErrorCode(err) == app.ERR_NOTFOUND {
+			// user does not exist with the given email address -- create a new user
 			if token.User, err = createUser(ctx, token.User); err != nil {
 				return app.Token{}, fmt.Errorf("could not create user for token: %w", err)
 			}
