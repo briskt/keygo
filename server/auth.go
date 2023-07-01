@@ -32,7 +32,6 @@ const (
 	DefaultUIPath = "/"
 )
 
-// TODO: make a connection between error responses and the logger, so all errors get logged
 type AuthError struct {
 	Error string
 }
