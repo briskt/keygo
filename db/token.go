@@ -28,11 +28,11 @@ type Token struct {
 	Hash      string
 	PlainText string `gorm:"-"`
 
-	LastLoginAt time.Time
-	ExpiresAt   time.Time
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	DeletedAt   *time.Time `gorm:"index"`
+	LastUsedAt time.Time
+	ExpiresAt  time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  *time.Time `gorm:"index"`
 }
 
 func (t *Token) BeforeCreate(tx *gorm.DB) error {
@@ -58,7 +58,7 @@ func (t *Token) Validate() error {
 // ID & timestamp fields are set to the current time
 func (t *Token) create(ctx echo.Context) error {
 	t.ExpiresAt = time.Now().Add(tokenLifetime)
-	t.LastLoginAt = time.Now()
+	t.LastUsedAt = time.Now()
 	t.PlainText = getRandomToken()
 	t.Hash = hashToken(t.PlainText)
 
@@ -107,15 +107,16 @@ func findTokenByAuthID(ctx echo.Context, authID string) (Token, error) {
 	return token, err
 }
 
-// updateToken updates expires_at and last_login_at on existing token object
+// updateToken updates expires_at and last_used_at on existing token object
 // Returns new state of the token object
+// FIXME: this is never called. It should be called in the authentication middleware.
 func updateToken(ctx echo.Context, token Token) (Token, error) {
 	if err := token.Validate(); err != nil {
 		return token, err
 	}
 
 	token.ExpiresAt = time.Now().Add(tokenLifetime)
-	token.LastLoginAt = time.Now()
+	token.LastUsedAt = time.Now()
 
 	result := Tx(ctx).Omit("User").Save(&token)
 	return token, result.Error
@@ -212,28 +213,28 @@ func (t TokenService) DeleteToken(ctx echo.Context, id string) error {
 
 func convertToken(token Token) app.Token {
 	return app.Token{
-		ID:          token.ID,
-		User:        convertUser(token.User),
-		UserID:      token.UserID,
-		AuthID:      token.AuthID,
-		PlainText:   token.PlainText,
-		LastLoginAt: token.LastLoginAt,
-		ExpiresAt:   token.ExpiresAt,
-		CreatedAt:   token.CreatedAt,
-		UpdatedAt:   token.UpdatedAt,
+		ID:         token.ID,
+		User:       convertUser(token.User),
+		UserID:     token.UserID,
+		AuthID:     token.AuthID,
+		PlainText:  token.PlainText,
+		LastUsedAt: token.LastUsedAt,
+		ExpiresAt:  token.ExpiresAt,
+		CreatedAt:  token.CreatedAt,
+		UpdatedAt:  token.UpdatedAt,
 	}
 }
 
 func convertAppToken(token app.Token) Token {
 	return Token{
-		ID:          token.ID,
-		User:        convertKeygoUser(token.User),
-		UserID:      token.UserID,
-		AuthID:      token.AuthID,
-		PlainText:   token.PlainText,
-		LastLoginAt: token.LastLoginAt,
-		ExpiresAt:   token.ExpiresAt,
-		CreatedAt:   token.CreatedAt,
-		UpdatedAt:   token.UpdatedAt,
+		ID:         token.ID,
+		User:       convertKeygoUser(token.User),
+		UserID:     token.UserID,
+		AuthID:     token.AuthID,
+		PlainText:  token.PlainText,
+		LastUsedAt: token.LastUsedAt,
+		ExpiresAt:  token.ExpiresAt,
+		CreatedAt:  token.CreatedAt,
+		UpdatedAt:  token.UpdatedAt,
 	}
 }
