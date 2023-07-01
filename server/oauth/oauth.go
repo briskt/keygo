@@ -16,6 +16,8 @@ type Authenticator struct {
 	scopes string
 }
 
+// Manager is an interface that defines a user identity manager service
+// TODO: implement this for Authgear
 type Manager interface {
 	// ReadUser requests the user profile from the ID Manager database
 	ReadUser(userID string) (Profile, error)

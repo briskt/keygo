@@ -33,23 +33,22 @@ func (u *User) Validate() error {
 // UserService represents a service for managing users
 type UserService interface {
 	// FindUserByID retrieves a user by ID
-	FindUserByID(echo.Context, string) (User, error)
+	FindUserByID(ctx echo.Context, id string) (User, error)
 
 	// FindUsers retrieves a list of users by filter
-	FindUsers(echo.Context, UserFilter) ([]User, int, error)
+	FindUsers(ctx echo.Context, userFilter UserFilter) ([]User, int, error)
 
 	// CreateUser creates a new user
-	CreateUser(echo.Context, User) (User, error)
+	CreateUser(ctx echo.Context, user User) (User, error)
 
 	// UpdateUser updates a user object
-	// TODO: either give the middle argument a name or make it a custom type (anywhere ID is an argument)
-	UpdateUser(echo.Context, string, UserUpdate) (User, error)
+	UpdateUser(ctx echo.Context, id string, userUpdate UserUpdate) (User, error)
 
 	// DeleteUser permanently deletes a user and all child objects
-	DeleteUser(echo.Context, string) error
+	DeleteUser(ctx echo.Context, id string) error
 
 	// TouchLastLoginAt sets the LastLoginAt field to the current time
-	TouchLastLoginAt(echo.Context, string) error
+	TouchLastLoginAt(ctx echo.Context, id string) error
 }
 
 // UserFilter represents a filter passed to FindUsers()

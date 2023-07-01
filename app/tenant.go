@@ -25,19 +25,19 @@ func (u *Tenant) Validate() error {
 // TenantService represents a service for managing tenants
 type TenantService interface {
 	// FindTenantByID retrieves a tenant by ID
-	FindTenantByID(echo.Context, string) (Tenant, error)
+	FindTenantByID(ctx echo.Context, id string) (Tenant, error)
 
 	// FindTenants retrieves a list of tenants by filter
-	FindTenants(echo.Context, TenantFilter) ([]Tenant, int, error)
+	FindTenants(ctx echo.Context, tenantFilter TenantFilter) ([]Tenant, int, error)
 
 	// CreateTenant creates a new tenant
-	CreateTenant(echo.Context, Tenant) (Tenant, error)
+	CreateTenant(ctx echo.Context, tenant Tenant) (Tenant, error)
 
 	// UpdateTenant updates a tenant object
-	UpdateTenant(echo.Context, string, TenantUpdate) (Tenant, error)
+	UpdateTenant(ctx echo.Context, id string, tenantUpdate TenantUpdate) (Tenant, error)
 
 	// DeleteTenant permanently deletes a tenant and all child objects
-	DeleteTenant(echo.Context, string) error
+	DeleteTenant(ctx echo.Context, id string) error
 }
 
 // TenantFilter represents a filter passed to FindTenants()

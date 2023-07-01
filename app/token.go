@@ -31,12 +31,12 @@ type TokenService interface {
 	// CreateToken creates a new token object
 	//
 	// On success, the token.ID is set to the new token ID
-	CreateToken(echo.Context, Token) (Token, error)
+	CreateToken(ctx echo.Context, token Token) (Token, error)
 
 	// DeleteToken permanently deletes a token object from the system by ID.
 	// The parent user object is not removed.
-	DeleteToken(ctx echo.Context, tokenID string) error
+	DeleteToken(ctx echo.Context, id string) error
 
 	// UpdateToken extends a token's ExpiresAt
-	UpdateToken(ctx echo.Context, tokenID string) error
+	UpdateToken(ctx echo.Context, id string) error
 }
