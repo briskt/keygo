@@ -36,4 +36,7 @@ type TokenService interface {
 	// DeleteToken permanently deletes a token object from the system by ID.
 	// The parent user object is not removed.
 	DeleteToken(ctx echo.Context, tokenID string) error
+
+	// UpdateToken extends a token's ExpiresAt
+	UpdateToken(ctx echo.Context, tokenID string) error
 }

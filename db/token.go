@@ -32,7 +32,7 @@ type Token struct {
 	ExpiresAt  time.Time
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
-	DeletedAt  *time.Time `gorm:"index"`
+	DeletedAt  *time.Time `gorm:"index"` // FIXME: Gorm soft delete is not working
 }
 
 func (t *Token) BeforeCreate(tx *gorm.DB) error {
@@ -101,11 +101,11 @@ func findToken(ctx echo.Context, raw string) (Token, error) {
 	return token, err
 }
 
-// findToken is a helper function to return a token object by AuthID
+// findToken is a helper function to return a token object by its ID
 // Returns ERR_NOTFOUND if record doesn't exist
-func findTokenByAuthID(ctx echo.Context, authID string) (Token, error) {
+func findTokenByID(ctx echo.Context, id string) (Token, error) {
 	var token Token
-	err := Tx(ctx).Where("auth_id = ?", authID).First(&token).Error
+	err := Tx(ctx).First(&token, "id = ?", id).Error
 	if err == gorm.ErrRecordNotFound {
 		return Token{}, &app.Error{Code: app.ERR_NOTFOUND, Message: "Token not found"}
 	}
@@ -213,6 +213,16 @@ func (t TokenService) CreateToken(ctx echo.Context, appToken app.Token) (app.Tok
 
 func (t TokenService) DeleteToken(ctx echo.Context, id string) error {
 	return deleteToken(ctx, id)
+}
+
+func (t TokenService) UpdateToken(ctx echo.Context, id string) error {
+	token, err := findTokenByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	token.touch()
+	_, err = updateToken(ctx, token)
+	return err
 }
 
 func convertToken(token Token) app.Token {

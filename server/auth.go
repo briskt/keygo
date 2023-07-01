@@ -210,6 +210,10 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return echo.NewHTTPError(status, authError)
 		}
 
+		if err := s.TokenService.UpdateToken(c, token.ID); err != nil {
+			return echo.NewHTTPError(status, echo.NewHTTPError(http.StatusInternalServerError), AuthError{Error: err.Error()})
+		}
+
 		c.Set(app.ContextKeyToken, token)
 		c.Set(app.ContextKeyUser, token.User)
 		return next(c)
