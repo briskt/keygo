@@ -5,7 +5,7 @@ CREATE TABLE "tokens" (
      user_id text NOT NULL,
      auth_id text NOT NULL,
      hash text NOT NULL,
-     last_login_at timestamp,
+     last_used_at timestamp,
      expires_at timestamp,
      created_at timestamp NOT NULL,
      updated_at timestamp NOT NULL,

@@ -24,7 +24,7 @@ func (ts *TestSuite) TestTokenService_CreateToken() {
 	fromDB, err := s.FindToken(ts.ctx, newToken.PlainText)
 	ts.NoError(err, "couldn't find created token %s", newToken.PlainText)
 	fromDB.PlainText = newToken.PlainText
-	fromDB.LastLoginAt = newToken.LastLoginAt
+	fromDB.LastUsedAt = newToken.LastUsedAt
 	fromDB.ExpiresAt = newToken.ExpiresAt
 	ts.SameToken(newToken, fromDB)
 

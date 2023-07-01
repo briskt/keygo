@@ -48,3 +48,11 @@ func (m *UserService) UpdateUser(context echo.Context, id string, update app.Use
 func (m *UserService) DeleteUser(context echo.Context, id string) error {
 	panic("implement UserService DeleteUser")
 }
+
+func (m *UserService) TouchLastLoginAt(context echo.Context, s string) error {
+	now := time.Now()
+	u := m.users[s]
+	u.LastLoginAt = &now
+	m.users[s] = u
+	return nil
+}

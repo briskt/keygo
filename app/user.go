@@ -7,14 +7,15 @@ import (
 )
 
 type User struct {
-	ID        string
-	FirstName string
-	LastName  string
-	Email     string
-	AvatarURL string
-	Role      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID          string
+	FirstName   string
+	LastName    string
+	Email       string
+	AvatarURL   string
+	Role        string
+	LastLoginAt *time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // Validate returns an error if the user contains invalid fields.
@@ -41,10 +42,14 @@ type UserService interface {
 	CreateUser(echo.Context, User) (User, error)
 
 	// UpdateUser updates a user object
+	// TODO: either give the middle argument a name or make it a custom type (anywhere ID is an argument)
 	UpdateUser(echo.Context, string, UserUpdate) (User, error)
 
 	// DeleteUser permanently deletes a user and all child objects
 	DeleteUser(echo.Context, string) error
+
+	// TouchLastLoginAt sets the LastLoginAt field to the current time
+	TouchLastLoginAt(echo.Context, string) error
 }
 
 // UserFilter represents a filter passed to FindUsers()

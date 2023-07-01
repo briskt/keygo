@@ -15,10 +15,10 @@ type Token struct {
 	AuthID    string `json:"authID"`
 	PlainText string `json:"plainText"`
 
-	LastLoginAt time.Time `json:"lastLoginAt"`
-	ExpiresAt   time.Time `json:"expiresAt"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	LastUsedAt time.Time `json:"lastUsedAt"`
+	ExpiresAt  time.Time `json:"expiresAt"`
+	CreatedAt  time.Time `json:"createdAt"`
+	UpdatedAt  time.Time `json:"updatedAt"`
 }
 
 // TokenService represents a service for managing tokens
