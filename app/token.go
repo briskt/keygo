@@ -9,9 +9,10 @@ import (
 type Token struct {
 	ID string `json:"id"`
 
-	Auth   Auth   `json:"auth"`
-	AuthID string `json:"authID"`
+	User   User   `json:"user"`
+	UserID string `json:"userID"`
 
+	AuthID    string `json:"authID"`
 	PlainText string `json:"plainText"`
 
 	LastLoginAt time.Time `json:"lastLoginAt"`
@@ -23,14 +24,14 @@ type Token struct {
 // TokenService represents a service for managing tokens
 type TokenService interface {
 	// FindToken looks up a token object by raw, unhashed token, and returns the Token object
-	// with associated Auth and Auth.User
+	// with associated User
 	// Returns ERR_NOTFOUND if token does not exist
 	FindToken(ctx echo.Context, raw string) (Token, error)
 
 	// CreateToken creates a new token object
 	//
 	// On success, the token.ID is set to the new token ID
-	CreateToken(ctx echo.Context, authID string) (Token, error)
+	CreateToken(echo.Context, Token) (Token, error)
 
 	// DeleteToken permanently deletes a token object from the system by ID.
 	// The parent user object is not removed.

@@ -8,10 +8,10 @@ import (
 func (ts *TestSuite) TestTokenService_CreateToken() {
 	s := db.NewTokenService()
 
-	auth := ts.CreateAuth()
+	token := app.Token{AuthID: "a", User: app.User{FirstName: "a", Email: "a"}}
 
 	// Create new record and check generated fields
-	newToken, err := s.CreateToken(ts.ctx, auth.ID)
+	newToken, err := s.CreateToken(ts.ctx, token)
 
 	ts.NoError(err)
 	ts.False(newToken.ID == "", "ID is not set")
@@ -29,7 +29,7 @@ func (ts *TestSuite) TestTokenService_CreateToken() {
 	ts.SameToken(newToken, fromDB)
 
 	// Expect validation error
-	_, err = s.CreateToken(ts.ctx, "")
+	_, err = s.CreateToken(ts.ctx, app.Token{})
 	ts.Error(err, "expected validation error")
 	ts.Equal(app.ERR_INVALID, app.ErrorCode(err))
 	ts.Equal(`AuthID required.`, app.ErrorMessage(err), "unexpected error")

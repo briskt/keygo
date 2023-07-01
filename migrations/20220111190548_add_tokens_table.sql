@@ -2,6 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE "tokens" (
      id text NOT NULL,
+     user_id text NOT NULL,
      auth_id text NOT NULL,
      hash text NOT NULL,
      last_login_at timestamp,
@@ -10,7 +11,7 @@ CREATE TABLE "tokens" (
      updated_at timestamp NOT NULL,
      deleted_at timestamp,
      PRIMARY KEY(id),
-     FOREIGN KEY(auth_id) REFERENCES "auths" (id) ON DELETE CASCADE ON UPDATE RESTRICT
+     FOREIGN KEY(user_id) REFERENCES "users" (id) ON DELETE CASCADE ON UPDATE RESTRICT
 );
 -- +goose StatementEnd
 

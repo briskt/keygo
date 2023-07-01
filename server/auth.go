@@ -64,7 +64,7 @@ func (s *Server) authStatus(c echo.Context) error {
 	if token.ExpiresAt.After(time.Now()) {
 		status.IsAuthenticated = true
 	}
-	status.UserID = token.Auth.UserID
+	status.UserID = token.UserID
 	status.Expiry = token.ExpiresAt
 
 	return c.JSON(http.StatusOK, status)
@@ -156,9 +156,8 @@ func (s *Server) authCallback(c echo.Context) error {
 
 	s.Logger.Infof("user authenticated, profile=%+v", profile)
 
-	auth, err := s.AuthService.CreateAuth(c, app.Auth{
-		Provider:   "oauth",
-		ProviderID: profile.ID,
+	token, err := s.TokenService.CreateToken(c, app.Token{
+		AuthID: profile.ID,
 		User: app.User{
 			Email: profile.Email,
 		},
@@ -167,12 +166,7 @@ func (s *Server) authCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
-	token, err := s.TokenService.CreateToken(c, auth.ID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
-	}
-
-	s.Logger.Infof("created token: %s, '%s'", token.ID, token.PlainText)
+	s.Logger.Infof("created token: %s", token.ID)
 
 	if err = sessionSetValue(c, SessionKeyToken, token.PlainText); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
@@ -213,7 +207,7 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		c.Set(app.ContextKeyToken, token)
-		c.Set(app.ContextKeyUser, token.Auth.User)
+		c.Set(app.ContextKeyUser, token.User)
 		return next(c)
 	}
 }
@@ -259,7 +253,7 @@ func (s *Server) getTokenFromSession(c echo.Context) (app.Token, error) {
 
 	token, err := s.TokenService.FindToken(c, tokenPlainText)
 	if err != nil {
-		return app.Token{}, fmt.Errorf("could not find token '%s' in DB: %w\n", tokenPlainText, err)
+		return app.Token{}, fmt.Errorf("could not find token in DB: %w\n", err)
 	}
 
 	return token, nil
