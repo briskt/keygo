@@ -114,7 +114,6 @@ func findTokenByID(ctx echo.Context, id string) (Token, error) {
 
 // updateToken updates expires_at and last_used_at on existing token object
 // Returns new state of the token object
-// FIXME: this is never called. It should be called in the authentication middleware.
 func updateToken(ctx echo.Context, token Token) (Token, error) {
 	if err := token.Validate(); err != nil {
 		return token, err
