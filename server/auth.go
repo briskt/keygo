@@ -155,11 +155,9 @@ func (s *Server) authCallback(c echo.Context) error {
 
 	s.Logger.Infof("user authenticated, profile=%+v", profile)
 
-	token, err := s.TokenService.CreateToken(c, app.Token{
-		AuthID: profile.ID,
-		User: app.User{
-			Email: profile.Email,
-		},
+	token, err := s.TokenService.CreateToken(c, app.TokenCreate{
+		AuthID:    profile.ID,
+		UserEmail: profile.Email,
 	})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})

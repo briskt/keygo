@@ -68,7 +68,7 @@ func Tx(ctx echo.Context) *gorm.DB {
 	return tx
 }
 
-// NullTime represents a helper wrapper for time.Time. It automatically converts
+// NullTime is a helper wrapper for time.Time. It automatically converts
 // time fields to/from RFC 3339 format. Also supports NULL for zero time.
 type NullTime time.Time
 

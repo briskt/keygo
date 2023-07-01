@@ -6,23 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type Tenant struct {
-	ID        string
-	Name      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-// Validate returns an error if the tenant contains invalid fields.
-// This only performs basic validation.
-func (u *Tenant) Validate() error {
-	if len(u.Name) < 3 {
-		return Errorf(ERR_INVALID, "Tenant name is required")
-	}
-	return nil
-}
-
-// TenantService represents a service for managing tenants
+// TenantService is a service for managing tenants
 type TenantService interface {
 	// FindTenantByID retrieves a tenant by ID
 	FindTenantByID(ctx echo.Context, id string) (Tenant, error)
@@ -31,7 +15,7 @@ type TenantService interface {
 	FindTenants(ctx echo.Context, tenantFilter TenantFilter) ([]Tenant, int, error)
 
 	// CreateTenant creates a new tenant
-	CreateTenant(ctx echo.Context, tenant Tenant) (Tenant, error)
+	CreateTenant(ctx echo.Context, tenantCreate TenantCreate) (Tenant, error)
 
 	// UpdateTenant updates a tenant object
 	UpdateTenant(ctx echo.Context, id string, tenantUpdate TenantUpdate) (Tenant, error)
@@ -40,7 +24,29 @@ type TenantService interface {
 	DeleteTenant(ctx echo.Context, id string) error
 }
 
-// TenantFilter represents a filter passed to FindTenants()
+// Tenant is the full model that identifies an app Tenant
+type Tenant struct {
+	ID        string
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// TenantCreate is a set of fields to define a new user for CreateTenant()
+type TenantCreate struct {
+	Name string
+}
+
+// Validate returns an error if the tenant contains invalid fields.
+// This only performs basic validation.
+func (u *TenantCreate) Validate() error {
+	if len(u.Name) < 3 {
+		return Errorf(ERR_INVALID, "Tenant name is required")
+	}
+	return nil
+}
+
+// TenantFilter is a filter passed to FindTenants()
 type TenantFilter struct {
 	// Filtering fields.
 	ID     *string `json:"id"`
@@ -52,7 +58,7 @@ type TenantFilter struct {
 	Limit  int `json:"limit"`
 }
 
-// TenantUpdate represents a set of fields to be updated via UpdateTenant()
+// TenantUpdate is a set of fields to be updated via UpdateTenant()
 type TenantUpdate struct {
 	Name  *string `json:"name"`
 	Email *string `json:"email"`

@@ -30,7 +30,7 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 // Ensure service implements interface.
 var _ app.UserService = (*UserService)(nil)
 
-// UserService represents a service for managing users.
+// UserService is a service for managing users.
 type UserService struct{}
 
 // NewUserService returns a new instance of UserService.
@@ -62,19 +62,16 @@ func (s *UserService) FindUsers(ctx echo.Context, filter app.UserFilter) ([]app.
 }
 
 // CreateUser creates a new user.
-func (s *UserService) CreateUser(ctx echo.Context, user app.User) (app.User, error) {
-	if err := user.Validate(); err != nil {
+func (s *UserService) CreateUser(ctx echo.Context, userCreate app.UserCreate) (app.User, error) {
+	if err := userCreate.Validate(); err != nil {
 		return app.User{}, err
 	}
 	newUser, err := createUser(ctx, User{
-		ID:        user.ID,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		AvatarURL: user.AvatarURL,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt, // TODO: make sure this is right and necessary
-		UpdatedAt: user.UpdatedAt,
+		FirstName: userCreate.FirstName,
+		LastName:  userCreate.LastName,
+		Email:     userCreate.Email,
+		AvatarURL: userCreate.AvatarURL,
+		Role:      userCreate.Role,
 	})
 	return convertUser(newUser), err
 }
@@ -122,6 +119,7 @@ func findUserByEmail(ctx echo.Context, email string) (User, error) {
 // findUsers returns a list of users. Also returns a count of
 // total matching users which may differ if filter.Limit is set.
 func findUsers(ctx echo.Context, filter app.UserFilter) ([]User, int, error) {
+	// TODO: implement (or remove) findUsers filter
 	var users []User
 	result := Tx(ctx).Find(&users)
 	return users, len(users), result.Error
@@ -174,18 +172,5 @@ func convertUser(u User) app.User {
 		LastLoginAt: u.LastLoginAt,
 		CreatedAt:   u.CreatedAt,
 		UpdatedAt:   u.UpdatedAt,
-	}
-}
-
-func convertKeygoUser(u app.User) User {
-	return User{
-		ID:        u.ID,
-		FirstName: u.FirstName,
-		LastName:  u.LastName,
-		Email:     u.Email,
-		AvatarURL: u.AvatarURL,
-		Role:      u.Role,
-		CreatedAt: u.CreatedAt, // TODO: is this needed?
-		UpdatedAt: u.UpdatedAt,
 	}
 }

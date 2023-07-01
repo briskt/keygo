@@ -19,7 +19,7 @@ const (
 	ERR_UNAUTHORIZED   = "unauthorized"
 )
 
-// Error represents an application-specific error. Application errors can be
+// Error is an application-specific error. Application errors can be
 // unwrapped by the caller to extract out the code & message.
 //
 // Any non-application error (such as a disk error) should be reported as an

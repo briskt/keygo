@@ -150,7 +150,7 @@ func (t *Token) loadUser(ctx echo.Context) (err error) {
 // Ensure service implements interface.
 var _ app.TokenService = (*TokenService)(nil)
 
-// TokenService represents a service for managing API auth tokens
+// TokenService is a service for managing API auth tokens
 type TokenService struct{}
 
 // NewTokenService returns a new instance of TokenService
@@ -174,28 +174,30 @@ func (t TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error)
 // token object is linked to the existing user, otherwise a new user object is created and linked.
 //
 // On success, the token.ID is set to the new token ID
-func (t TokenService) CreateToken(ctx echo.Context, appToken app.Token) (app.Token, error) {
-	token := convertAppToken(appToken)
-
-	// Check if token has a new user object passed in. It is considered "new" if
-	// the caller doesn't know the database ID for the user.
-	if token.UserID == "" {
-		// Look up the user by email address. If no user can be found then
-		// create a new user with the token.User object passed in.
-		if user, err := findUserByEmail(ctx, token.User.Email); err == nil { // user exists
-			token.User = user
-		} else if app.ErrorCode(err) == app.ERR_NOTFOUND {
-			// user does not exist with the given email address -- create a new user
-			if token.User, err = createUser(ctx, token.User); err != nil {
-				return app.Token{}, fmt.Errorf("could not create user for token: %w", err)
-			}
-		} else {
-			return app.Token{}, fmt.Errorf("cannot find user by email: %w", err)
-		}
-
-		// Assign the created/found user ID back to the token object.
-		token.UserID = token.User.ID
+// TODO: try to remove the creation of the user from this function
+func (t TokenService) CreateToken(ctx echo.Context, tokenCreate app.TokenCreate) (app.Token, error) {
+	token := Token{
+		User: User{
+			Email: tokenCreate.UserEmail,
+		},
+		AuthID: tokenCreate.AuthID,
 	}
+
+	// Look up the user by email address. If no user can be found then
+	// create a new user with the token.User object passed in.
+	if user, err := findUserByEmail(ctx, token.User.Email); err == nil { // user exists
+		token.User = user
+	} else if app.ErrorCode(err) == app.ERR_NOTFOUND {
+		// user does not exist with the given email address -- create a new user
+		if token.User, err = createUser(ctx, token.User); err != nil {
+			return app.Token{}, fmt.Errorf("could not create user for token: %w", err)
+		}
+	} else {
+		return app.Token{}, fmt.Errorf("cannot find user by email: %w", err)
+	}
+
+	// Assign the created/found user ID back to the token object.
+	token.UserID = token.User.ID
 
 	// Create new token object & attach associated user.
 	err := token.create(ctx)
@@ -228,20 +230,6 @@ func convertToken(token Token) app.Token {
 	return app.Token{
 		ID:         token.ID,
 		User:       convertUser(token.User),
-		UserID:     token.UserID,
-		AuthID:     token.AuthID,
-		PlainText:  token.PlainText,
-		LastUsedAt: token.LastUsedAt,
-		ExpiresAt:  token.ExpiresAt,
-		CreatedAt:  token.CreatedAt,
-		UpdatedAt:  token.UpdatedAt,
-	}
-}
-
-func convertAppToken(token app.Token) Token {
-	return Token{
-		ID:         token.ID,
-		User:       convertKeygoUser(token.User),
 		UserID:     token.UserID,
 		AuthID:     token.AuthID,
 		PlainText:  token.PlainText,

@@ -32,11 +32,18 @@ func (m *UserService) FindUsers(context echo.Context, filter app.UserFilter) ([]
 	return users, 0, nil
 }
 
-func (m *UserService) CreateUser(context echo.Context, user app.User) (app.User, error) {
-	user.ID = newID()
+func (m *UserService) CreateUser(context echo.Context, userCreate app.UserCreate) (app.User, error) {
 	now := time.Now()
-	user.CreatedAt = now
-	user.UpdatedAt = now
+	user := app.User{
+		ID:        newID(),
+		FirstName: userCreate.FirstName,
+		LastName:  userCreate.LastName,
+		Email:     userCreate.Email,
+		AvatarURL: userCreate.AvatarURL,
+		Role:      userCreate.Role,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 	m.users[user.ID] = user
 	return user, nil
 }

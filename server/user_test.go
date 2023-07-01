@@ -53,7 +53,12 @@ func (ts *TestSuite) Test_GetUserList() {
 		ExpiresAt: time.Now().Add(time.Minute),
 	}
 	ts.server.TokenService.(*mock.TokenService).Init([]app.Token{fakeToken})
-	createdUser, err := ts.server.UserService.CreateUser(ts.ctx, fakeToken.User)
+
+	fakeUserCreate := app.UserCreate{
+		Email: "test@example.com",
+		Role:  "Admin",
+	}
+	createdUser, err := ts.server.UserService.CreateUser(ts.ctx, fakeUserCreate)
 	ts.NoError(err)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)

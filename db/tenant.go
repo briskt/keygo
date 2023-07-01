@@ -25,7 +25,7 @@ func (u *Tenant) BeforeCreate(tx *gorm.DB) error {
 // Ensure service implements interface.
 var _ app.TenantService = (*TenantService)(nil)
 
-// TenantService represents a service for managing tenants.
+// TenantService is a service for managing tenants.
 type TenantService struct{}
 
 // NewTenantService returns a new instance of TenantService.
@@ -58,12 +58,14 @@ func (s *TenantService) FindTenants(ctx echo.Context, filter app.TenantFilter) (
 }
 
 // CreateTenant creates a new tenant.
-func (s *TenantService) CreateTenant(ctx echo.Context, input app.Tenant) (app.Tenant, error) {
+func (s *TenantService) CreateTenant(ctx echo.Context, input app.TenantCreate) (app.Tenant, error) {
 	if err := input.Validate(); err != nil {
 		return app.Tenant{}, err
 	}
-	newTenant := importTenant(input)
 
+	newTenant := Tenant{
+		Name: input.Name,
+	}
 	result := Tx(ctx).Create(&newTenant)
 
 	return exportTenant(newTenant), result.Error
@@ -106,15 +108,6 @@ func findTenantByID(ctx echo.Context, id string) (Tenant, error) {
 
 func exportTenant(t Tenant) app.Tenant {
 	return app.Tenant{
-		ID:        t.ID,
-		Name:      t.Name,
-		CreatedAt: t.CreatedAt,
-		UpdatedAt: t.UpdatedAt,
-	}
-}
-
-func importTenant(t app.Tenant) Tenant {
-	return Tenant{
 		ID:        t.ID,
 		Name:      t.Name,
 		CreatedAt: t.CreatedAt,

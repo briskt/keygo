@@ -14,7 +14,7 @@ func (s *Server) tenantsCreateHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, AuthError{Error: "not an authorized user"})
 	}
 
-	var input app.Tenant
+	var input app.TenantCreate
 	err := (&echo.DefaultBinder{}).BindBody(c, &input)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "bad request")
