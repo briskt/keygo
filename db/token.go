@@ -29,7 +29,7 @@ type Token struct {
 	PlainText string `gorm:"-"`
 
 	LastUsedAt *time.Time
-	ExpiresAt  time.Time // FIXME: change to pointer
+	ExpiresAt  time.Time // FIXME: this is never checked
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	DeletedAt  *time.Time `gorm:"index"`
@@ -57,8 +57,7 @@ func (t *Token) Validate() error {
 // create a new token object in the database. On success, the ID is set to the new database
 // ID & timestamp fields are set to the current time
 func (t *Token) create(ctx echo.Context) error {
-	t.ExpiresAt = time.Now().Add(tokenLifetime)
-	t.LastUsedAt = time.Now()
+	t.touch()
 	t.PlainText = getRandomToken()
 	t.Hash = hashToken(t.PlainText)
 
@@ -68,6 +67,12 @@ func (t *Token) create(ctx echo.Context) error {
 
 	err := Tx(ctx).Omit("User").Create(t).Error
 	return err
+}
+
+func (t *Token) touch() {
+	now := time.Now()
+	t.ExpiresAt = now.Add(tokenLifetime)
+	t.LastUsedAt = &now
 }
 
 func getRandomToken() string {
@@ -115,8 +120,7 @@ func updateToken(ctx echo.Context, token Token) (Token, error) {
 		return token, err
 	}
 
-	token.ExpiresAt = time.Now().Add(tokenLifetime)
-	token.LastUsedAt = time.Now()
+	token.touch()
 
 	result := Tx(ctx).Omit("User").Save(&token)
 	return token, result.Error
