@@ -32,7 +32,7 @@ type Token struct {
 	ExpiresAt  time.Time
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
-	DeletedAt  *time.Time `gorm:"index"` // FIXME: Gorm soft delete is not working
+	Deleted    gorm.DeletedAt
 }
 
 func (t *Token) BeforeCreate(tx *gorm.DB) error {

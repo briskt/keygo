@@ -5,9 +5,9 @@ CREATE TABLE "tenants" (
   name text NOT NULL,
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
-  deleted_at timestamp,
+  deleted timestamp,
   PRIMARY KEY(id),
-  UNIQUE (name)
+  UNIQUE (name, deleted)
 );
 CREATE TABLE "tenant_users" (
   id text NOT NULL,
@@ -15,11 +15,11 @@ CREATE TABLE "tenant_users" (
   user_id varchar(255) NOT NULL,
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
-  deleted_at timestamp,
+  deleted timestamp,
   PRIMARY KEY(id),
   CONSTRAINT FK_tenant_users_tenants FOREIGN KEY (tenant_id) REFERENCES tenants(id),
   CONSTRAINT FK_tenant_users_user FOREIGN KEY (user_id) REFERENCES users(id),
-  UNIQUE (tenant_id, user_id)
+  UNIQUE (tenant_id, user_id, deleted)
 );
 -- +goose StatementEnd
 

@@ -9,7 +9,7 @@ CREATE TABLE "tokens" (
      expires_at timestamp NOT NULL,
      created_at timestamp NOT NULL,
      updated_at timestamp NOT NULL,
-     deleted_at timestamp,
+     deleted timestamp,
      PRIMARY KEY(id),
      FOREIGN KEY(user_id) REFERENCES "users" (id) ON DELETE CASCADE ON UPDATE RESTRICT
 );

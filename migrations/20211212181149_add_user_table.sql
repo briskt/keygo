@@ -5,13 +5,14 @@ CREATE TABLE "users" (
     first_name text NOT NULL,
     last_name text NOT NULL,
     role text NOT NULL,
-    email text NOT NULL UNIQUE,
+    email text NOT NULL,
     avatar_url text NOT NULL,
     last_login_at timestamp,
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
-    deleted_at timestamp,
-    PRIMARY KEY(id)
+    deleted timestamp,
+    PRIMARY KEY(id),
+    UNIQUE (email, deleted)
 );
 -- +goose StatementEnd
 

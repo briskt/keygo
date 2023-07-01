@@ -19,7 +19,7 @@ type User struct {
 	LastLoginAt *time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-	DeletedAt   *time.Time `gorm:"index"`
+	Deleted     gorm.DeletedAt
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {

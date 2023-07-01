@@ -14,7 +14,7 @@ type Tenant struct {
 	Name      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt *time.Time `gorm:"index"`
+	Deleted   gorm.DeletedAt
 }
 
 func (u *Tenant) BeforeCreate(tx *gorm.DB) error {
