@@ -29,7 +29,7 @@ type Token struct {
 	PlainText string `gorm:"-"`
 
 	LastUsedAt *time.Time
-	ExpiresAt  time.Time // FIXME: this is never checked
+	ExpiresAt  time.Time
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	DeletedAt  *time.Time `gorm:"index"`
