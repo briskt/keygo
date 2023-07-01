@@ -1,6 +1,8 @@
 package db_test
 
 import (
+	"time"
+
 	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/db"
 )
@@ -81,4 +83,24 @@ func (ts *TestSuite) Test_FindUsers() {
 		ids[i] = found[i].ID
 	}
 	ts.EqualValues([]string{joe.ID, sally.ID}, ids)
+}
+
+func (ts *TestSuite) Test_TouchLastLoginAt() {
+	s := db.NewUserService()
+
+	joe, err := s.CreateUser(ts.ctx, app.User{FirstName: "joe", Email: "joe@example.com"})
+	ts.NoError(err)
+
+	now := time.Now().UTC()
+	yesterday := now.AddDate(0, 0, -1)
+	err = ts.DB.Exec("update users set last_login_at = ? where id = ?", yesterday, joe.ID).Error
+	ts.NoError(err)
+
+	err = s.TouchLastLoginAt(ts.ctx, joe.ID)
+	ts.NoError(err)
+
+	found, err := s.FindUserByID(ts.ctx, joe.ID)
+	ts.NoError(err)
+
+	ts.WithinDuration(now, *found.LastLoginAt, time.Second)
 }

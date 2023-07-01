@@ -10,15 +10,16 @@ import (
 )
 
 type User struct {
-	ID        string `gorm:"primaryKey;type:string"`
-	FirstName string
-	LastName  string
-	Email     string
-	AvatarURL string
-	Role      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `gorm:"index"`
+	ID          string `gorm:"primaryKey;type:string"`
+	FirstName   string
+	LastName    string
+	Email       string
+	AvatarURL   string
+	Role        string
+	LastLoginAt *time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   *time.Time `gorm:"index"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
@@ -72,7 +73,7 @@ func (s *UserService) CreateUser(ctx echo.Context, user app.User) (app.User, err
 		Email:     user.Email,
 		AvatarURL: user.AvatarURL,
 		Role:      user.Role,
-		CreatedAt: user.CreatedAt,
+		CreatedAt: user.CreatedAt, // TODO: make sure this is right and necessary
 		UpdatedAt: user.UpdatedAt,
 	})
 	return convertUser(newUser), err
@@ -93,6 +94,12 @@ func (s *UserService) DeleteUser(ctx echo.Context, id string) error {
 		return err
 	}
 	return nil
+}
+
+// TouchLastLoginAt sets the LastLoginAt field to the current time
+func (s *UserService) TouchLastLoginAt(ctx echo.Context, id string) error {
+	result := Tx(ctx).Model(&User{}).Where("id = ?", id).Update("last_login_at", time.Now())
+	return result.Error
 }
 
 // findUserByID is a helper function to fetch a user by ID.
@@ -158,14 +165,15 @@ func deleteUser(ctx echo.Context, id string) error {
 
 func convertUser(u User) app.User {
 	return app.User{
-		ID:        u.ID,
-		FirstName: u.FirstName,
-		LastName:  u.LastName,
-		Email:     u.Email,
-		AvatarURL: u.AvatarURL,
-		Role:      u.Role,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
+		ID:          u.ID,
+		FirstName:   u.FirstName,
+		LastName:    u.LastName,
+		Email:       u.Email,
+		AvatarURL:   u.AvatarURL,
+		Role:        u.Role,
+		LastLoginAt: u.LastLoginAt,
+		CreatedAt:   u.CreatedAt,
+		UpdatedAt:   u.UpdatedAt,
 	}
 }
 
@@ -177,7 +185,7 @@ func convertKeygoUser(u app.User) User {
 		Email:     u.Email,
 		AvatarURL: u.AvatarURL,
 		Role:      u.Role,
-		CreatedAt: u.CreatedAt,
+		CreatedAt: u.CreatedAt, // TODO: is this needed?
 		UpdatedAt: u.UpdatedAt,
 	}
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { user } from 'data/store/user'
 
-  const { Email, FirstName, LastName, CreatedAt, Role } = $user
+  const { Email, FirstName, LastName, CreatedAt, LastLoginAt, Role } = $user
 </script>
 
 <h1>My Profile</h1>
@@ -11,7 +11,9 @@
   <dt>Email</dt>
   <dd>{Email}</dd>
   <dt>CreatedAt</dt>
-  <dd>{CreatedAt}</dd>
+  <dd>{new Date(CreatedAt).toLocaleString()}</dd>
+  <dt>LastLoginAt</dt>
+  <dd>{new Date(LastLoginAt).toLocaleString()}</dd>
   <dt>Role</dt>
   <dd>{Role}</dd>
 </dl>

@@ -28,8 +28,8 @@ type Token struct {
 	Hash      string
 	PlainText string `gorm:"-"`
 
-	LastUsedAt time.Time
-	ExpiresAt  time.Time
+	LastUsedAt time.Time // FIXME: change to pointer
+	ExpiresAt  time.Time // FIXME: change to pointer
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	DeletedAt  *time.Time `gorm:"index"`

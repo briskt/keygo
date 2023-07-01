@@ -4,6 +4,7 @@ export type User = {
   Email: string
   FirstName: string
   ID: string
+  LastLoginAt: string //date
   UpdatedAt: string //date
   LastName: string
   Role: string

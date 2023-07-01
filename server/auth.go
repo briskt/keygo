@@ -168,6 +168,10 @@ func (s *Server) authCallback(c echo.Context) error {
 
 	s.Logger.Infof("created token: %s", token.ID)
 
+	if err := s.UserService.TouchLastLoginAt(c, token.UserID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
+
 	if err = sessionSetValue(c, SessionKeyToken, token.PlainText); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
@@ -263,6 +267,8 @@ func (s *Server) getTokenFromSession(c echo.Context) (app.Token, error) {
 // Auth0 Quick Start at https://auth0.com/docs/quickstart/webapp/golang/interactive
 func getAuthProfile(c echo.Context) (oauth.Profile, error) {
 	var ap oauth.Profile
+
+	// TODO: move this whole function to the oauth package?
 
 	authenticator := oauth.Get()
 	if authenticator == nil {
