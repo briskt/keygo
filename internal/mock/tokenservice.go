@@ -37,6 +37,17 @@ func (m *TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error
 	return app.Token{}, fmt.Errorf("token %s not found", raw)
 }
 
+// ListTokensForUser returns all tokens for the given user
+func (m *TokenService) ListTokensForUser(_ echo.Context, userID string) ([]app.Token, error) {
+	var tokens []app.Token
+	for _, t := range m.tokens {
+		if t.UserID == userID {
+			tokens = append(tokens, t)
+		}
+	}
+	return tokens, nil
+}
+
 func (m *TokenService) CreateToken(ctx echo.Context, tokenCreate app.TokenCreate) (app.Token, error) {
 	if m.tokens == nil {
 		m.tokens = make(map[string]app.Token)

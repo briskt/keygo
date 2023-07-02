@@ -34,3 +34,15 @@ func (s *Server) userHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, user)
 }
+
+func (s *Server) userTokensListHandler(c echo.Context) error {
+	userID := c.Param("id")
+
+	tokens, err := s.TokenService.ListTokensForUser(c, userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
+
+	s.Logger.Infof("found %d tokens for user %s", len(tokens), userID)
+	return c.JSON(http.StatusOK, tokens)
+}

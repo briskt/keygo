@@ -69,6 +69,20 @@ func (t *Token) create(ctx echo.Context) error {
 	return err
 }
 
+func (t *Token) convert() app.Token {
+	return app.Token{
+		ID:         t.ID,
+		User:       convertUser(t.User),
+		UserID:     t.UserID,
+		AuthID:     t.AuthID,
+		PlainText:  t.PlainText,
+		LastUsedAt: t.LastUsedAt,
+		ExpiresAt:  t.ExpiresAt,
+		CreatedAt:  t.CreatedAt,
+		UpdatedAt:  t.UpdatedAt,
+	}
+}
+
 func (t *Token) touch() {
 	now := time.Now()
 	t.ExpiresAt = now.Add(tokenLifetime)
@@ -167,7 +181,21 @@ func (t TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error)
 		return app.Token{}, err
 	}
 
-	return convertToken(token), nil
+	return token.convert(), nil
+}
+
+// ListTokensForUser returns all tokens for the given user
+func (t TokenService) ListTokensForUser(ctx echo.Context, userID string) ([]app.Token, error) {
+	var tokens []Token
+	if err := Tx(ctx).Where("user_id = ?", userID).Find(&tokens).Error; err != nil {
+		return nil, err
+	}
+
+	appTokens := make([]app.Token, len(tokens))
+	for i := range appTokens {
+		appTokens[i] = tokens[i].convert()
+	}
+	return appTokens, nil
 }
 
 // CreateToken creates a new token object. If a User is attached to the provided token, then the created
@@ -209,7 +237,7 @@ func (t TokenService) CreateToken(ctx echo.Context, tokenCreate app.TokenCreate)
 		return app.Token{}, err
 	}
 
-	return convertToken(token), nil
+	return token.convert(), nil
 }
 
 func (t TokenService) DeleteToken(ctx echo.Context, id string) error {
@@ -224,18 +252,4 @@ func (t TokenService) UpdateToken(ctx echo.Context, id string) error {
 	token.touch()
 	_, err = updateToken(ctx, token)
 	return err
-}
-
-func convertToken(token Token) app.Token {
-	return app.Token{
-		ID:         token.ID,
-		User:       convertUser(token.User),
-		UserID:     token.UserID,
-		AuthID:     token.AuthID,
-		PlainText:  token.PlainText,
-		LastUsedAt: token.LastUsedAt,
-		ExpiresAt:  token.ExpiresAt,
-		CreatedAt:  token.CreatedAt,
-		UpdatedAt:  token.UpdatedAt,
-	}
 }

@@ -1,7 +1,15 @@
 <script lang="ts">
-  import { user } from 'data/store/user'
+  import {listUserTokens} from 'data/api/users'
+  import {user} from 'data/store/user'
+  import {onMount} from 'svelte'
 
   const { Email, FirstName, LastName, CreatedAt, LastLoginAt, Role } = $user
+
+  let tokens = []
+
+  onMount(async () => {
+    tokens = await listUserTokens($user.ID)
+  })
 </script>
 
 <h1>My Profile</h1>
@@ -17,6 +25,15 @@
   <dt>Role</dt>
   <dd>{Role}</dd>
 </dl>
+
+<h2>Tokens</h2>
+<ul>
+  {#each tokens as token (token.id)}
+    <li>
+      {JSON.stringify(token)}
+    </li>
+  {/each}
+</ul>
 
 <style>
   dd {

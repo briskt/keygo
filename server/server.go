@@ -83,6 +83,7 @@ func (s *Server) registerRoutes() {
 	api.GET("/tenants", s.tenantsListHandler)
 	api.GET("/users", s.usersListHandler)
 	api.GET("/users/:id", s.userHandler)
+	api.GET("/users/:id/tokens", s.userTokensListHandler)
 
 	s.registerUiRoutes()
 }

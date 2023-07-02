@@ -13,6 +13,9 @@ type TokenService interface {
 	// Returns ERR_NOTFOUND if token does not exist
 	FindToken(ctx echo.Context, raw string) (Token, error)
 
+	// ListTokensForUser returns all tokens for the given user
+	ListTokensForUser(ctx echo.Context, userID string) ([]Token, error)
+
 	// CreateToken creates a new token object
 	//
 	// On success, the token.ID is set to the new token ID
@@ -27,18 +30,18 @@ type TokenService interface {
 }
 
 type Token struct {
-	ID string `json:"id"`
+	ID string
 
-	User   User   `json:"user"`
-	UserID string `json:"userID"`
+	User   User
+	UserID string
 
-	AuthID    string `json:"authID"`
-	PlainText string `json:"plainText"`
+	AuthID    string
+	PlainText string
 
-	LastUsedAt *time.Time `json:"lastUsedAt"`
-	ExpiresAt  time.Time  `json:"expiresAt"`
-	CreatedAt  time.Time  `json:"createdAt"`
-	UpdatedAt  time.Time  `json:"updatedAt"`
+	LastUsedAt *time.Time
+	ExpiresAt  time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type TokenCreate struct {
