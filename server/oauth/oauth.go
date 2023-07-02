@@ -107,3 +107,48 @@ func AuthCodeURL(state string) string {
 
 	return authenticator.AuthCodeURL(state, options)
 }
+
+func GetProfile(ctx context.Context, code string) (Profile, error) {
+	var ap Profile
+
+	// Exchange an authorization code for a token.
+	token, err := authenticator.Exchange(ctx, code)
+	if err != nil {
+		err = fmt.Errorf("failed to create an access token from the authorization code: %w", err)
+		return ap, err
+	}
+
+	idToken, err := authenticator.VerifyIDToken(ctx, token)
+	if err != nil {
+		err = fmt.Errorf("failed to verify ID Token: %w", err)
+		return ap, err
+	}
+
+	var profile map[string]any
+	if err = idToken.Claims(&profile); err != nil {
+		err = fmt.Errorf("failed to get profile from token: %w", err)
+		return ap, err
+	}
+
+	var ok bool
+
+	ap.ID, ok = profile["sub"].(string)
+	if !ok {
+		err = fmt.Errorf("no 'sub' key (AuthID) found in the user profile")
+		return ap, err
+	}
+
+	ap.Email, ok = profile["email"].(string)
+	if !ok {
+		err = fmt.Errorf("no email address found in the user profile")
+		return ap, err
+	}
+
+	ap.Verified, ok = profile["email_verified"].(bool)
+	if !ok {
+		err = fmt.Errorf("invalid email_verified in the user profile")
+		return ap, err
+	}
+
+	return ap, nil
+}

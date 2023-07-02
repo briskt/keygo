@@ -141,7 +141,13 @@ func (s *Server) authCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
-	profile, err := getAuthProfile(c)
+	authenticator := oauth.Get()
+	if authenticator == nil {
+		err := fmt.Errorf("authenticator is not initialized")
+		return err
+	}
+
+	profile, err := oauth.GetProfile(context.Background(), c.QueryParam(ParamCode))
 	if err != nil {
 		err = fmt.Errorf("auth profile error: %w", err)
 		s.Logger.Errorf(err.Error())
@@ -262,61 +268,6 @@ func (s *Server) getTokenFromSession(c echo.Context) (app.Token, error) {
 	}
 
 	return token, nil
-}
-
-// getAuthProfile retrieves the user's profile from the authorization code provided by Auth0. This code is based on the
-// Auth0 Quick Start at https://auth0.com/docs/quickstart/webapp/golang/interactive
-func getAuthProfile(c echo.Context) (oauth.Profile, error) {
-	var ap oauth.Profile
-
-	// TODO: move this whole function to the oauth package?
-
-	authenticator := oauth.Get()
-	if authenticator == nil {
-		err := fmt.Errorf("authenticator is not initialized")
-		return ap, err
-	}
-
-	// Exchange an authorization code for a token.
-	token, err := authenticator.Exchange(context.TODO(), c.QueryParam(ParamCode)) // TODO: need a real Context?
-	if err != nil {
-		err = fmt.Errorf("failed to create an access token from the authorization code: %w", err)
-		return ap, err
-	}
-
-	idToken, err := authenticator.VerifyIDToken(context.TODO(), token) // TODO: need a real context?
-	if err != nil {
-		err = fmt.Errorf("failed to verify ID Token: %w", err)
-		return ap, err
-	}
-
-	var profile map[string]any
-	if err = idToken.Claims(&profile); err != nil {
-		err = fmt.Errorf("failed to get profile from token: %w", err)
-		return ap, err
-	}
-
-	var ok bool
-
-	ap.ID, ok = profile["sub"].(string)
-	if !ok {
-		err = fmt.Errorf("no 'sub' key (AuthID) found in the user profile")
-		return ap, err
-	}
-
-	ap.Email, ok = profile["email"].(string)
-	if !ok {
-		err = fmt.Errorf("no email address found in the user profile")
-		return ap, err
-	}
-
-	ap.Verified, ok = profile["email_verified"].(bool)
-	if !ok {
-		err = fmt.Errorf("invalid email_verified in the user profile")
-		return ap, err
-	}
-
-	return ap, nil
 }
 
 func env(key string, required bool) string {
