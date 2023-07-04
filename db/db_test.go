@@ -22,6 +22,7 @@ type TestSuite struct {
 	*require.Assertions
 	ctx echo.Context
 	DB  *gorm.DB
+	app.DataServices
 }
 
 // SetupTest runs before every test function
@@ -32,6 +33,8 @@ func (ts *TestSuite) SetupTest() {
 		migrations.Fresh(sqlDB)
 	}
 	ts.Assertions = require.New(ts.T())
+	ts.TokenService = db.NewTokenService()
+	ts.UserService = db.NewUserService()
 }
 
 func Test_RunSuite(t *testing.T) {

@@ -22,6 +22,10 @@ func NewTokenService() app.TokenService {
 	return &TokenService{}
 }
 
+func (m *TokenService) DeleteAllTokens() {
+	m.tokens = map[string]app.Token{}
+}
+
 // Init preloads the mock "database" with tokens
 func (m *TokenService) Init(fakeTokens []app.Token) {
 	m.tokens = make(map[string]app.Token, len(fakeTokens))
@@ -44,8 +48,12 @@ func (m *TokenService) CreateToken(ctx echo.Context, tokenCreate app.TokenCreate
 	mockRandomToken := strconv.Itoa(int(time.Now().Unix()))
 	newToken := app.Token{
 		AuthID:    tokenCreate.AuthID,
+		UserID:    tokenCreate.UserID,
+		User:      app.User{ID: tokenCreate.UserID},
 		PlainText: mockRandomToken,
 		ExpiresAt: time.Now().Add(tokenLife),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 	m.tokens[mockRandomToken] = newToken
 	return newToken, nil

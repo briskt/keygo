@@ -42,6 +42,6 @@ type Token struct {
 }
 
 type TokenCreate struct {
-	UserEmail string
-	AuthID    string
+	UserID string
+	AuthID string
 }

@@ -1,6 +1,7 @@
 package db_test
 
 import (
+	"testing"
 	"time"
 
 	"github.com/briskt/keygo/app"
@@ -32,7 +33,7 @@ func (ts *TestSuite) TestUserService_CreateUser() {
 	_, err = s.CreateUser(ts.ctx, app.UserCreate{})
 	ts.Error(err)
 	ts.Equal(app.ErrorCode(err), app.ERR_INVALID)
-	ts.Equal(`FirstName required`, app.ErrorMessage(err))
+	ts.Equal(`Email required`, app.ErrorMessage(err))
 }
 
 // SameUser verifies two User objects are the same except for the timestamps
@@ -69,20 +70,55 @@ func (ts *TestSuite) Test_FindUserByID() {
 func (ts *TestSuite) Test_FindUsers() {
 	s := db.NewUserService()
 
-	joe, err := s.CreateUser(ts.ctx, app.UserCreate{FirstName: "joe", Email: "joe@example.com"})
+	joeEmail := "joe@example.com"
+	joe, err := s.CreateUser(ts.ctx, app.UserCreate{FirstName: "joe", Email: joeEmail})
 	ts.NoError(err)
 	sally, err := s.CreateUser(ts.ctx, app.UserCreate{FirstName: "sally", Email: "sally@example.com"})
 	ts.NoError(err)
 
-	found, n, err := s.FindUsers(ts.ctx, app.UserFilter{})
-	ts.NoError(err)
+	notFindableEmail := "nobody@example.com"
 
-	ts.Equal(2, n)
-	ids := make([]string, len(found))
-	for i := range found {
-		ids[i] = found[i].ID
+	tests := []struct {
+		name      string
+		filter    app.UserFilter
+		wantError bool
+		wantUsers []string
+	}{
+		{
+			name:      "empty filter",
+			filter:    app.UserFilter{},
+			wantError: false,
+			wantUsers: []string{joe.ID, sally.ID},
+		},
+		{
+			name:      "filter by email",
+			filter:    app.UserFilter{Email: &joeEmail},
+			wantError: false,
+			wantUsers: []string{joe.ID},
+		},
+		{
+			name:      "no results",
+			filter:    app.UserFilter{Email: &notFindableEmail},
+			wantError: false,
+			wantUsers: []string{},
+		},
 	}
-	ts.EqualValues([]string{joe.ID, sally.ID}, ids)
+	for _, tt := range tests {
+		ts.T().Run(tt.name, func(t *testing.T) {
+			found, n, err := s.FindUsers(ts.ctx, tt.filter)
+			if tt.wantError {
+				ts.Error(err)
+				return
+			}
+			ts.NoError(err)
+			ts.Equal(n, len(found))
+			foundIDs := make([]string, len(found))
+			for i := range found {
+				foundIDs[i] = found[i].ID
+			}
+			ts.EqualValues(tt.wantUsers, foundIDs)
+		})
+	}
 }
 
 func (ts *TestSuite) Test_TouchLastLoginAt() {

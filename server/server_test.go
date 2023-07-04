@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
@@ -26,6 +27,8 @@ type TestSuite struct {
 // SetupTest runs before every test function
 func (ts *TestSuite) SetupTest() {
 	ts.Assertions = require.New(ts.T())
+	ts.server.UserService.(*mock.UserService).DeleteAllUsers()
+	ts.server.TokenService.(*mock.TokenService).DeleteAllTokens()
 }
 
 func Test_RunSuite(t *testing.T) {
@@ -46,4 +49,35 @@ func testContext() echo.Context {
 	rec := httptest.NewRecorder()
 	ctx := echo.New().NewContext(req, rec)
 	return ctx
+}
+
+func (ts *TestSuite) createUserFixture() Fixtures {
+	fakeUserCreate := app.UserCreate{
+		Email: "test@example.com",
+		Role:  "Admin",
+	}
+	createdUser, err := ts.server.UserService.CreateUser(ts.ctx, fakeUserCreate)
+	ts.NoError(err)
+
+	fakeToken := app.Token{
+		ID: "1",
+		User: app.User{
+			ID:    createdUser.ID,
+			Email: "test@example.com",
+			Role:  "Admin",
+		},
+		PlainText: "12345",
+		ExpiresAt: time.Now().Add(time.Minute),
+	}
+	ts.server.TokenService.(*mock.TokenService).Init([]app.Token{fakeToken})
+
+	return Fixtures{
+		Users:  []app.User{createdUser},
+		Tokens: []app.Token{fakeToken},
+	}
+}
+
+type Fixtures struct {
+	Users  []app.User
+	Tokens []app.Token
 }
