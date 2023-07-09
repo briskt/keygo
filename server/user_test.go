@@ -2,72 +2,49 @@ package server_test
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
-	"time"
 
 	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo/app"
-	"github.com/briskt/keygo/internal/mock"
 )
 
 func (ts *TestSuite) Test_GetUser() {
-	fakeToken := app.Token{
-		ID: "1",
-		User: app.User{
-			ID:    "1",
-			Email: "test@example.com",
-		},
-		PlainText: "12345",
-		ExpiresAt: time.Now().Add(time.Minute),
-	}
-	ts.server.TokenService.(*mock.TokenService).Init([]app.Token{fakeToken})
+	f := ts.createUserFixture()
+	user := f.Users[0]
+	token := f.Tokens[0]
 
-	req := httptest.NewRequest(http.MethodGet, "/api/users/"+fakeToken.User.ID, nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/users/"+user.ID, nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+fakeToken.PlainText)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)
 
 	res := httptest.NewRecorder()
 	ts.server.ServeHTTP(res, req)
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	ts.NoError(err)
 
 	// Assertions
 	ts.Equal(http.StatusOK, res.Code, "incorrect http status, body: \n%s", body)
 
-	var user app.User
-	ts.NoError(json.Unmarshal(body, &user))
-	ts.Equal(fakeToken.User, user, "incorrect user data, body: \n%s", body)
+	var gotUser app.User
+	ts.NoError(json.Unmarshal(body, &gotUser))
+	ts.Equal(user.ID, gotUser.ID, "incorrect user data, body: \n%s", body)
 }
 
 func (ts *TestSuite) Test_GetUserList() {
-	fakeToken := app.Token{
-		ID: "1",
-		User: app.User{
-			Email: "test@example.com",
-			Role:  "Admin",
-		},
-		PlainText: "12345",
-		ExpiresAt: time.Now().Add(time.Minute),
-	}
-	ts.server.TokenService.(*mock.TokenService).Init([]app.Token{fakeToken})
-
-	fakeUserCreate := app.UserCreate{
-		Email: "test@example.com",
-		Role:  "Admin",
-	}
-	createdUser, err := ts.server.UserService.CreateUser(ts.ctx, fakeUserCreate)
-	ts.NoError(err)
+	f := ts.createUserFixture()
+	user := f.Users[0]
+	token := f.Tokens[0]
 
 	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+fakeToken.PlainText)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)
 
 	res := httptest.NewRecorder()
 	ts.server.ServeHTTP(res, req)
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	ts.NoError(err)
 
 	// Assertions
@@ -75,7 +52,8 @@ func (ts *TestSuite) Test_GetUserList() {
 
 	var users []app.User
 	ts.NoError(json.Unmarshal(body, &users))
-	ts.Equal(createdUser.ID, users[0].ID, "incorrect user ID, body: \n%s", body)
-	ts.Equal(fakeToken.User.Email, users[0].Email, "incorrect user email, body: \n%s", body)
-	ts.Equal(fakeToken.User.Role, users[0].Role, "incorrect user role, body: \n%s", body)
+	ts.Len(users, 1)
+	ts.Equal(user.ID, users[0].ID, "incorrect user ID, body: \n%s", body)
+	ts.Equal(token.User.Email, users[0].Email, "incorrect user email, body: \n%s", body)
+	ts.Equal(token.User.Role, users[0].Role, "incorrect user role, body: \n%s", body)
 }

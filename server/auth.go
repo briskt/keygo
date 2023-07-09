@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -161,9 +162,14 @@ func (s *Server) authCallback(c echo.Context) error {
 
 	s.Logger.Infof("user authenticated, profile=%+v", profile)
 
+	user, err := s.FindOrCreateUser(c, profile.Email)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
+	}
+
 	token, err := s.TokenService.CreateToken(c, app.TokenCreate{
-		AuthID:    profile.ID,
-		UserEmail: profile.Email,
+		AuthID: profile.ID,
+		UserID: user.ID,
 	})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
@@ -276,4 +282,26 @@ func env(key string, required bool) string {
 		panic("required environment variable '" + key + "' is not defined")
 	}
 	return v
+}
+
+func (s *Server) FindOrCreateUser(ctx echo.Context, email string) (app.User, error) {
+	// Look up the user by email address. If no user can be found then create a new user
+	users, n, err := s.UserService.FindUsers(ctx, app.UserFilter{Email: &email})
+	if err != nil {
+		return app.User{}, fmt.Errorf("error searching users by email: %w", err)
+	}
+	if n > 1 {
+		err = errors.New("should only find a single user with a matching email address")
+		return app.User{}, err
+	}
+	if n == 1 {
+		return users[0], nil
+	}
+
+	// user does not exist with the given email address -- create a new user
+	if user, err := s.UserService.CreateUser(ctx, app.UserCreate{Email: email}); err != nil {
+		return app.User{}, fmt.Errorf("failed to create a new user: %w", err)
+	} else {
+		return user, nil
+	}
 }

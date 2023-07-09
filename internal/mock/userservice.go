@@ -18,18 +18,25 @@ func NewUserService() app.UserService {
 	}
 }
 
+func (m *UserService) DeleteAllUsers() {
+	m.users = map[string]app.User{}
+}
+
 func (m *UserService) FindUserByID(context echo.Context, id string) (app.User, error) {
 	panic("implement UserService FindUserByID")
 }
 
 func (m *UserService) FindUsers(context echo.Context, filter app.UserFilter) ([]app.User, int, error) {
-	users := make([]app.User, len(m.users))
-	i := 0
+	var users []app.User
 	for _, u := range m.users {
-		users[i] = u
-		i++
+		if filter.Email != nil && *filter.Email != u.Email {
+			continue
+		}
+		// TODO: implement (or remove) other filter fields
+
+		users = append(users, u)
 	}
-	return users, 0, nil
+	return users, len(users), nil
 }
 
 func (m *UserService) CreateUser(context echo.Context, userCreate app.UserCreate) (app.User, error) {

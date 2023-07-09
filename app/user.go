@@ -64,9 +64,6 @@ type UserCreate struct {
 // Validate returns an error if the user contains invalid fields.
 // This only performs basic validation.
 func (u *UserCreate) Validate() error {
-	if u.FirstName == "" {
-		return Errorf(ERR_INVALID, "FirstName required")
-	}
 	if u.Email == "" {
 		return Errorf(ERR_INVALID, "Email required")
 	}

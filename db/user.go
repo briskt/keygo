@@ -119,9 +119,13 @@ func findUserByEmail(ctx echo.Context, email string) (User, error) {
 // findUsers returns a list of users. Also returns a count of
 // total matching users which may differ if filter.Limit is set.
 func findUsers(ctx echo.Context, filter app.UserFilter) ([]User, int, error) {
-	// TODO: implement (or remove) findUsers filter
+	// TODO: implement (or remove) other filter parameters
 	var users []User
-	result := Tx(ctx).Find(&users)
+	q := Tx(ctx)
+	if filter.Email != nil {
+		q = q.Where("email = ?", filter.Email)
+	}
+	result := q.Find(&users)
 	return users, len(users), result.Error
 }
 
