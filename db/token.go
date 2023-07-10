@@ -58,7 +58,7 @@ func (t *Token) Validate() error {
 // ID & timestamp fields are set to the current time
 func (t *Token) create(ctx echo.Context) error {
 	t.touch()
-	t.PlainText = getRandomToken()
+	t.PlainText = randomString()
 	t.Hash = hashToken(t.PlainText)
 
 	if err := t.Validate(); err != nil {
@@ -75,12 +75,12 @@ func (t *Token) touch() {
 	t.LastUsedAt = &now
 }
 
-func getRandomToken() string {
+func randomString() string {
 	rb := make([]byte, tokenBytes)
 
 	_, err := rand.Read(rb)
 	if err != nil {
-		panic("rand.Read failed in getRandomToken, " + err.Error())
+		panic("rand.Read failed in randomString, " + err.Error())
 	}
 
 	return base64.URLEncoding.EncodeToString(rb)
