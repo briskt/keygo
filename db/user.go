@@ -77,8 +77,11 @@ func (s *UserService) CreateUser(ctx echo.Context, userCreate app.UserCreate) (a
 }
 
 // UpdateUser updates a user object.
-func (s *UserService) UpdateUser(ctx echo.Context, id string, upd app.UserUpdate) (app.User, error) {
-	user, err := updateUser(ctx, id, upd)
+func (s *UserService) UpdateUser(ctx echo.Context, id string, input app.UserUpdate) (app.User, error) {
+	if err := input.Validate(); err != nil {
+		return app.User{}, err
+	}
+	user, err := updateUser(ctx, id, input)
 	if err != nil {
 		return app.User{}, err
 	}

@@ -73,6 +73,10 @@ func (s *TenantService) CreateTenant(ctx echo.Context, input app.TenantCreate) (
 
 // UpdateTenant updates a tenant object.
 func (s *TenantService) UpdateTenant(ctx echo.Context, id string, input app.TenantUpdate) (app.Tenant, error) {
+	if err := input.Validate(); err != nil {
+		return app.Tenant{}, err
+	}
+
 	tenant, err := findTenantByID(ctx, id)
 	if err != nil {
 		return app.Tenant{}, err

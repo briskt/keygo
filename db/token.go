@@ -35,22 +35,8 @@ type Token struct {
 	Deleted    gorm.DeletedAt
 }
 
-func (t *Token) BeforeCreate(tx *gorm.DB) error {
+func (t *Token) BeforeCreate(_ *gorm.DB) error {
 	t.ID = newID()
-	return nil
-}
-
-// Validate returns an error if any fields are invalid on the Token object.
-func (t *Token) Validate() error {
-	if t.UserID == "" {
-		return app.Errorf(app.ERR_INVALID, "UserID required.")
-	}
-	if t.AuthID == "" {
-		return app.Errorf(app.ERR_INVALID, "AuthID required.")
-	}
-	if t.Hash == "" {
-		return app.Errorf(app.ERR_INVALID, "Hash required.")
-	}
 	return nil
 }
 
@@ -60,10 +46,6 @@ func (t *Token) create(ctx echo.Context) error {
 	t.touch()
 	t.PlainText = randomString()
 	t.Hash = hashToken(t.PlainText)
-
-	if err := t.Validate(); err != nil {
-		return err
-	}
 
 	err := Tx(ctx).Omit("User").Create(t).Error
 	return err
@@ -115,10 +97,6 @@ func findTokenByID(ctx echo.Context, id string) (Token, error) {
 // updateToken updates expires_at and last_used_at on existing token object
 // Returns new state of the token object
 func updateToken(ctx echo.Context, token Token) (Token, error) {
-	if err := token.Validate(); err != nil {
-		return token, err
-	}
-
 	token.touch()
 
 	result := Tx(ctx).Omit("User").Save(&token)
@@ -171,10 +149,14 @@ func (t TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error)
 }
 
 // CreateToken creates a new token object.
-func (t TokenService) CreateToken(ctx echo.Context, tokenCreate app.TokenCreate) (app.Token, error) {
+func (t TokenService) CreateToken(ctx echo.Context, input app.TokenCreate) (app.Token, error) {
+	if err := input.Validate(); err != nil {
+		return app.Token{}, err
+	}
+
 	token := Token{
-		UserID: tokenCreate.UserID,
-		AuthID: tokenCreate.AuthID,
+		UserID: input.UserID,
+		AuthID: input.AuthID,
 	}
 
 	err := token.create(ctx)
