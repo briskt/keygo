@@ -17,7 +17,7 @@ type Tenant struct {
 	Deleted   gorm.DeletedAt
 }
 
-func (u *Tenant) BeforeCreate(tx *gorm.DB) error {
+func (u *Tenant) BeforeCreate(_ *gorm.DB) error {
 	u.ID = newID()
 	return nil
 }
@@ -39,12 +39,12 @@ func (s *TenantService) FindTenantByID(ctx echo.Context, id string) (app.Tenant,
 	if err != nil {
 		return app.Tenant{}, err
 	}
-	return exportTenant(tenant), nil
+	return convertTenant(ctx, tenant)
 }
 
 // FindTenants retrieves a list of tenants by filter. Also returns total count of
 // matching tenants which may differ from returned results if filter.Limit is specified.
-func (s *TenantService) FindTenants(ctx echo.Context, filter app.TenantFilter) ([]app.Tenant, int, error) {
+func (s *TenantService) FindTenants(ctx echo.Context, _ app.TenantFilter) ([]app.Tenant, int, error) {
 	var tenants []Tenant
 	result := Tx(ctx).Find(&tenants)
 	if result.Error != nil {
@@ -52,7 +52,11 @@ func (s *TenantService) FindTenants(ctx echo.Context, filter app.TenantFilter) (
 	}
 	appTenants := make([]app.Tenant, len(tenants))
 	for i := range tenants {
-		appTenants[i] = exportTenant(tenants[i])
+		tenant, err := convertTenant(ctx, tenants[i])
+		if err != nil {
+			return nil, 0, err
+		}
+		appTenants[i] = tenant
 	}
 	return appTenants, len(tenants), nil
 }
@@ -66,9 +70,12 @@ func (s *TenantService) CreateTenant(ctx echo.Context, input app.TenantCreate) (
 	newTenant := Tenant{
 		Name: input.Name,
 	}
-	result := Tx(ctx).Create(&newTenant)
+	err := Tx(ctx).Create(&newTenant).Error
+	if err != nil {
+		return app.Tenant{}, err
+	}
 
-	return exportTenant(newTenant), result.Error
+	return convertTenant(ctx, newTenant)
 }
 
 // UpdateTenant updates a tenant object.
@@ -91,7 +98,7 @@ func (s *TenantService) UpdateTenant(ctx echo.Context, id string, input app.Tena
 		return app.Tenant{}, result.Error
 	}
 
-	return exportTenant(tenant), nil
+	return convertTenant(ctx, tenant)
 }
 
 // DeleteTenant permanently deletes a tenant and all child objects
@@ -110,11 +117,11 @@ func findTenantByID(ctx echo.Context, id string) (Tenant, error) {
 	return tenant, result.Error
 }
 
-func exportTenant(t Tenant) app.Tenant {
+func convertTenant(_ echo.Context, t Tenant) (app.Tenant, error) {
 	return app.Tenant{
 		ID:        t.ID,
 		Name:      t.Name,
 		CreatedAt: t.CreatedAt,
 		UpdatedAt: t.UpdatedAt,
-	}
+	}, nil
 }

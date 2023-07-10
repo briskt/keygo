@@ -22,7 +22,7 @@ type User struct {
 	Deleted     gorm.DeletedAt
 }
 
-func (u *User) BeforeCreate(tx *gorm.DB) error {
+func (u *User) BeforeCreate(_ *gorm.DB) error {
 	u.ID = newID()
 	return nil
 }
@@ -44,7 +44,7 @@ func (s *UserService) FindUserByID(ctx echo.Context, id string) (app.User, error
 	if err != nil {
 		return app.User{}, err
 	}
-	return convertUser(user), nil
+	return convertUser(ctx, user)
 }
 
 // FindUsers retrieves a list of users by filter. Also returns total count of
@@ -56,7 +56,11 @@ func (s *UserService) FindUsers(ctx echo.Context, filter app.UserFilter) ([]app.
 	}
 	keygoUsers := make([]app.User, len(users))
 	for i := range users {
-		keygoUsers[i] = convertUser(users[i])
+		u, err := convertUser(ctx, users[i])
+		if err != nil {
+			return nil, 0, err
+		}
+		keygoUsers[i] = u
 	}
 	return keygoUsers, n, nil
 }
@@ -73,7 +77,10 @@ func (s *UserService) CreateUser(ctx echo.Context, userCreate app.UserCreate) (a
 		AvatarURL: userCreate.AvatarURL,
 		Role:      userCreate.Role,
 	})
-	return convertUser(newUser), err
+	if err != nil {
+		return app.User{}, err
+	}
+	return convertUser(ctx, newUser)
 }
 
 // UpdateUser updates a user object.
@@ -85,7 +92,7 @@ func (s *UserService) UpdateUser(ctx echo.Context, id string, input app.UserUpda
 	if err != nil {
 		return app.User{}, err
 	}
-	return convertUser(user), nil
+	return convertUser(ctx, user)
 }
 
 // DeleteUser permanently deletes a user and all child objects
@@ -107,16 +114,6 @@ func findUserByID(ctx echo.Context, id string) (User, error) {
 	var user User
 	result := Tx(ctx).First(&user, "id = ?", id)
 	return user, result.Error
-}
-
-// findUserByEmail is a helper function to fetch a user by email.
-func findUserByEmail(ctx echo.Context, email string) (User, error) {
-	var user User
-	err := Tx(ctx).Where("email = ?", email).First(&user).Error
-	if err == gorm.ErrRecordNotFound {
-		return User{}, &app.Error{Code: app.ERR_NOTFOUND, Message: "User not found"}
-	}
-	return user, err
 }
 
 // findUsers returns a list of users. Also returns a count of
@@ -168,7 +165,7 @@ func deleteUser(ctx echo.Context, id string) error {
 	return result.Error
 }
 
-func convertUser(u User) app.User {
+func convertUser(_ echo.Context, u User) (app.User, error) {
 	return app.User{
 		ID:          u.ID,
 		FirstName:   u.FirstName,
@@ -179,5 +176,5 @@ func convertUser(u User) app.User {
 		LastLoginAt: u.LastLoginAt,
 		CreatedAt:   u.CreatedAt,
 		UpdatedAt:   u.UpdatedAt,
-	}
+	}, nil
 }

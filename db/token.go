@@ -141,11 +141,7 @@ func (t TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error)
 	if err != nil {
 		return app.Token{}, err
 	}
-	if err = token.loadUser(ctx); err != nil {
-		return app.Token{}, err
-	}
-
-	return convertToken(token), nil
+	return convertToken(ctx, token)
 }
 
 // CreateToken creates a new token object.
@@ -164,7 +160,7 @@ func (t TokenService) CreateToken(ctx echo.Context, input app.TokenCreate) (app.
 		return app.Token{}, err
 	}
 
-	return convertToken(token), nil
+	return convertToken(ctx, token)
 }
 
 func (t TokenService) DeleteToken(ctx echo.Context, id string) error {
@@ -176,15 +172,23 @@ func (t TokenService) UpdateToken(ctx echo.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	token.touch()
 	_, err = updateToken(ctx, token)
 	return err
 }
 
-func convertToken(token Token) app.Token {
+func convertToken(ctx echo.Context, token Token) (app.Token, error) {
+	if err := token.loadUser(ctx); err != nil {
+		return app.Token{}, err
+	}
+
+	user, err := convertUser(ctx, token.User)
+	if err != nil {
+		return app.Token{}, err
+	}
+
 	return app.Token{
 		ID:         token.ID,
-		User:       convertUser(token.User),
+		User:       user,
 		UserID:     token.UserID,
 		AuthID:     token.AuthID,
 		PlainText:  token.PlainText,
@@ -192,5 +196,5 @@ func convertToken(token Token) app.Token {
 		ExpiresAt:  token.ExpiresAt,
 		CreatedAt:  token.CreatedAt,
 		UpdatedAt:  token.UpdatedAt,
-	}
+	}, nil
 }
