@@ -27,18 +27,19 @@ type TokenService interface {
 }
 
 type Token struct {
-	ID string `json:"id"`
+	// TODO: remove private fields not appropriate for the API. (May require architecture changes.)
+	ID string
 
-	User   User   `json:"user"`
-	UserID string `json:"userID"`
+	User   User
+	UserID string
 
-	AuthID    string `json:"authID"`
-	PlainText string `json:"plainText"`
+	AuthID    string
+	PlainText string
 
-	LastUsedAt *time.Time `json:"lastUsedAt"`
-	ExpiresAt  time.Time  `json:"expiresAt"`
-	CreatedAt  time.Time  `json:"createdAt"`
-	UpdatedAt  time.Time  `json:"updatedAt"`
+	LastUsedAt *time.Time
+	ExpiresAt  time.Time
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type TokenCreate struct {

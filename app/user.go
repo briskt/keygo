@@ -30,13 +30,13 @@ type UserService interface {
 // UserFilter is a filter passed to FindUsers()
 type UserFilter struct {
 	// Filtering fields.
-	ID     *string `json:"id"`
-	Email  *string `json:"email"`
-	APIKey *string `json:"apiKey"`
+	ID     *string
+	Email  *string
+	APIKey *string
 
 	// Restrict to subset of results.
-	Offset int `json:"offset"`
-	Limit  int `json:"limit"`
+	Offset int
+	Limit  int
 }
 
 // User is the full model that identifies an app User
@@ -72,7 +72,7 @@ func (u *UserCreate) Validate() error {
 
 // UserUpdate is a set of fields to be updated via UpdateUser()
 type UserUpdate struct {
-	FirstName *string `json:"firstName"`
-	LastName  *string `json:"lastName"`
-	Email     *string `json:"email"`
+	FirstName *string
+	LastName  *string
+	Email     *string
 }

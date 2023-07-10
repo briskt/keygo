@@ -49,17 +49,15 @@ func (u *TenantCreate) Validate() error {
 // TenantFilter is a filter passed to FindTenants()
 type TenantFilter struct {
 	// Filtering fields.
-	ID     *string `json:"id"`
-	Email  *string `json:"email"`
-	APIKey *string `json:"apiKey"`
+	ID   *string
+	Name *string
 
 	// Restrict to subset of results.
-	Offset int `json:"offset"`
-	Limit  int `json:"limit"`
+	Offset int
+	Limit  int
 }
 
 // TenantUpdate is a set of fields to be updated via UpdateTenant()
 type TenantUpdate struct {
-	Name  *string `json:"name"`
-	Email *string `json:"email"`
+	Name *string
 }
