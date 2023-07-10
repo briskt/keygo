@@ -46,3 +46,14 @@ type TokenCreate struct {
 	UserID string
 	AuthID string
 }
+
+// Validate returns an error if the struct contains invalid information
+func (tc *TokenCreate) Validate() error {
+	if tc.UserID == "" {
+		return Errorf(ERR_INVALID, "UserID is required")
+	}
+	if tc.AuthID == "" {
+		return Errorf(ERR_INVALID, "AuthID is required")
+	}
+	return nil
+}

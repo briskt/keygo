@@ -61,11 +61,10 @@ type UserCreate struct {
 	Role      string
 }
 
-// Validate returns an error if the user contains invalid fields.
-// This only performs basic validation.
-func (u *UserCreate) Validate() error {
-	if u.Email == "" {
-		return Errorf(ERR_INVALID, "Email required")
+// Validate returns an error if the struct contains invalid information
+func (uc *UserCreate) Validate() error {
+	if uc.Email == "" {
+		return Errorf(ERR_INVALID, "Email is required")
 	}
 	return nil
 }
@@ -75,4 +74,12 @@ type UserUpdate struct {
 	FirstName *string
 	LastName  *string
 	Email     *string
+}
+
+// Validate returns an error if the struct contains invalid information.
+func (uu *UserUpdate) Validate() error {
+	if uu.Email != nil && *uu.Email == "" {
+		return Errorf(ERR_INVALID, "Email is required")
+	}
+	return nil
 }

@@ -6,6 +6,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const minTenantNameLength = 3
+
 // TenantService is a service for managing tenants
 type TenantService interface {
 	// FindTenantByID retrieves a tenant by ID
@@ -37,11 +39,13 @@ type TenantCreate struct {
 	Name string
 }
 
-// Validate returns an error if the tenant contains invalid fields.
-// This only performs basic validation.
-func (u *TenantCreate) Validate() error {
-	if len(u.Name) < 3 {
+// Validate returns an error if the struct contains invalid information
+func (tc *TenantCreate) Validate() error {
+	if tc.Name == "" {
 		return Errorf(ERR_INVALID, "Tenant name is required")
+	}
+	if len(tc.Name) < minTenantNameLength {
+		return Errorf(ERR_INVALID, "Tenant name must be at least %d characters", minTenantNameLength)
 	}
 	return nil
 }
@@ -60,4 +64,15 @@ type TenantFilter struct {
 // TenantUpdate is a set of fields to be updated via UpdateTenant()
 type TenantUpdate struct {
 	Name *string
+}
+
+// Validate returns an error if the struct contains invalid information
+func (tu *TenantUpdate) Validate() error {
+	if tu.Name != nil && *tu.Name == "" {
+		return Errorf(ERR_INVALID, "Tenant name is required")
+	}
+	if tu.Name != nil && len(*tu.Name) < minTenantNameLength {
+		return Errorf(ERR_INVALID, "Tenant name must be at least %d characters", minTenantNameLength)
+	}
+	return nil
 }
