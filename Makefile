@@ -1,5 +1,5 @@
-app: db migrate adminer ui-app
-	docker-compose up -d app
+app: migrate
+	docker-compose up -d app ui-app adminer proxy
 
 ui-app:
 	docker-compose up -d ui-app
