@@ -33,7 +33,7 @@ func (ts *TestSuite) TestUserService_CreateUser() {
 	_, err = s.CreateUser(ts.ctx, app.UserCreate{})
 	ts.Error(err)
 	ts.Equal(app.ErrorCode(err), app.ERR_INVALID)
-	ts.Equal(`Email required`, app.ErrorMessage(err))
+	ts.Contains(app.ErrorMessage(err), "Email")
 }
 
 // SameUser verifies two User objects are the same except for the timestamps

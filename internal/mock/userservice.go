@@ -39,15 +39,18 @@ func (m *UserService) FindUsers(context echo.Context, filter app.UserFilter) ([]
 	return users, len(users), nil
 }
 
-func (m *UserService) CreateUser(context echo.Context, userCreate app.UserCreate) (app.User, error) {
+func (m *UserService) CreateUser(context echo.Context, input app.UserCreate) (app.User, error) {
+	if err := input.Validate(); err != nil {
+		return app.User{}, err
+	}
 	now := time.Now()
 	user := app.User{
 		ID:        newID(),
-		FirstName: userCreate.FirstName,
-		LastName:  userCreate.LastName,
-		Email:     userCreate.Email,
-		AvatarURL: userCreate.AvatarURL,
-		Role:      userCreate.Role,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+		Email:     input.Email,
+		AvatarURL: input.AvatarURL,
+		Role:      input.Role,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -55,7 +58,10 @@ func (m *UserService) CreateUser(context echo.Context, userCreate app.UserCreate
 	return user, nil
 }
 
-func (m *UserService) UpdateUser(context echo.Context, id string, update app.UserUpdate) (app.User, error) {
+func (m *UserService) UpdateUser(context echo.Context, id string, input app.UserUpdate) (app.User, error) {
+	if err := input.Validate(); err != nil {
+		return app.User{}, err
+	}
 	panic("implement UserService UpdateUser")
 }
 

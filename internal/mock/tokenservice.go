@@ -41,15 +41,18 @@ func (m *TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error
 	return app.Token{}, fmt.Errorf("token %s not found", raw)
 }
 
-func (m *TokenService) CreateToken(ctx echo.Context, tokenCreate app.TokenCreate) (app.Token, error) {
+func (m *TokenService) CreateToken(ctx echo.Context, input app.TokenCreate) (app.Token, error) {
+	if err := input.Validate(); err != nil {
+		return app.Token{}, err
+	}
 	if m.tokens == nil {
 		m.tokens = make(map[string]app.Token)
 	}
 	mockRandomToken := strconv.Itoa(int(time.Now().Unix()))
 	newToken := app.Token{
-		AuthID:    tokenCreate.AuthID,
-		UserID:    tokenCreate.UserID,
-		User:      app.User{ID: tokenCreate.UserID},
+		AuthID:    input.AuthID,
+		UserID:    input.UserID,
+		User:      app.User{ID: input.UserID},
 		PlainText: mockRandomToken,
 		ExpiresAt: time.Now().Add(tokenLife),
 		CreatedAt: time.Now(),
