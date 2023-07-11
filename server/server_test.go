@@ -20,8 +20,11 @@ import (
 type TestSuite struct {
 	suite.Suite
 	*require.Assertions
-	server *server.Server
-	ctx    echo.Context
+
+	server           *server.Server
+	ctx              echo.Context
+	mockUserService  *mock.UserService
+	mockTokenService *mock.TokenService
 }
 
 // SetupTest runs before every test function
@@ -32,15 +35,19 @@ func (ts *TestSuite) SetupTest() {
 }
 
 func Test_RunSuite(t *testing.T) {
+	mus := mock.NewUserService()
+	mts := mock.NewTokenService()
 	s := app.DataServices{
 		TenantService: nil,
-		TokenService:  mock.NewTokenService(),
-		UserService:   mock.NewUserService(),
+		TokenService:  &mts,
+		UserService:   &mus,
 	}
 	svr := server.New(server.WithDataServices(s))
 	suite.Run(t, &TestSuite{
-		server: svr,
-		ctx:    testContext(),
+		server:           svr,
+		ctx:              testContext(),
+		mockUserService:  &mus,
+		mockTokenService: &mts,
 	})
 }
 

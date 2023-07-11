@@ -10,10 +10,12 @@ import (
 
 type UserService struct {
 	users map[string]app.User
+
+	FindUsersFn func(ctx echo.Context, filter app.UserFilter) ([]app.User, int, error)
 }
 
-func NewUserService() app.UserService {
-	return &UserService{
+func NewUserService() UserService {
+	return UserService{
 		users: map[string]app.User{},
 	}
 }
@@ -27,6 +29,9 @@ func (m *UserService) FindUserByID(context echo.Context, id string) (app.User, e
 }
 
 func (m *UserService) FindUsers(context echo.Context, filter app.UserFilter) ([]app.User, int, error) {
+	if m.FindUsersFn != nil {
+		return m.FindUsersFn(context, filter)
+	}
 	var users []app.User
 	for _, u := range m.users {
 		if filter.Email != nil && *filter.Email != u.Email {

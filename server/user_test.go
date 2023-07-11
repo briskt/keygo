@@ -16,6 +16,9 @@ func (ts *TestSuite) Test_GetUser() {
 	user := f.Users[0]
 	token := f.Tokens[0]
 
+	ts.mockTokenService.FindTokenFn = func(_ echo.Context, raw string) (app.Token, error) {
+		return token, nil
+	}
 	req := httptest.NewRequest(http.MethodGet, "/api/users/"+user.ID, nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)
@@ -31,12 +34,18 @@ func (ts *TestSuite) Test_GetUser() {
 	var gotUser app.User
 	ts.NoError(json.Unmarshal(body, &gotUser))
 	ts.Equal(user.ID, gotUser.ID, "incorrect user data, body: \n%s", body)
+
+	// TODO: test error response
 }
 
 func (ts *TestSuite) Test_GetUserList() {
 	f := ts.createUserFixture()
 	user := f.Users[0]
 	token := f.Tokens[0]
+
+	ts.mockUserService.FindUsersFn = func(_ echo.Context, _ app.UserFilter) ([]app.User, int, error) {
+		return f.Users, len(f.Users), nil
+	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -56,4 +65,6 @@ func (ts *TestSuite) Test_GetUserList() {
 	ts.Equal(user.ID, users[0].ID, "incorrect user ID, body: \n%s", body)
 	ts.Equal(token.User.Email, users[0].Email, "incorrect user email, body: \n%s", body)
 	ts.Equal(token.User.Role, users[0].Role, "incorrect user role, body: \n%s", body)
+
+	// TODO: test error response
 }

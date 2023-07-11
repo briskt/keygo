@@ -16,10 +16,12 @@ const tokenLife = time.Minute
 
 type TokenService struct {
 	tokens map[string]app.Token // key is timestamp
+
+	FindTokenFn func(ctx echo.Context, raw string) (app.Token, error)
 }
 
-func NewTokenService() app.TokenService {
-	return &TokenService{}
+func NewTokenService() TokenService {
+	return TokenService{}
 }
 
 func (m *TokenService) DeleteAllTokens() {
@@ -35,6 +37,9 @@ func (m *TokenService) Init(fakeTokens []app.Token) {
 }
 
 func (m *TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error) {
+	if m.FindTokenFn != nil {
+		return m.FindTokenFn(ctx, raw)
+	}
 	if t, ok := m.tokens[raw]; ok {
 		return t, nil
 	}
