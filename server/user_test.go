@@ -38,6 +38,10 @@ func (ts *TestSuite) Test_GetUserList() {
 	user := f.Users[0]
 	token := f.Tokens[0]
 
+	ts.mockUserService.FindUsersFn = func(_ echo.Context, _ app.UserFilter) ([]app.User, int, error) {
+		return f.Users, len(f.Users), nil
+	}
+
 	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)
