@@ -13,10 +13,7 @@ import (
 	"github.com/briskt/keygo/app"
 )
 
-const (
-	tokenLifetime = time.Hour * 24
-	tokenBytes    = 32
-)
+const tokenBytes = 32
 
 type Token struct {
 	ID string `gorm:"primaryKey"`
@@ -43,18 +40,11 @@ func (t *Token) BeforeCreate(_ *gorm.DB) error {
 // create a new token object in the database. On success, the ID is set to the new database
 // ID & timestamp fields are set to the current time
 func (t *Token) create(ctx echo.Context) error {
-	t.touch()
 	t.PlainText = randomString()
 	t.Hash = hashToken(t.PlainText)
 
 	err := Tx(ctx).Omit("User").Create(t).Error
 	return err
-}
-
-func (t *Token) touch() {
-	now := time.Now()
-	t.ExpiresAt = now.Add(tokenLifetime)
-	t.LastUsedAt = &now
 }
 
 func randomString() string {
@@ -96,8 +86,13 @@ func findTokenByID(ctx echo.Context, id string) (Token, error) {
 
 // updateToken updates expires_at and last_used_at on existing token object
 // Returns new state of the token object
-func updateToken(ctx echo.Context, token Token) (Token, error) {
-	token.touch()
+func updateToken(ctx echo.Context, token Token, input app.TokenUpdate) (Token, error) {
+	if input.ExpiresAt != nil {
+		token.ExpiresAt = *input.ExpiresAt
+	}
+	if input.LastUsedAt != nil {
+		token.LastUsedAt = input.LastUsedAt
+	}
 
 	result := Tx(ctx).Omit("User").Save(&token)
 	return token, result.Error
@@ -151,8 +146,9 @@ func (t TokenService) CreateToken(ctx echo.Context, input app.TokenCreate) (app.
 	}
 
 	token := Token{
-		UserID: input.UserID,
-		AuthID: input.AuthID,
+		UserID:    input.UserID,
+		AuthID:    input.AuthID,
+		ExpiresAt: input.ExpiresAt,
 	}
 
 	err := token.create(ctx)
@@ -167,12 +163,16 @@ func (t TokenService) DeleteToken(ctx echo.Context, id string) error {
 	return deleteToken(ctx, id)
 }
 
-func (t TokenService) UpdateToken(ctx echo.Context, id string) error {
+func (t TokenService) UpdateToken(ctx echo.Context, id string, input app.TokenUpdate) error {
+	if err := input.Validate(); err != nil {
+		return err
+	}
+
 	token, err := findTokenByID(ctx, id)
 	if err != nil {
 		return err
 	}
-	_, err = updateToken(ctx, token)
+	_, err = updateToken(ctx, token, input)
 	return err
 }
 

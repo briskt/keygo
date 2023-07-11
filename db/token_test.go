@@ -1,6 +1,8 @@
 package db_test
 
 import (
+	"time"
+
 	"github.com/briskt/keygo/app"
 )
 
@@ -9,7 +11,8 @@ func (ts *TestSuite) TestTokenService_CreateToken() {
 	ts.NoError(err)
 
 	// Create new record and check generated fields
-	newToken, err := ts.TokenService.CreateToken(ts.ctx, app.TokenCreate{AuthID: "a", UserID: user.ID})
+	exp := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+	newToken, err := ts.TokenService.CreateToken(ts.ctx, app.TokenCreate{AuthID: "a", UserID: user.ID, ExpiresAt: exp})
 
 	ts.NoError(err)
 	ts.NotEmpty(newToken.ID, "ID is not set")
@@ -17,6 +20,7 @@ func (ts *TestSuite) TestTokenService_CreateToken() {
 	ts.NotZero(newToken.ExpiresAt, "expected ExpiredAt")
 	ts.NotZero(newToken.CreatedAt, "expected CreatedAt")
 	ts.NotZero(newToken.UpdatedAt, "expected UpdatedAt")
+	ts.Equal(exp, newToken.ExpiresAt)
 
 	// Query database and compare
 	fromDB, err := ts.TokenService.FindToken(ts.ctx, newToken.PlainText)

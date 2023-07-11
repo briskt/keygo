@@ -23,7 +23,7 @@ type TokenService interface {
 	DeleteToken(ctx echo.Context, id string) error
 
 	// UpdateToken extends a token's ExpiresAt
-	UpdateToken(ctx echo.Context, id string) error
+	UpdateToken(ctx echo.Context, id string, input TokenUpdate) error
 }
 
 type Token struct {
@@ -43,8 +43,9 @@ type Token struct {
 }
 
 type TokenCreate struct {
-	UserID string
-	AuthID string
+	UserID    string
+	AuthID    string
+	ExpiresAt time.Time
 }
 
 // Validate returns an error if the struct contains invalid information
@@ -54,6 +55,19 @@ func (tc *TokenCreate) Validate() error {
 	}
 	if tc.AuthID == "" {
 		return Errorf(ERR_INVALID, "AuthID is required")
+	}
+	return nil
+}
+
+type TokenUpdate struct {
+	ExpiresAt  *time.Time
+	LastUsedAt *time.Time
+}
+
+// Validate returns an error if the struct contains invalid information
+func (tu *TokenUpdate) Validate() error {
+	if tu.LastUsedAt != nil && tu.LastUsedAt.After(time.Now()) {
+		return Errorf(ERR_INVALID, "LastUsedAt is in the future")
 	}
 	return nil
 }

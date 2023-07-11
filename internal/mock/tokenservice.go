@@ -10,14 +10,11 @@ import (
 	"github.com/briskt/keygo/app"
 )
 
-// tokenLife is the amount of time a new token can be used
-// TODO: since token renewal and expiration is duplicated here and in the db package, it maybe indicates this logic should be moved elsewhere.
-const tokenLife = time.Minute
-
 type TokenService struct {
 	tokens map[string]app.Token // key is timestamp
 
-	FindTokenFn func(ctx echo.Context, raw string) (app.Token, error)
+	FindTokenFn   func(ctx echo.Context, raw string) (app.Token, error)
+	UpdateTokenFn func(ctx echo.Context, id string, input app.TokenUpdate) error
 }
 
 func NewTokenService() TokenService {
@@ -59,7 +56,7 @@ func (m *TokenService) CreateToken(ctx echo.Context, input app.TokenCreate) (app
 		UserID:    input.UserID,
 		User:      app.User{ID: input.UserID},
 		PlainText: mockRandomToken,
-		ExpiresAt: time.Now().Add(tokenLife),
+		ExpiresAt: input.ExpiresAt,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -71,12 +68,29 @@ func (m *TokenService) DeleteToken(ctx echo.Context, tokenID string) error {
 	panic("implement TokenService DeleteToken")
 }
 
-func (m *TokenService) UpdateToken(ctx echo.Context, id string) error {
-	t := m.tokens[id]
+func (m *TokenService) UpdateToken(ctx echo.Context, id string, input app.TokenUpdate) error {
+	if err := input.Validate(); err != nil {
+		return err
+	}
+
+	if m.UpdateTokenFn != nil {
+		return m.UpdateTokenFn(ctx, id, input)
+	}
+
+	t, ok := m.tokens[id]
+	if !ok {
+		return &app.Error{Code: app.ERR_NOTFOUND, Message: "Token not found"}
+	}
+
+	if input.ExpiresAt != nil {
+		t.ExpiresAt = *input.ExpiresAt
+	}
+	if input.LastUsedAt != nil {
+		t.LastUsedAt = input.LastUsedAt
+	}
+
 	now := time.Now()
 	t.UpdatedAt = now
-	t.ExpiresAt = now.Add(tokenLife)
-	t.LastUsedAt = &now
 	m.tokens[id] = t
 	return nil
 }

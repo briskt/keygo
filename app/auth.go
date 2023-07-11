@@ -1,8 +1,8 @@
 package app
 
-import (
-	"time"
-)
+import "time"
+
+const AuthTokenLifetime = time.Hour * 24
 
 // swagger:model
 type AuthStatus struct {

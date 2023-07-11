@@ -37,6 +37,10 @@ func (ts *TestSuite) SetupTest() {
 func Test_RunSuite(t *testing.T) {
 	mus := mock.NewUserService()
 	mts := mock.NewTokenService()
+	mts.UpdateTokenFn = func(ctx echo.Context, id string, input app.TokenUpdate) error {
+		return nil
+	}
+
 	s := app.DataServices{
 		TenantService: nil,
 		TokenService:  &mts,

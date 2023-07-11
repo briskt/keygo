@@ -168,8 +168,9 @@ func (s *Server) authCallback(c echo.Context) error {
 	}
 
 	token, err := s.TokenService.CreateToken(c, app.TokenCreate{
-		AuthID: profile.ID,
-		UserID: user.ID,
+		AuthID:    profile.ID,
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(app.AuthTokenLifetime),
 	})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
@@ -219,8 +220,13 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return echo.NewHTTPError(status, authError)
 		}
 
-		if err := s.TokenService.UpdateToken(c, token.ID); err != nil {
-			return echo.NewHTTPError(status, echo.NewHTTPError(http.StatusInternalServerError), AuthError{Error: err.Error()})
+		now := time.Now()
+		tokenExpiry := now.Add(app.AuthTokenLifetime)
+		if err := s.TokenService.UpdateToken(c, token.ID, app.TokenUpdate{
+			ExpiresAt:  &tokenExpiry,
+			LastUsedAt: &now,
+		}); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, echo.NewHTTPError(http.StatusInternalServerError), AuthError{Error: err.Error()})
 		}
 
 		c.Set(app.ContextKeyToken, token)
@@ -284,6 +290,7 @@ func env(key string, required bool) string {
 	return v
 }
 
+// TODO: move this to the app package
 func (s *Server) FindOrCreateUser(ctx echo.Context, email string) (app.User, error) {
 	// Look up the user by email address. If no user can be found then create a new user
 	users, n, err := s.UserService.FindUsers(ctx, app.UserFilter{Email: &email})
