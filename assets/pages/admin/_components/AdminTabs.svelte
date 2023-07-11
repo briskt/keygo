@@ -16,6 +16,11 @@
       visible: true,
     },
     {
+      label: 'Tenants',
+      tabUrl: '/admin/tenants',
+      visible: true,
+    },
+    {
       label: 'Users',
       tabUrl: '/admin/users',
       visible: true,
