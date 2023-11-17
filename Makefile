@@ -7,6 +7,9 @@ ui-app:
 test:
 	docker-compose run --rm test
 
+testcli:
+	docker-compose run --rm test bash
+
 bounce:
 	docker-compose kill app && docker-compose up -d app
 
