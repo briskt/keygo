@@ -30,6 +30,8 @@
   const onCancel = () => {
     showAddTenantModal = false
   }
+
+  const tenantPage = (id: string) => `/admin/tenants/${id}`
 </script>
 
 <h1>Tenants</h1>
@@ -44,7 +46,7 @@
   </tr>
   {#each tenants as tenant (tenant.ID)}
     <tr>
-      <td>{tenant.Name}</td>
+      <td><a href="{tenantPage(tenant.ID)}">{tenant.Name}</a></td>
       <td>{tenant.CreatedAt}</td>
       <td>{tenant.UpdatedAt}</td>
     </tr>
