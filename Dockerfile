@@ -14,7 +14,7 @@ RUN go install github.com/cosmtrek/air@v1.43.0
 RUN go install github.com/pressly/goose/v3/cmd/goose@v3.11.2
 
 # set up to run as a normal user
-RUN useradd user && mkdir /home/user && chown user.user /home/user && chown user.user /src
+RUN useradd user && mkdir /home/user && chown user:user /home/user && chown user:user /src
 USER user
 ENV GOPATH /home/user/go
 
