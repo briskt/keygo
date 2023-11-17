@@ -36,13 +36,20 @@
 
 <Button on:click={onClickAdd}>Add</Button>
 
-<ul>
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Created At</th>
+    <th>Updated At</th>
+  </tr>
   {#each tenants as tenant (tenant.ID)}
-    <li>
-      {tenant.Name}
-    </li>
+    <tr>
+      <td>{tenant.Name}</td>
+      <td>{tenant.CreatedAt}</td>
+      <td>{tenant.UpdatedAt}</td>
+    </tr>
   {/each}
-</ul>
+</table>
 
 <Dialog.Alert
         open={showAddTenantModal}
@@ -76,5 +83,15 @@
 
   .form-button {
     margin: 0.5rem;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+  table, th, td {
+    border: 1px solid;
+  }
+  th,td {
+    padding: 0.5rem;
   }
 </style>

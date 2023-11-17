@@ -12,10 +12,40 @@
 
 <h1>Users</h1>
 
-<ul>
+<table>
+  <tr>
+    <th>Role</th>
+    <th>First Name</th>
+    <th>Last Name</th>
+    <th>Email</th>
+    <th>Avatar URL</th>
+    <th>Created At</th>
+    <th>Updated At</th>
+    <th>Last Login</th>
+  </tr>
 {#each users as user (user.ID)}
-  <li>
-    {user.FirstName}
-  </li>
+  <tr>
+    <td>{user.Role}</td>
+    <td>{user.FirstName}</td>
+    <td>{user.LastName}</td>
+    <td>{user.Email}</td>
+    <td>{user.AvatarURL}</td>
+    <td>{new Date(user.CreatedAt).toLocaleString()}</td>
+    <td>{new Date(user.UpdatedAt).toLocaleString()}</td>
+    <td>{new Date(user.LastLoginAt).toLocaleString()}</td>
+  </tr>
 {/each}
-</ul>
+
+</table>
+
+<style>
+  table {
+    border-collapse: collapse;
+  }
+  table, th, td {
+    border: 1px solid;
+  }
+  th,td {
+    padding: 0.5rem;
+  }
+</style>
