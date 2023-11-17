@@ -12,13 +12,13 @@ type UserService interface {
 	FindUserByID(ctx echo.Context, id string) (User, error)
 
 	// FindUsers retrieves a list of users by filter
-	FindUsers(ctx echo.Context, userFilter UserFilter) ([]User, int, error)
+	FindUsers(ctx echo.Context, filter UserFilter) ([]User, int, error)
 
 	// CreateUser creates a new user
-	CreateUser(ctx echo.Context, userCreate UserCreate) (User, error)
+	CreateUser(ctx echo.Context, input UserCreateInput) (User, error)
 
 	// UpdateUser updates a user object
-	UpdateUser(ctx echo.Context, id string, userUpdate UserUpdate) (User, error)
+	UpdateUser(ctx echo.Context, id string, input UserUpdateInput) (User, error)
 
 	// DeleteUser permanently deletes a user and all child objects
 	DeleteUser(ctx echo.Context, id string) error
@@ -52,8 +52,8 @@ type User struct {
 	UpdatedAt   time.Time
 }
 
-// UserCreate is a set of fields to define a new user for CreateUser()
-type UserCreate struct {
+// UserCreateInput is a set of fields to define a new user for CreateUser()
+type UserCreateInput struct {
 	FirstName string
 	LastName  string
 	Email     string
@@ -62,22 +62,22 @@ type UserCreate struct {
 }
 
 // Validate returns an error if the struct contains invalid information
-func (uc *UserCreate) Validate() error {
+func (uc *UserCreateInput) Validate() error {
 	if uc.Email == "" {
 		return Errorf(ERR_INVALID, "Email is required")
 	}
 	return nil
 }
 
-// UserUpdate is a set of fields to be updated via UpdateUser()
-type UserUpdate struct {
+// UserUpdateInput is a set of fields to be updated via UpdateUser()
+type UserUpdateInput struct {
 	FirstName *string
 	LastName  *string
 	Email     *string
 }
 
 // Validate returns an error if the struct contains invalid information.
-func (uu *UserUpdate) Validate() error {
+func (uu *UserUpdateInput) Validate() error {
 	if uu.Email != nil && *uu.Email == "" {
 		return Errorf(ERR_INVALID, "Email is required")
 	}

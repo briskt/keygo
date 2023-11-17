@@ -11,7 +11,7 @@ import (
 func (ts *TestSuite) TestUserService_CreateUser() {
 	s := db.NewUserService()
 
-	u := app.UserCreate{
+	u := app.UserCreateInput{
 		FirstName: "susy",
 		LastName:  "smith",
 		Email:     "susy@example.com",
@@ -30,7 +30,7 @@ func (ts *TestSuite) TestUserService_CreateUser() {
 	ts.SameUser(newUser, fromDB)
 
 	// Expect a validation error
-	_, err = s.CreateUser(ts.ctx, app.UserCreate{})
+	_, err = s.CreateUser(ts.ctx, app.UserCreateInput{})
 	ts.Error(err)
 	ts.Equal(app.ErrorCode(err), app.ERR_INVALID)
 	ts.Contains(app.ErrorMessage(err), "Email")
@@ -44,7 +44,7 @@ func (ts *TestSuite) SameUser(expected app.User, actual app.User, msgAndArgs ...
 }
 
 // CreateUser creates a user in the database. Fatal on error.
-func (ts *TestSuite) CreateUser(user app.UserCreate) app.User {
+func (ts *TestSuite) CreateUser(user app.UserCreateInput) app.User {
 	ts.T().Helper()
 	newUser, err := db.NewUserService().CreateUser(ts.ctx, user)
 	if err != nil {
@@ -56,7 +56,7 @@ func (ts *TestSuite) CreateUser(user app.UserCreate) app.User {
 func (ts *TestSuite) Test_FindUserByID() {
 	s := db.NewUserService()
 
-	user, err := s.CreateUser(ts.ctx, app.UserCreate{FirstName: "joe", Email: "joe@example.com"})
+	user, err := s.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "joe", Email: "joe@example.com"})
 	ts.NoError(err)
 
 	found, err := s.FindUserByID(ts.ctx, user.ID)
@@ -71,9 +71,9 @@ func (ts *TestSuite) Test_FindUsers() {
 	s := db.NewUserService()
 
 	joeEmail := "joe@example.com"
-	joe, err := s.CreateUser(ts.ctx, app.UserCreate{FirstName: "joe", Email: joeEmail})
+	joe, err := s.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "joe", Email: joeEmail})
 	ts.NoError(err)
-	sally, err := s.CreateUser(ts.ctx, app.UserCreate{FirstName: "sally", Email: "sally@example.com"})
+	sally, err := s.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "sally", Email: "sally@example.com"})
 	ts.NoError(err)
 
 	notFindableEmail := "nobody@example.com"
@@ -124,7 +124,7 @@ func (ts *TestSuite) Test_FindUsers() {
 func (ts *TestSuite) Test_TouchLastLoginAt() {
 	s := db.NewUserService()
 
-	joe, err := s.CreateUser(ts.ctx, app.UserCreate{FirstName: "joe", Email: "joe@example.com"})
+	joe, err := s.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "joe", Email: "joe@example.com"})
 	ts.NoError(err)
 
 	now := time.Now().UTC()

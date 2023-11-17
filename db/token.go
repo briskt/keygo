@@ -86,7 +86,7 @@ func findTokenByID(ctx echo.Context, id string) (Token, error) {
 
 // updateToken updates expires_at and last_used_at on existing token object
 // Returns new state of the token object
-func updateToken(ctx echo.Context, token Token, input app.TokenUpdate) (Token, error) {
+func updateToken(ctx echo.Context, token Token, input app.TokenUpdateInput) (Token, error) {
 	if input.ExpiresAt != nil {
 		token.ExpiresAt = *input.ExpiresAt
 	}
@@ -140,7 +140,7 @@ func (t TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error)
 }
 
 // CreateToken creates a new token object.
-func (t TokenService) CreateToken(ctx echo.Context, input app.TokenCreate) (app.Token, error) {
+func (t TokenService) CreateToken(ctx echo.Context, input app.TokenCreateInput) (app.Token, error) {
 	if err := input.Validate(); err != nil {
 		return app.Token{}, err
 	}
@@ -163,7 +163,7 @@ func (t TokenService) DeleteToken(ctx echo.Context, id string) error {
 	return deleteToken(ctx, id)
 }
 
-func (t TokenService) UpdateToken(ctx echo.Context, id string, input app.TokenUpdate) error {
+func (t TokenService) UpdateToken(ctx echo.Context, id string, input app.TokenUpdateInput) error {
 	if err := input.Validate(); err != nil {
 		return err
 	}

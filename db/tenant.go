@@ -62,7 +62,7 @@ func (s *TenantService) FindTenants(ctx echo.Context, _ app.TenantFilter) ([]app
 }
 
 // CreateTenant creates a new tenant.
-func (s *TenantService) CreateTenant(ctx echo.Context, input app.TenantCreate) (app.Tenant, error) {
+func (s *TenantService) CreateTenant(ctx echo.Context, input app.TenantCreateInput) (app.Tenant, error) {
 	if err := input.Validate(); err != nil {
 		return app.Tenant{}, err
 	}
@@ -79,7 +79,7 @@ func (s *TenantService) CreateTenant(ctx echo.Context, input app.TenantCreate) (
 }
 
 // UpdateTenant updates a tenant object.
-func (s *TenantService) UpdateTenant(ctx echo.Context, id string, input app.TenantUpdate) (app.Tenant, error) {
+func (s *TenantService) UpdateTenant(ctx echo.Context, id string, input app.TenantUpdateInput) (app.Tenant, error) {
 	if err := input.Validate(); err != nil {
 		return app.Tenant{}, err
 	}

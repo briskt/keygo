@@ -44,7 +44,7 @@ func (m *UserService) FindUsers(context echo.Context, filter app.UserFilter) ([]
 	return users, len(users), nil
 }
 
-func (m *UserService) CreateUser(context echo.Context, input app.UserCreate) (app.User, error) {
+func (m *UserService) CreateUser(context echo.Context, input app.UserCreateInput) (app.User, error) {
 	if err := input.Validate(); err != nil {
 		return app.User{}, err
 	}
@@ -63,7 +63,7 @@ func (m *UserService) CreateUser(context echo.Context, input app.UserCreate) (ap
 	return user, nil
 }
 
-func (m *UserService) UpdateUser(context echo.Context, id string, input app.UserUpdate) (app.User, error) {
+func (m *UserService) UpdateUser(context echo.Context, id string, input app.UserUpdateInput) (app.User, error) {
 	if err := input.Validate(); err != nil {
 		return app.User{}, err
 	}

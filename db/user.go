@@ -66,7 +66,7 @@ func (s *UserService) FindUsers(ctx echo.Context, filter app.UserFilter) ([]app.
 }
 
 // CreateUser creates a new user.
-func (s *UserService) CreateUser(ctx echo.Context, userCreate app.UserCreate) (app.User, error) {
+func (s *UserService) CreateUser(ctx echo.Context, userCreate app.UserCreateInput) (app.User, error) {
 	if err := userCreate.Validate(); err != nil {
 		return app.User{}, err
 	}
@@ -84,7 +84,7 @@ func (s *UserService) CreateUser(ctx echo.Context, userCreate app.UserCreate) (a
 }
 
 // UpdateUser updates a user object.
-func (s *UserService) UpdateUser(ctx echo.Context, id string, input app.UserUpdate) (app.User, error) {
+func (s *UserService) UpdateUser(ctx echo.Context, id string, input app.UserUpdateInput) (app.User, error) {
 	if err := input.Validate(); err != nil {
 		return app.User{}, err
 	}
@@ -139,7 +139,7 @@ func createUser(ctx echo.Context, user User) (User, error) {
 }
 
 // updateUser updates fields on a user object.
-func updateUser(ctx echo.Context, id string, upd app.UserUpdate) (User, error) {
+func updateUser(ctx echo.Context, id string, upd app.UserUpdateInput) (User, error) {
 	user, err := findUserByID(ctx, id)
 	if err != nil {
 		return User{}, err

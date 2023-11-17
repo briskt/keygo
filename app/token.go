@@ -16,14 +16,14 @@ type TokenService interface {
 	// CreateToken creates a new token object
 	//
 	// On success, the token.ID is set to the new token ID
-	CreateToken(ctx echo.Context, tokenCreate TokenCreate) (Token, error)
+	CreateToken(ctx echo.Context, input TokenCreateInput) (Token, error)
 
 	// DeleteToken permanently deletes a token object from the system by ID.
 	// The parent user object is not removed.
 	DeleteToken(ctx echo.Context, id string) error
 
 	// UpdateToken extends a token's ExpiresAt
-	UpdateToken(ctx echo.Context, id string, input TokenUpdate) error
+	UpdateToken(ctx echo.Context, id string, input TokenUpdateInput) error
 }
 
 type Token struct {
@@ -42,14 +42,14 @@ type Token struct {
 	UpdatedAt  time.Time
 }
 
-type TokenCreate struct {
+type TokenCreateInput struct {
 	UserID    string
 	AuthID    string
 	ExpiresAt time.Time
 }
 
 // Validate returns an error if the struct contains invalid information
-func (tc *TokenCreate) Validate() error {
+func (tc *TokenCreateInput) Validate() error {
 	if tc.UserID == "" {
 		return Errorf(ERR_INVALID, "UserID is required")
 	}
@@ -59,13 +59,13 @@ func (tc *TokenCreate) Validate() error {
 	return nil
 }
 
-type TokenUpdate struct {
+type TokenUpdateInput struct {
 	ExpiresAt  *time.Time
 	LastUsedAt *time.Time
 }
 
 // Validate returns an error if the struct contains invalid information
-func (tu *TokenUpdate) Validate() error {
+func (tu *TokenUpdateInput) Validate() error {
 	if tu.LastUsedAt != nil && tu.LastUsedAt.After(time.Now()) {
 		return Errorf(ERR_INVALID, "LastUsedAt is in the future")
 	}

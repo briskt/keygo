@@ -37,7 +37,7 @@ func (ts *TestSuite) SetupTest() {
 func Test_RunSuite(t *testing.T) {
 	mus := mock.NewUserService()
 	mts := mock.NewTokenService()
-	mts.UpdateTokenFn = func(ctx echo.Context, id string, input app.TokenUpdate) error {
+	mts.UpdateTokenFn = func(ctx echo.Context, id string, input app.TokenUpdateInput) error {
 		return nil
 	}
 
@@ -63,7 +63,7 @@ func testContext() echo.Context {
 }
 
 func (ts *TestSuite) createUserFixture() Fixtures {
-	fakeUserCreate := app.UserCreate{
+	fakeUserCreate := app.UserCreateInput{
 		Email: "test@example.com",
 		Role:  "Admin",
 	}

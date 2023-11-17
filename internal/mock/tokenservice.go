@@ -14,7 +14,7 @@ type TokenService struct {
 	tokens map[string]app.Token // key is timestamp
 
 	FindTokenFn   func(ctx echo.Context, raw string) (app.Token, error)
-	UpdateTokenFn func(ctx echo.Context, id string, input app.TokenUpdate) error
+	UpdateTokenFn func(ctx echo.Context, id string, input app.TokenUpdateInput) error
 }
 
 func NewTokenService() TokenService {
@@ -43,7 +43,7 @@ func (m *TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error
 	return app.Token{}, fmt.Errorf("token %s not found", raw)
 }
 
-func (m *TokenService) CreateToken(ctx echo.Context, input app.TokenCreate) (app.Token, error) {
+func (m *TokenService) CreateToken(ctx echo.Context, input app.TokenCreateInput) (app.Token, error) {
 	if err := input.Validate(); err != nil {
 		return app.Token{}, err
 	}
@@ -68,7 +68,7 @@ func (m *TokenService) DeleteToken(ctx echo.Context, tokenID string) error {
 	panic("implement TokenService DeleteToken")
 }
 
-func (m *TokenService) UpdateToken(ctx echo.Context, id string, input app.TokenUpdate) error {
+func (m *TokenService) UpdateToken(ctx echo.Context, id string, input app.TokenUpdateInput) error {
 	if err := input.Validate(); err != nil {
 		return err
 	}

@@ -167,7 +167,7 @@ func (s *Server) authCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
-	token, err := s.TokenService.CreateToken(c, app.TokenCreate{
+	token, err := s.TokenService.CreateToken(c, app.TokenCreateInput{
 		AuthID:    profile.ID,
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(app.AuthTokenLifetime),
@@ -222,7 +222,7 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		now := time.Now()
 		tokenExpiry := now.Add(app.AuthTokenLifetime)
-		if err := s.TokenService.UpdateToken(c, token.ID, app.TokenUpdate{
+		if err := s.TokenService.UpdateToken(c, token.ID, app.TokenUpdateInput{
 			ExpiresAt:  &tokenExpiry,
 			LastUsedAt: &now,
 		}); err != nil {
@@ -306,7 +306,7 @@ func (s *Server) FindOrCreateUser(ctx echo.Context, email string) (app.User, err
 	}
 
 	// user does not exist with the given email address -- create a new user
-	if user, err := s.UserService.CreateUser(ctx, app.UserCreate{Email: email}); err != nil {
+	if user, err := s.UserService.CreateUser(ctx, app.UserCreateInput{Email: email}); err != nil {
 		return app.User{}, fmt.Errorf("failed to create a new user: %w", err)
 	} else {
 		return user, nil
