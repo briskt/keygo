@@ -24,6 +24,9 @@ type TenantService interface {
 
 	// DeleteTenant permanently deletes a tenant and all child objects
 	DeleteTenant(ctx echo.Context, id string) error
+
+	// CreateTenantUser creates a new tenant user
+	CreateTenantUser(ctx echo.Context, input TenantUserCreateInput) error
 }
 
 // Tenant is the full model that identifies an app Tenant
@@ -75,4 +78,9 @@ func (tu *TenantUpdateInput) Validate() error {
 		return Errorf(ERR_INVALID, "Tenant name must be at least %d characters", minTenantNameLength)
 	}
 	return nil
+}
+
+// TenantUserCreateInput is a set of fields to define a new tenant user for CreateTenantUser()
+type TenantUserCreateInput struct {
+	Name string
 }
