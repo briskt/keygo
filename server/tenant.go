@@ -45,3 +45,19 @@ func (s *Server) tenantsListHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, tenants)
 }
+
+func (s *Server) tenantHandler(c echo.Context) error {
+	user := app.CurrentUser(c)
+
+	if user.Role != app.UserRoleAdmin {
+		return echo.NewHTTPError(http.StatusNotFound, AuthError{Error: "not found"})
+	}
+
+	id := c.Param("id")
+	tenant, err := s.TenantService.FindTenantByID(c, id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+
+	return c.JSON(http.StatusOK, tenant)
+}

@@ -81,6 +81,7 @@ func (s *Server) registerRoutes() {
 	api.GET("/auth/logout", s.authLogout)
 	api.POST("/tenants", s.tenantsCreateHandler)
 	api.GET("/tenants", s.tenantsListHandler)
+	api.GET("/tenants/:id", s.tenantHandler)
 	api.GET("/users", s.usersListHandler)
 	api.GET("/users/:id", s.userHandler)
 
