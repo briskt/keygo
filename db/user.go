@@ -133,7 +133,7 @@ func findUsers(ctx echo.Context, filter app.UserFilter) ([]User, int, error) {
 // the timestamps to the current time.
 func createUser(ctx echo.Context, user User) (User, error) {
 	// TODO: remove this when ready
-	user.Role = "Admin"
+	user.Role = app.UserRoleAdmin
 	result := Tx(ctx).Create(&user)
 	return user, result.Error
 }

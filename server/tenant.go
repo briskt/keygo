@@ -10,7 +10,7 @@ import (
 
 func (s *Server) tenantsCreateHandler(c echo.Context) error {
 	user := app.CurrentUser(c)
-	if user.Role != "Admin" {
+	if user.Role != app.UserRoleAdmin {
 		return echo.NewHTTPError(http.StatusUnauthorized, AuthError{Error: "not an authorized user"})
 	}
 
@@ -32,7 +32,7 @@ func (s *Server) tenantsCreateHandler(c echo.Context) error {
 
 func (s *Server) tenantsListHandler(c echo.Context) error {
 	user := app.CurrentUser(c)
-	if user.Role != "Admin" {
+	if user.Role != app.UserRoleAdmin {
 		return echo.NewHTTPError(http.StatusNotFound, AuthError{Error: "not found"})
 	}
 

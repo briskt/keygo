@@ -65,7 +65,7 @@ func testContext() echo.Context {
 func (ts *TestSuite) createUserFixture() Fixtures {
 	fakeUserCreate := app.UserCreateInput{
 		Email: "test@example.com",
-		Role:  "Admin",
+		Role:  app.UserRoleAdmin,
 	}
 	createdUser, err := ts.server.UserService.CreateUser(ts.ctx, fakeUserCreate)
 	ts.NoError(err)
@@ -75,7 +75,7 @@ func (ts *TestSuite) createUserFixture() Fixtures {
 		User: app.User{
 			ID:    createdUser.ID,
 			Email: "test@example.com",
-			Role:  "Admin",
+			Role:  app.UserRoleAdmin,
 		},
 		PlainText: "12345",
 		ExpiresAt: time.Now().Add(time.Minute),

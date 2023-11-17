@@ -6,6 +6,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const UserRoleAdmin = "Admin"
+
 // UserService is a service for managing users
 type UserService interface {
 	// FindUserByID retrieves a user by ID

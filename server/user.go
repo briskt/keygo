@@ -10,7 +10,7 @@ import (
 
 func (s *Server) usersListHandler(c echo.Context) error {
 	user := app.CurrentUser(c)
-	if user.Role != "Admin" {
+	if user.Role != app.UserRoleAdmin {
 		return echo.NewHTTPError(http.StatusOK, []app.User{})
 	}
 
