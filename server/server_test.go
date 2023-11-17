@@ -21,37 +21,41 @@ type TestSuite struct {
 	suite.Suite
 	*require.Assertions
 
-	server           *server.Server
-	ctx              echo.Context
-	mockUserService  *mock.UserService
-	mockTokenService *mock.TokenService
+	server            *server.Server
+	ctx               echo.Context
+	mockTenantService *mock.TenantService // TODO: replace this with server.TenantService
+	mockTokenService  *mock.TokenService
+	mockUserService   *mock.UserService
 }
 
 // SetupTest runs before every test function
 func (ts *TestSuite) SetupTest() {
 	ts.Assertions = require.New(ts.T())
-	ts.server.UserService.(*mock.UserService).DeleteAllUsers()
+	ts.server.TenantService.(*mock.TenantService).DeleteAllTenants()
 	ts.server.TokenService.(*mock.TokenService).DeleteAllTokens()
+	ts.server.UserService.(*mock.UserService).DeleteAllUsers()
 }
 
 func Test_RunSuite(t *testing.T) {
-	mus := mock.NewUserService()
-	mts := mock.NewTokenService()
-	mts.UpdateTokenFn = func(ctx echo.Context, id string, input app.TokenUpdateInput) error {
+	mockTenantService := mock.NewTenantService()
+	mockTokenService := mock.NewTokenService()
+	mockUserService := mock.NewUserService()
+	mockTokenService.UpdateTokenFn = func(ctx echo.Context, id string, input app.TokenUpdateInput) error {
 		return nil
 	}
 
 	s := app.DataServices{
-		TenantService: nil,
-		TokenService:  &mts,
-		UserService:   &mus,
+		TenantService: &mockTenantService,
+		TokenService:  &mockTokenService,
+		UserService:   &mockUserService,
 	}
 	svr := server.New(server.WithDataServices(s))
 	suite.Run(t, &TestSuite{
-		server:           svr,
-		ctx:              testContext(),
-		mockUserService:  &mus,
-		mockTokenService: &mts,
+		server:            svr,
+		ctx:               testContext(),
+		mockTenantService: &mockTenantService,
+		mockTokenService:  &mockTokenService,
+		mockUserService:   &mockUserService,
 	})
 }
 
@@ -88,7 +92,20 @@ func (ts *TestSuite) createUserFixture() Fixtures {
 	}
 }
 
+func (ts *TestSuite) createTenantFixture() Fixtures {
+	fakeTenantCreate := app.TenantCreateInput{
+		Name: "Test Tenant",
+	}
+	createdTenant, err := ts.server.TenantService.CreateTenant(ts.ctx, fakeTenantCreate)
+	ts.NoError(err)
+
+	return Fixtures{
+		Tenants: []app.Tenant{createdTenant},
+	}
+}
+
 type Fixtures struct {
-	Users  []app.User
-	Tokens []app.Token
+	Tenants []app.Tenant
+	Tokens  []app.Token
+	Users   []app.User
 }
