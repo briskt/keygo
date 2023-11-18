@@ -2,6 +2,8 @@
   import {addTenant, listTenants} from 'data/api/tenants'
   import type {Tenant} from 'data/types/tenant'
   import {Button, Dialog, Form, TextField} from '@silintl/ui-components'
+  import * as routes from 'helpers/routes'
+  import {localeTime} from 'helpers/time'
   import {onMount} from 'svelte'
 
   let newTenantName = ''
@@ -30,8 +32,6 @@
   const onCancel = () => {
     showAddTenantModal = false
   }
-
-  const tenantPage = (id: string) => `/admin/tenants/${id}`
 </script>
 
 <h1>Tenants</h1>
@@ -46,7 +46,7 @@
   </tr>
   {#each tenants as tenant (tenant.ID)}
     <tr>
-      <td><a href="{tenantPage(tenant.ID)}">{tenant.Name}</a></td>
+      <td><a href="{routes.TENANTS + '/' + tenant.ID}">{tenant.Name}</a></td>
       <td>{tenant.CreatedAt}</td>
       <td>{tenant.UpdatedAt}</td>
     </tr>

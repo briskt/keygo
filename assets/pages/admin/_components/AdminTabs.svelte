@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { TabData } from 'data/types/tab'
+  import * as routes from 'helpers/routes'
   import { goto, isActive } from '@roxi/routify'
   import { TabBar } from '@silintl/ui-components'
 
@@ -12,17 +13,17 @@
   $: tabs = [
     {
       label: 'Admin Home',
-      tabUrl: '/admin',
+      tabUrl: routes.ADMIN,
       visible: true,
     },
     {
       label: 'Tenants',
-      tabUrl: '/admin/tenants',
+      tabUrl: routes.TENANTS,
       visible: true,
     },
     {
       label: 'Users',
-      tabUrl: '/admin/users',
+      tabUrl: routes.USERS,
       visible: true,
     },
   ]

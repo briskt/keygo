@@ -1,5 +1,10 @@
 export const ROOT = '/'
+
+// admin pages
 export const ADMIN = '/admin'
+export const TENANTS = '/admin/tenants'
+export const USERS = '/admin/users'
+
 export const PROFILE = '/user'
 export const LOGOUT = '/logout'
 export const EXIT = '/exit'
