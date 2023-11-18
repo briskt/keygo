@@ -38,15 +38,3 @@
 {/each}
 
 </table>
-
-<style>
-  table {
-    border-collapse: collapse;
-  }
-  table, th, td {
-    border: 1px solid;
-  }
-  th,td {
-    padding: 0.5rem;
-  }
-</style>

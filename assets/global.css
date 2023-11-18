@@ -71,3 +71,13 @@ button.mdc-tab,
   border-color: var(--mdc-theme-status-error);
   color: var(--mdc-theme-status-error);
 }
+
+table {
+	border-collapse: collapse;
+}
+table, th, td {
+	border: 1px solid;
+}
+th,td {
+	padding: 0.5rem;
+}

@@ -86,14 +86,4 @@
   .form-button {
     margin: 0.5rem;
   }
-
-  table {
-    border-collapse: collapse;
-  }
-  table, th, td {
-    border: 1px solid;
-  }
-  th,td {
-    padding: 0.5rem;
-  }
 </style>
