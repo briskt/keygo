@@ -13,3 +13,8 @@ export const listTenants = async (): Promise<Tenant[]> => {
   const response = await api.get('/api/tenants')
   return response.json()
 }
+
+export const getTenant = async (id: string): Promise<Tenant> => {
+  const response = await api.get('/api/tenants/'+encodeURIComponent(id))
+  return response.json()
+}
