@@ -1,6 +1,7 @@
 <script lang="ts">
   import {getTenant} from 'data/api/tenants'
   import type {Tenant} from 'data/types/tenant'
+  import {localeTime} from 'helpers/time'
   import {Button, Dialog, Form, TextField} from '@silintl/ui-components'
   import {onMount} from 'svelte'
 
@@ -27,9 +28,9 @@
   <dt>Name</dt>
   <dd>{tenant.Name}</dd>
   <dt>CreatedAt</dt>
-  <dd>{new Date(tenant.CreatedAt).toLocaleString()}</dd>
+  <dd>{localeTime(tenant.CreatedAt)}</dd>
   <dt>UpdatedAt</dt>
-  <dd>{new Date(tenant.UpdatedAt).toLocaleString()}</dd>
+  <dd>{localeTime(tenant.UpdatedAt)}</dd>
 </dl>
 
 

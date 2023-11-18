@@ -1,5 +1,6 @@
 <script lang="ts">
   import { user } from 'data/store/user'
+  import {localeTime} from 'helpers/time'
 
   const { Email, FirstName, LastName, CreatedAt, LastLoginAt, Role } = $user
 </script>
@@ -11,9 +12,9 @@
   <dt>Email</dt>
   <dd>{Email}</dd>
   <dt>CreatedAt</dt>
-  <dd>{new Date(CreatedAt).toLocaleString()}</dd>
+  <dd>{localeTime(CreatedAt)}</dd>
   <dt>LastLoginAt</dt>
-  <dd>{new Date(LastLoginAt).toLocaleString()}</dd>
+  <dd>{localeTime(LastLoginAt)}</dd>
   <dt>Role</dt>
   <dd>{Role}</dd>
 </dl>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import {listUsers} from 'data/api/users'
   import type {User} from 'data/types/user'
+  import {localeTime} from 'helpers/time'
   import {onMount} from 'svelte'
 
   let users = [] as User[]
@@ -30,9 +31,9 @@
     <td>{user.LastName}</td>
     <td>{user.Email}</td>
     <td>{user.AvatarURL}</td>
-    <td>{new Date(user.CreatedAt).toLocaleString()}</td>
-    <td>{new Date(user.UpdatedAt).toLocaleString()}</td>
-    <td>{new Date(user.LastLoginAt).toLocaleString()}</td>
+    <td>{localeTime(user.CreatedAt)}</td>
+    <td>{localeTime(user.UpdatedAt)}</td>
+    <td>{localeTime(user.LastLoginAt)}</td>
   </tr>
 {/each}
 

@@ -47,8 +47,8 @@
   {#each tenants as tenant (tenant.ID)}
     <tr>
       <td><a href="{routes.TENANTS + '/' + tenant.ID}">{tenant.Name}</a></td>
-      <td>{tenant.CreatedAt}</td>
-      <td>{tenant.UpdatedAt}</td>
+      <td>{localeTime(tenant.CreatedAt)}</td>
+      <td>{localeTime(tenant.UpdatedAt)}</td>
     </tr>
   {/each}
 </table>
