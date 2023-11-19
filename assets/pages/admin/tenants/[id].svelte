@@ -7,7 +7,6 @@
 
   export let id: string
 
-  let newTenantName = ''
   let tenant = {} as Tenant
   let showAddTenantUserModal = false
 
@@ -33,7 +32,22 @@
   <dd>{localeTime(tenant.UpdatedAt)}</dd>
 </dl>
 
+<h2>Tenant Users</h2>
 
+{#if tenant.UserIDs && tenant.UserIDs.length}
+  <table>
+    <tr>
+      <th>ID</th>
+    </tr>
+    {#each tenant.UserIDs as id (id)}
+      <tr>
+        <td>{id}</td>
+      </tr>
+    {/each}
+  </table>
+{:else}
+  <em>No users</em>
+{/if}
 
 <style>
   dd {

@@ -122,11 +122,20 @@ func findTenantByID(ctx echo.Context, id string) (Tenant, error) {
 	return tenant, result.Error
 }
 
-func convertTenant(_ echo.Context, t Tenant) (app.Tenant, error) {
-	return app.Tenant{
+func convertTenant(c echo.Context, t Tenant) (app.Tenant, error) {
+	tenant := app.Tenant{
 		ID:        t.ID,
 		Name:      t.Name,
 		CreatedAt: t.CreatedAt,
 		UpdatedAt: t.UpdatedAt,
-	}, nil
+	}
+	users, n, err := findUsers(c, app.UserFilter{TenantID: &t.ID})
+	if err != nil {
+		return app.Tenant{}, err
+	}
+	tenant.UserIDs = make([]string, n)
+	for i, user := range users {
+		tenant.UserIDs[i] = user.ID
+	}
+	return tenant, nil
 }

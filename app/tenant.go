@@ -33,6 +33,7 @@ type TenantService interface {
 type Tenant struct {
 	ID        string
 	Name      string
+	UserIDs   []string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
