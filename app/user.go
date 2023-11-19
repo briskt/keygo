@@ -32,9 +32,8 @@ type UserService interface {
 // UserFilter is a filter passed to FindUsers()
 type UserFilter struct {
 	// Filtering fields.
-	ID     *string
-	Email  *string
-	APIKey *string
+	Email    *string
+	TenantID *string
 
 	// Restrict to subset of results.
 	Offset int

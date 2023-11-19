@@ -16,6 +16,7 @@ type User struct {
 	Email       string
 	AvatarURL   string
 	Role        string
+	TenantID    string
 	LastLoginAt *time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -119,11 +120,13 @@ func findUserByID(ctx echo.Context, id string) (User, error) {
 // findUsers returns a list of users. Also returns a count of
 // total matching users which may differ if filter.Limit is set.
 func findUsers(ctx echo.Context, filter app.UserFilter) ([]User, int, error) {
-	// TODO: implement (or remove) other filter parameters
 	var users []User
 	q := Tx(ctx)
 	if filter.Email != nil {
 		q = q.Where("email = ?", filter.Email)
+	}
+	if filter.TenantID != nil {
+		q = q.Where("tenant_id = ?", filter.TenantID)
 	}
 	result := q.Find(&users)
 	return users, len(users), result.Error
