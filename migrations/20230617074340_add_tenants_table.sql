@@ -15,7 +15,7 @@ ALTER TABLE "users" ADD FOREIGN KEY ("tenant_id") REFERENCES "tenants" ("id") ON
 
 -- +goose Down
 -- +goose StatementBegin
-ALTER TABLE "users" DROP CONSTRAINT "users_tenant_id_fkey"
+ALTER TABLE "users" DROP CONSTRAINT "users_tenant_id_fkey";
 ALTER TABLE "users" DROP "tenant_id";
 DROP TABLE "tenants";
 -- +goose StatementEnd
