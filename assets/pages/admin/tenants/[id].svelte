@@ -1,4 +1,5 @@
 <script lang="ts">
+  import TenantUser from './_components/TenantUser.svelte'
   import {getTenant} from 'data/api/tenants'
   import type {Tenant} from 'data/types/tenant'
   import {localeTime} from 'helpers/time'
@@ -37,12 +38,13 @@
 {#if tenant.UserIDs && tenant.UserIDs.length}
   <table>
     <tr>
-      <th>ID</th>
+      <th>Role</th>
+      <th>Email</th>
+      <th>First Name</th>
+      <th>Last Name</th>
     </tr>
     {#each tenant.UserIDs as id (id)}
-      <tr>
-        <td>{id}</td>
-      </tr>
+      <TenantUser {id} />
     {/each}
   </table>
 {:else}

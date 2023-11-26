@@ -60,5 +60,10 @@ func (s *Server) tenantHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 
-	return c.JSON(http.StatusOK, tenant)
+	t, err := db.ConvertTenant(c, tenant)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, t)
 }

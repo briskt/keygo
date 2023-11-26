@@ -1,7 +1,7 @@
 import type {User} from 'data/types/user'
 import api from '../api'
 
-export const viewUser = async (id: string): Promise<User> => {
+export const getUser = async (id: string): Promise<User> => {
   const response = await api.get('/api/users/' + encodeURIComponent(id))
   return response.json()
 }
