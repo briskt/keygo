@@ -2,32 +2,9 @@ package app
 
 import (
 	"time"
-
-	"github.com/labstack/echo/v4"
 )
 
 const UserRoleAdmin = "Admin"
-
-// UserService is a service for managing users
-type UserService interface {
-	// FindUserByID retrieves a user by ID
-	FindUserByID(ctx echo.Context, id string) (User, error)
-
-	// FindUsers retrieves a list of users by filter
-	FindUsers(ctx echo.Context, filter UserFilter) ([]User, int, error)
-
-	// CreateUser creates a new user
-	CreateUser(ctx echo.Context, input UserCreateInput) (User, error)
-
-	// UpdateUser updates a user object
-	UpdateUser(ctx echo.Context, id string, input UserUpdateInput) (User, error)
-
-	// DeleteUser permanently deletes a user and all child objects
-	DeleteUser(ctx echo.Context, id string) error
-
-	// TouchLastLoginAt sets the LastLoginAt field to the current time
-	TouchLastLoginAt(ctx echo.Context, id string) error
-}
 
 // UserFilter is a filter passed to FindUsers()
 type UserFilter struct {

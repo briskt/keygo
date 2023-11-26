@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo/app"
+	"github.com/briskt/keygo/db"
 )
 
 func (s *Server) usersListHandler(c echo.Context) error {
@@ -14,12 +15,12 @@ func (s *Server) usersListHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusOK, []app.User{})
 	}
 
-	users, n, err := s.UserService.FindUsers(c, app.UserFilter{})
+	users, err := db.FindUsers(c, app.UserFilter{})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
-	s.Logger.Infof("found %d users", n)
+	s.Logger.Infof("found %d users", len(users))
 
 	return c.JSON(http.StatusOK, users)
 }

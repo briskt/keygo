@@ -8,13 +8,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/gorm"
-
-	"github.com/briskt/keygo/app"
 )
 
 type Server struct {
 	*echo.Echo
-	app.DataServices
 	db *gorm.DB
 }
 
@@ -23,12 +20,6 @@ const loggerFormat = "${time_rfc3339} ${status} ${method} ${uri} ${error}\n"
 var svr *Server
 
 type Option func(*Server)
-
-func WithDataServices(services app.DataServices) Option {
-	return func(s *Server) {
-		s.DataServices = services
-	}
-}
 
 func WithDataBase(db *gorm.DB) Option {
 	return func(s *Server) {

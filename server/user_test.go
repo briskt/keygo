@@ -16,9 +16,6 @@ func (ts *TestSuite) Test_GetUser() {
 	user := f.Users[0]
 	token := f.Tokens[0]
 
-	ts.mockTokenService.FindTokenFn = func(_ echo.Context, raw string) (app.Token, error) {
-		return token, nil
-	}
 	req := httptest.NewRequest(http.MethodGet, "/api/users/"+user.ID, nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)
@@ -42,10 +39,6 @@ func (ts *TestSuite) Test_GetUserList() {
 	f := ts.createUserFixture()
 	user := f.Users[0]
 	token := f.Tokens[0]
-
-	ts.mockUserService.FindUsersFn = func(_ echo.Context, _ app.UserFilter) ([]app.User, int, error) {
-		return f.Users, len(f.Users), nil
-	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)

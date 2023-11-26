@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo/app"
+	"github.com/briskt/keygo/db"
 )
 
 func (s *Server) tenantsCreateHandler(c echo.Context) error {
@@ -20,7 +21,7 @@ func (s *Server) tenantsCreateHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "bad request")
 	}
 
-	tenant, err := s.TenantService.CreateTenant(c, input)
+	tenant, err := db.CreateTenant(c, input)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
@@ -36,12 +37,12 @@ func (s *Server) tenantsListHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, AuthError{Error: "not found"})
 	}
 
-	tenants, n, err := s.TenantService.FindTenants(c, app.TenantFilter{})
+	tenants, err := db.FindTenants(c, app.TenantFilter{})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
-	s.Logger.Infof("found %d tenants", n)
+	s.Logger.Infof("found %d tenants", len(tenants))
 
 	return c.JSON(http.StatusOK, tenants)
 }
@@ -54,7 +55,7 @@ func (s *Server) tenantHandler(c echo.Context) error {
 	}
 
 	id := c.Param("id")
-	tenant, err := s.TenantService.FindTenantByID(c, id)
+	tenant, err := db.FindTenantByID(c, id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}

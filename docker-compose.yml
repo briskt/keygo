@@ -18,7 +18,8 @@ services:
       GO_ENV: development
       SUPPORT_EMAIL: forget_about_it@example.com
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     working_dir: /src
 
   ui-app:
@@ -41,32 +42,39 @@ services:
     environment:
       DATABASE_URL: postgres://keygo:keygo@testdb:5432/keygo?sslmode=disable
       GO_ENV: test
+      HISTCONTROL: ignoreboth
     depends_on:
-      - testdb
+      testdb:
+        condition: service_healthy
     working_dir: /src
-    command: go test ./...
+    command: go test -p 1 ./...
+
+  db_base:
+    image: postgres:11.6
+    volumes:
+      - ./db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
+    environment:
+      POSTGRES_USER: keygo
+      POSTGRES_PASSWORD: keygo
+      POSTGRES_DB: keygo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "keygo"]
+      start_period: 1s
+      interval: 500ms
+      timeout: 100ms
+      retries: 3
 
   db:
-    image: postgres:11.6
-    volumes:
-      - ./db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
+    extends:
+      service: db_base
     ports:
-      - "5433:5432"
-    environment:
-      POSTGRES_USER: keygo
-      POSTGRES_PASSWORD: keygo
-      POSTGRES_DB: keygo
+    - "5433:5432"
 
   testdb:
-    image: postgres:11.6
-    volumes:
-      - ./db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
+    extends:
+      service: db_base
     ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: keygo
-      POSTGRES_PASSWORD: keygo
-      POSTGRES_DB: keygo
+    - "5432:5432"
 
   # http://localhost:8000/?pgsql=db&username=keygo&db=keygo&ns=public
   adminer:

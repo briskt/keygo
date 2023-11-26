@@ -16,9 +16,6 @@ func (ts *TestSuite) Test_GetTenant() {
 	token := f.Tokens[0]
 	tenant := ts.createTenantFixture().Tenants[0]
 
-	ts.mockTokenService.FindTokenFn = func(_ echo.Context, raw string) (app.Token, error) {
-		return token, nil
-	}
 	req := httptest.NewRequest(http.MethodGet, "/api/tenants/"+tenant.ID, nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)

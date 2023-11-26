@@ -40,7 +40,9 @@ func (t *Token) BeforeCreate(_ *gorm.DB) error {
 // create a new token object in the database. On success, the ID is set to the new database
 // ID & timestamp fields are set to the current time
 func (t *Token) create(ctx echo.Context) error {
-	t.PlainText = randomString()
+	if t.PlainText == "" {
+		t.PlainText = randomString()
+	}
 	t.Hash = hashToken(t.PlainText)
 
 	err := Tx(ctx).Omit("User").Create(t).Error
@@ -120,29 +122,18 @@ func (t *Token) loadUser(ctx echo.Context) (err error) {
 	return nil
 }
 
-// Ensure service implements interface.
-var _ app.TokenService = (*TokenService)(nil)
-
-// TokenService is a service for managing API auth tokens
-type TokenService struct{}
-
-// NewTokenService returns a new instance of TokenService
-func NewTokenService() *TokenService {
-	return &TokenService{}
-}
-
-func (t TokenService) FindToken(ctx echo.Context, raw string) (app.Token, error) {
+func FindToken(ctx echo.Context, raw string) (Token, error) {
 	token, err := findToken(ctx, raw)
 	if err != nil {
-		return app.Token{}, err
+		return Token{}, err
 	}
-	return convertToken(ctx, token)
+	return token, nil
 }
 
 // CreateToken creates a new token object.
-func (t TokenService) CreateToken(ctx echo.Context, input app.TokenCreateInput) (app.Token, error) {
+func CreateToken(ctx echo.Context, input app.TokenCreateInput) (Token, error) {
 	if err := input.Validate(); err != nil {
-		return app.Token{}, err
+		return Token{}, err
 	}
 
 	token := Token{
@@ -153,17 +144,17 @@ func (t TokenService) CreateToken(ctx echo.Context, input app.TokenCreateInput) 
 
 	err := token.create(ctx)
 	if err != nil {
-		return app.Token{}, err
+		return Token{}, err
 	}
 
-	return convertToken(ctx, token)
+	return token, nil
 }
 
-func (t TokenService) DeleteToken(ctx echo.Context, id string) error {
+func DeleteToken(ctx echo.Context, id string) error {
 	return deleteToken(ctx, id)
 }
 
-func (t TokenService) UpdateToken(ctx echo.Context, id string, input app.TokenUpdateInput) error {
+func UpdateToken(ctx echo.Context, id string, input app.TokenUpdateInput) error {
 	if err := input.Validate(); err != nil {
 		return err
 	}
@@ -176,12 +167,12 @@ func (t TokenService) UpdateToken(ctx echo.Context, id string, input app.TokenUp
 	return err
 }
 
-func convertToken(ctx echo.Context, token Token) (app.Token, error) {
+func ConvertToken(ctx echo.Context, token Token) (app.Token, error) {
 	if err := token.loadUser(ctx); err != nil {
 		return app.Token{}, err
 	}
 
-	user, err := convertUser(ctx, token.User)
+	user, err := ConvertUser(ctx, token.User)
 	if err != nil {
 		return app.Token{}, err
 	}
