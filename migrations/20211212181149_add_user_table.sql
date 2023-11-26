@@ -11,9 +11,11 @@ CREATE TABLE "users" (
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
     deleted timestamp,
-    PRIMARY KEY(id),
-    UNIQUE (email, deleted)
+    PRIMARY KEY(id)
 );
+CREATE UNIQUE INDEX “users_email_unique”
+    ON users(email)
+    WHERE deleted IS NULL;
 -- +goose StatementEnd
 
 -- +goose Down

@@ -15,6 +15,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo/app"
+	"github.com/briskt/keygo/db"
 	"github.com/briskt/keygo/server/oauth"
 )
 
@@ -128,7 +129,7 @@ func (s *Server) authLogout(c echo.Context) error {
 	if err != nil {
 		s.Logger.Error(err.Error())
 	}
-	if err := s.TokenService.DeleteToken(c, token.ID); err != nil {
+	if err := db.DeleteToken(c, token.ID); err != nil {
 		s.Logger.Errorf("failed to delete user token: %s", err)
 	}
 	return c.Redirect(http.StatusTemporaryRedirect, DefaultUIPath)
@@ -167,7 +168,7 @@ func (s *Server) authCallback(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
-	token, err := s.TokenService.CreateToken(c, app.TokenCreateInput{
+	token, err := db.CreateToken(c, app.TokenCreateInput{
 		AuthID:    profile.ID,
 		UserID:    user.ID,
 		ExpiresAt: time.Now().Add(app.AuthTokenLifetime),
@@ -178,7 +179,7 @@ func (s *Server) authCallback(c echo.Context) error {
 
 	s.Logger.Infof("created token: %s", token.ID)
 
-	if err := s.UserService.TouchLastLoginAt(c, token.UserID); err != nil {
+	if err := db.TouchLastLoginAt(c, token.UserID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, AuthError{Error: err.Error()})
 	}
 
@@ -206,12 +207,20 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("getTokenFromSession: %s", err))
 		}
 
-		if token.ID == "" {
-			token, _ = s.TokenService.FindToken(c, getBearerToken(c))
-		}
-
 		status := http.StatusUnauthorized
 		authError := AuthError{"not authorized"}
+
+		if token.ID == "" {
+			t, err := db.FindToken(c, getBearerToken(c))
+			if err != nil {
+				return echo.NewHTTPError(status, authError) // TODO: should this be a different error?
+			}
+			token, err = db.ConvertToken(c, t)
+			if err != nil {
+				return echo.NewHTTPError(status, authError) // TODO: should this be a different error?
+			}
+		}
+
 		if token.ID == "" {
 			return echo.NewHTTPError(status, authError)
 		}
@@ -222,7 +231,7 @@ func (s *Server) AuthnMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		now := time.Now()
 		tokenExpiry := now.Add(app.AuthTokenLifetime)
-		if err := s.TokenService.UpdateToken(c, token.ID, app.TokenUpdateInput{
+		if err := db.UpdateToken(c, token.ID, app.TokenUpdateInput{
 			ExpiresAt:  &tokenExpiry,
 			LastUsedAt: &now,
 		}); err != nil {
@@ -274,12 +283,12 @@ func (s *Server) getTokenFromSession(c echo.Context) (app.Token, error) {
 		return app.Token{}, fmt.Errorf("token in session is not a string\n")
 	}
 
-	token, err := s.TokenService.FindToken(c, tokenPlainText)
+	token, err := db.FindToken(c, tokenPlainText)
 	if err != nil {
 		return app.Token{}, fmt.Errorf("could not find token in DB: %w\n", err)
 	}
 
-	return token, nil
+	return db.ConvertToken(c, token)
 }
 
 func env(key string, required bool) string {
@@ -293,22 +302,22 @@ func env(key string, required bool) string {
 // TODO: move this to the app package
 func (s *Server) FindOrCreateUser(ctx echo.Context, email string) (app.User, error) {
 	// Look up the user by email address. If no user can be found then create a new user
-	users, n, err := s.UserService.FindUsers(ctx, app.UserFilter{Email: &email})
+	users, err := db.FindUsers(ctx, app.UserFilter{Email: &email})
 	if err != nil {
 		return app.User{}, fmt.Errorf("error searching users by email: %w", err)
 	}
-	if n > 1 {
+	if len(users) > 1 {
 		err = errors.New("should only find a single user with a matching email address")
 		return app.User{}, err
 	}
-	if n == 1 {
-		return users[0], nil
+	if len(users) == 1 {
+		return db.ConvertUser(ctx, users[0])
 	}
 
 	// user does not exist with the given email address -- create a new user
-	if user, err := s.UserService.CreateUser(ctx, app.UserCreateInput{Email: email}); err != nil {
+	if user, err := db.CreateUser(ctx, app.UserCreateInput{Email: email}); err != nil {
 		return app.User{}, fmt.Errorf("failed to create a new user: %w", err)
 	} else {
-		return user, nil
+		return db.ConvertUser(ctx, user)
 	}
 }

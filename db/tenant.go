@@ -22,49 +22,22 @@ func (u *Tenant) BeforeCreate(_ *gorm.DB) error {
 	return nil
 }
 
-// Ensure service implements interface.
-var _ app.TenantService = (*TenantService)(nil)
-
-// TenantService is a service for managing tenants.
-type TenantService struct{}
-
-// NewTenantService returns a new instance of TenantService.
-func NewTenantService() *TenantService {
-	return &TenantService{}
-}
-
-// FindTenantByID retrieves a tenant by ID along with their associated auth objects.
-func (s *TenantService) FindTenantByID(ctx echo.Context, id string) (app.Tenant, error) {
-	tenant, err := findTenantByID(ctx, id)
-	if err != nil {
-		return app.Tenant{}, err
-	}
-	return convertTenant(ctx, tenant)
-}
-
 // FindTenants retrieves a list of tenants by filter. Also returns total count of
 // matching tenants which may differ from returned results if filter.Limit is specified.
-func (s *TenantService) FindTenants(ctx echo.Context, _ app.TenantFilter) ([]app.Tenant, int, error) {
+func FindTenants(ctx echo.Context, _ app.TenantFilter) ([]Tenant, error) {
 	var tenants []Tenant
 	result := Tx(ctx).Find(&tenants)
 	if result.Error != nil {
-		return []app.Tenant{}, 0, result.Error
+		return []Tenant{}, result.Error
 	}
-	appTenants := make([]app.Tenant, len(tenants))
-	for i := range tenants {
-		tenant, err := convertTenant(ctx, tenants[i])
-		if err != nil {
-			return nil, 0, err
-		}
-		appTenants[i] = tenant
-	}
-	return appTenants, len(tenants), nil
+
+	return tenants, nil
 }
 
 // CreateTenant creates a new tenant.
-func (s *TenantService) CreateTenant(ctx echo.Context, input app.TenantCreateInput) (app.Tenant, error) {
+func CreateTenant(ctx echo.Context, input app.TenantCreateInput) (Tenant, error) {
 	if err := input.Validate(); err != nil {
-		return app.Tenant{}, err
+		return Tenant{}, err
 	}
 
 	newTenant := Tenant{
@@ -72,21 +45,21 @@ func (s *TenantService) CreateTenant(ctx echo.Context, input app.TenantCreateInp
 	}
 	err := Tx(ctx).Create(&newTenant).Error
 	if err != nil {
-		return app.Tenant{}, err
+		return Tenant{}, err
 	}
 
-	return convertTenant(ctx, newTenant)
+	return newTenant, nil
 }
 
 // UpdateTenant updates a tenant object.
-func (s *TenantService) UpdateTenant(ctx echo.Context, id string, input app.TenantUpdateInput) (app.Tenant, error) {
+func UpdateTenant(ctx echo.Context, id string, input app.TenantUpdateInput) (Tenant, error) {
 	if err := input.Validate(); err != nil {
-		return app.Tenant{}, err
+		return Tenant{}, err
 	}
 
-	tenant, err := findTenantByID(ctx, id)
+	tenant, err := FindTenantByID(ctx, id)
 	if err != nil {
-		return app.Tenant{}, err
+		return Tenant{}, err
 	}
 
 	if input.Name != nil {
@@ -95,14 +68,14 @@ func (s *TenantService) UpdateTenant(ctx echo.Context, id string, input app.Tena
 
 	result := Tx(ctx).Save(&tenant)
 	if err != nil {
-		return app.Tenant{}, result.Error
+		return Tenant{}, result.Error
 	}
 
-	return convertTenant(ctx, tenant)
+	return tenant, nil
 }
 
 // DeleteTenant permanently deletes a tenant and all child objects
-func (s *TenantService) DeleteTenant(ctx echo.Context, id string) error {
+func DeleteTenant(ctx echo.Context, id string) error {
 	result := Tx(ctx).Where("id = ?", id).Delete(&Tenant{})
 	if err := result.Error; err != nil {
 		return err
@@ -111,29 +84,29 @@ func (s *TenantService) DeleteTenant(ctx echo.Context, id string) error {
 }
 
 // CreateTenantUser permanently deletes a tenant and all child objects
-func (s *TenantService) CreateTenantUser(ctx echo.Context, input app.TenantUserCreateInput) error {
+func CreateTenantUser(ctx echo.Context, input app.TenantUserCreateInput) error {
 	return nil
 }
 
-// findTenantByID is a helper function to fetch a tenant by ID.
-func findTenantByID(ctx echo.Context, id string) (Tenant, error) {
+// FindTenantByID is a function to fetch a tenant by ID.
+func FindTenantByID(ctx echo.Context, id string) (Tenant, error) {
 	var tenant Tenant
 	result := Tx(ctx).First(&tenant, "id = ?", id)
 	return tenant, result.Error
 }
 
-func convertTenant(c echo.Context, t Tenant) (app.Tenant, error) {
+func ConvertTenant(c echo.Context, t Tenant) (app.Tenant, error) {
 	tenant := app.Tenant{
 		ID:        t.ID,
 		Name:      t.Name,
 		CreatedAt: t.CreatedAt,
 		UpdatedAt: t.UpdatedAt,
 	}
-	users, n, err := findUsers(c, app.UserFilter{TenantID: &t.ID})
+	users, err := FindUsers(c, app.UserFilter{TenantID: &t.ID})
 	if err != nil {
 		return app.Tenant{}, err
 	}
-	tenant.UserIDs = make([]string, n)
+	tenant.UserIDs = make([]string, len(users))
 	for i, user := range users {
 		tenant.UserIDs[i] = user.ID
 	}

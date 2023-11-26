@@ -8,9 +8,7 @@ import (
 	"github.com/briskt/keygo/db"
 )
 
-func (ts *TestSuite) TestUserService_CreateUser() {
-	s := db.NewUserService()
-
+func (ts *TestSuite) Test_CreateUser() {
 	u := app.UserCreateInput{
 		FirstName: "susy",
 		LastName:  "smith",
@@ -18,35 +16,35 @@ func (ts *TestSuite) TestUserService_CreateUser() {
 	}
 
 	// Create new record and check generated fields
-	newUser, err := s.CreateUser(ts.ctx, u)
+	newUser, err := db.CreateUser(ts.ctx, u)
 	ts.NoError(err)
 	ts.False(newUser.ID == "", "ID is not set")
 	ts.False(newUser.CreatedAt.IsZero(), "expected CreatedAt")
 	ts.False(newUser.UpdatedAt.IsZero(), "expected UpdatedAt")
 
 	// Query database and compare
-	fromDB, err := s.FindUserByID(ts.ctx, newUser.ID)
+	fromDB, err := db.FindUserByID(ts.ctx, newUser.ID)
 	ts.NoError(err)
 	ts.SameUser(newUser, fromDB)
 
 	// Expect a validation error
-	_, err = s.CreateUser(ts.ctx, app.UserCreateInput{})
+	_, err = db.CreateUser(ts.ctx, app.UserCreateInput{})
 	ts.Error(err)
 	ts.Equal(app.ErrorCode(err), app.ERR_INVALID)
 	ts.Contains(app.ErrorMessage(err), "Email")
 }
 
 // SameUser verifies two User objects are the same except for the timestamps
-func (ts *TestSuite) SameUser(expected app.User, actual app.User, msgAndArgs ...interface{}) {
+func (ts *TestSuite) SameUser(expected db.User, actual db.User, msgAndArgs ...interface{}) {
 	actual.CreatedAt = expected.CreatedAt
 	actual.UpdatedAt = expected.UpdatedAt
 	ts.Equal(expected, actual, msgAndArgs...)
 }
 
 // CreateUser creates a user in the database. Fatal on error.
-func (ts *TestSuite) CreateUser(user app.UserCreateInput) app.User {
+func (ts *TestSuite) CreateUser(user app.UserCreateInput) db.User {
 	ts.T().Helper()
-	newUser, err := db.NewUserService().CreateUser(ts.ctx, user)
+	newUser, err := db.CreateUser(ts.ctx, user)
 	if err != nil {
 		ts.Fail("failed to create user: " + err.Error())
 	}
@@ -54,12 +52,10 @@ func (ts *TestSuite) CreateUser(user app.UserCreateInput) app.User {
 }
 
 func (ts *TestSuite) Test_FindUserByID() {
-	s := db.NewUserService()
-
-	user, err := s.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "joe", Email: "joe@example.com"})
+	user, err := db.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "joe", Email: "joe@example.com"})
 	ts.NoError(err)
 
-	found, err := s.FindUserByID(ts.ctx, user.ID)
+	found, err := db.FindUserByID(ts.ctx, user.ID)
 	ts.NoError(err)
 
 	ts.Equal(user.ID, found.ID)
@@ -68,12 +64,10 @@ func (ts *TestSuite) Test_FindUserByID() {
 }
 
 func (ts *TestSuite) Test_FindUsers() {
-	s := db.NewUserService()
-
 	joeEmail := "joe@example.com"
-	joe, err := s.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "joe", Email: joeEmail})
+	joe, err := db.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "joe", Email: joeEmail})
 	ts.NoError(err)
-	sally, err := s.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "sally", Email: "sally@example.com"})
+	sally, err := db.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "sally", Email: "sally@example.com"})
 	ts.NoError(err)
 
 	notFindableEmail := "nobody@example.com"
@@ -105,13 +99,12 @@ func (ts *TestSuite) Test_FindUsers() {
 	}
 	for _, tt := range tests {
 		ts.T().Run(tt.name, func(t *testing.T) {
-			found, n, err := s.FindUsers(ts.ctx, tt.filter)
+			found, err := db.FindUsers(ts.ctx, tt.filter)
 			if tt.wantError {
 				ts.Error(err)
 				return
 			}
 			ts.NoError(err)
-			ts.Equal(n, len(found))
 			foundIDs := make([]string, len(found))
 			for i := range found {
 				foundIDs[i] = found[i].ID
@@ -122,9 +115,7 @@ func (ts *TestSuite) Test_FindUsers() {
 }
 
 func (ts *TestSuite) Test_TouchLastLoginAt() {
-	s := db.NewUserService()
-
-	joe, err := s.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "joe", Email: "joe@example.com"})
+	joe, err := db.CreateUser(ts.ctx, app.UserCreateInput{FirstName: "joe", Email: "joe@example.com"})
 	ts.NoError(err)
 
 	now := time.Now().UTC()
@@ -132,10 +123,10 @@ func (ts *TestSuite) Test_TouchLastLoginAt() {
 	err = ts.DB.Exec("update users set last_login_at = ? where id = ?", yesterday, joe.ID).Error
 	ts.NoError(err)
 
-	err = s.TouchLastLoginAt(ts.ctx, joe.ID)
+	err = db.TouchLastLoginAt(ts.ctx, joe.ID)
 	ts.NoError(err)
 
-	found, err := s.FindUserByID(ts.ctx, joe.ID)
+	found, err := db.FindUserByID(ts.ctx, joe.ID)
 	ts.NoError(err)
 
 	ts.WithinDuration(now, *found.LastLoginAt, time.Second)

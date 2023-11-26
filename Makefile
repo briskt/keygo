@@ -4,10 +4,10 @@ app: migrate
 ui-app:
 	docker-compose up -d ui-app
 
-test:
+test: migratetestdb
 	docker-compose run --rm test
 
-testcli:
+testcli: migratetestdb
 	docker-compose run --rm test bash
 
 bounce:
@@ -15,6 +15,9 @@ bounce:
 
 migrate: db
 	docker-compose run --rm app bash -c "goose -dir migrations postgres postgres://keygo:keygo@db:5432/keygo?sslmode=disable up"
+
+migratetestdb:
+	docker-compose run --rm test bash -c "goose -dir migrations postgres postgres://keygo:keygo@testdb:5432/keygo?sslmode=disable up"
 
 migratedown: db
 	docker-compose run --rm app bash -c "goose -dir migrations postgres postgres://keygo:keygo@db:5432/keygo?sslmode=disable down"
@@ -39,4 +42,4 @@ install-js-deps:
 proxy:
 	docker-compose up -d proxy
 
-.PHONY: app ui-app test bounce migrate migratedown new-migration db fresh adminer install-js-deps proxy
+.PHONY: app ui-app test bounce migrate migratetestdb migratedown new-migration db fresh adminer install-js-deps proxy

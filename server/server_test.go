@@ -1,6 +1,7 @@
 package server_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -12,7 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/briskt/keygo/app"
-	"github.com/briskt/keygo/internal/mock"
+	"github.com/briskt/keygo/db"
 	"github.com/briskt/keygo/server"
 )
 
@@ -21,41 +22,27 @@ type TestSuite struct {
 	suite.Suite
 	*require.Assertions
 
-	server            *server.Server
-	ctx               echo.Context
-	mockTenantService *mock.TenantService // TODO: replace this with server.TenantService
-	mockTokenService  *mock.TokenService
-	mockUserService   *mock.UserService
+	server *server.Server
+	ctx    echo.Context
 }
 
 // SetupTest runs before every test function
 func (ts *TestSuite) SetupTest() {
 	ts.Assertions = require.New(ts.T())
-	ts.server.TenantService.(*mock.TenantService).DeleteAllTenants()
-	ts.server.TokenService.(*mock.TokenService).DeleteAllTokens()
-	ts.server.UserService.(*mock.UserService).DeleteAllUsers()
+
+	deleteAll(ts.ctx, &db.Tenant{})
+	deleteAll(ts.ctx, &db.Token{})
+	deleteAll(ts.ctx, &db.User{})
 }
 
 func Test_RunSuite(t *testing.T) {
-	mockTenantService := mock.NewTenantService()
-	mockTokenService := mock.NewTokenService()
-	mockUserService := mock.NewUserService()
-	mockTokenService.UpdateTokenFn = func(ctx echo.Context, id string, input app.TokenUpdateInput) error {
-		return nil
-	}
-
-	s := app.DataServices{
-		TenantService: &mockTenantService,
-		TokenService:  &mockTokenService,
-		UserService:   &mockUserService,
-	}
-	svr := server.New(server.WithDataServices(s))
+	db := db.OpenDB()
+	svr := server.New(server.WithDataBase(db))
+	ctx := testContext()
+	ctx.Set(app.ContextKeyTx, db)
 	suite.Run(t, &TestSuite{
-		server:            svr,
-		ctx:               testContext(),
-		mockTenantService: &mockTenantService,
-		mockTokenService:  &mockTokenService,
-		mockUserService:   &mockUserService,
+		server: svr,
+		ctx:    ctx,
 	})
 }
 
@@ -71,7 +58,7 @@ func (ts *TestSuite) createUserFixture() Fixtures {
 		Email: "test@example.com",
 		Role:  app.UserRoleAdmin,
 	}
-	createdUser, err := ts.server.UserService.CreateUser(ts.ctx, fakeUserCreate)
+	createdUser, err := db.CreateUser(ts.ctx, fakeUserCreate)
 	ts.NoError(err)
 
 	fakeToken := app.Token{
@@ -81,13 +68,24 @@ func (ts *TestSuite) createUserFixture() Fixtures {
 			Email: "test@example.com",
 			Role:  app.UserRoleAdmin,
 		},
-		PlainText: "12345",
-		ExpiresAt: time.Now().Add(time.Minute),
+		ExpiresAt: time.Now().Add(time.Hour * 24),
 	}
-	ts.server.TokenService.(*mock.TokenService).Init([]app.Token{fakeToken})
+	newToken, err := db.CreateToken(ts.ctx, app.TokenCreateInput{
+		UserID:    createdUser.ID,
+		AuthID:    createdUser.ID,
+		ExpiresAt: fakeToken.ExpiresAt,
+	})
+	ts.NoError(err)
+	if err != nil {
+		return Fixtures{}
+	}
+	fakeToken.PlainText = newToken.PlainText
+
+	u, err := db.ConvertUser(ts.ctx, createdUser)
+	ts.NoError(err)
 
 	return Fixtures{
-		Users:  []app.User{createdUser},
+		Users:  []app.User{u},
 		Tokens: []app.Token{fakeToken},
 	}
 }
@@ -96,11 +94,14 @@ func (ts *TestSuite) createTenantFixture() Fixtures {
 	fakeTenantCreate := app.TenantCreateInput{
 		Name: "Test Tenant",
 	}
-	createdTenant, err := ts.server.TenantService.CreateTenant(ts.ctx, fakeTenantCreate)
+	createdTenant, err := db.CreateTenant(ts.ctx, fakeTenantCreate)
+	ts.NoError(err)
+
+	t, err := db.ConvertTenant(ts.ctx, createdTenant)
 	ts.NoError(err)
 
 	return Fixtures{
-		Tenants: []app.Tenant{createdTenant},
+		Tenants: []app.Tenant{t},
 	}
 }
 
@@ -108,4 +109,11 @@ type Fixtures struct {
 	Tenants []app.Tenant
 	Tokens  []app.Token
 	Users   []app.User
+}
+
+func deleteAll(c echo.Context, i any) {
+	result := db.Tx(c).Where("TRUE").Delete(i)
+	if result.Error != nil {
+		panic(fmt.Sprintf("failed to delete all %T: %s", i, result.Error))
+	}
 }

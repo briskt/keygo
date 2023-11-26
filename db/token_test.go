@@ -4,15 +4,16 @@ import (
 	"time"
 
 	"github.com/briskt/keygo/app"
+	"github.com/briskt/keygo/db"
 )
 
-func (ts *TestSuite) TestTokenService_CreateToken() {
-	user, err := ts.UserService.CreateUser(ts.ctx, app.UserCreateInput{Email: "a@b.com"})
+func (ts *TestSuite) Test_CreateToken() {
+	user, err := db.CreateUser(ts.ctx, app.UserCreateInput{Email: "a@b.com"})
 	ts.NoError(err)
 
 	// Create new record and check generated fields
 	exp := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
-	newToken, err := ts.TokenService.CreateToken(ts.ctx, app.TokenCreateInput{AuthID: "a", UserID: user.ID, ExpiresAt: exp})
+	newToken, err := db.CreateToken(ts.ctx, app.TokenCreateInput{AuthID: "a", UserID: user.ID, ExpiresAt: exp})
 
 	ts.NoError(err)
 	ts.NotEmpty(newToken.ID, "ID is not set")
@@ -23,13 +24,13 @@ func (ts *TestSuite) TestTokenService_CreateToken() {
 	ts.Equal(exp, newToken.ExpiresAt)
 
 	// Query database and compare
-	fromDB, err := ts.TokenService.FindToken(ts.ctx, newToken.PlainText)
+	fromDB, err := db.FindToken(ts.ctx, newToken.PlainText)
 	ts.NoError(err, "couldn't find created token %s", newToken.PlainText)
 	ts.Equal(newToken.ID, fromDB.ID)
 	ts.Equal(newToken.UserID, fromDB.UserID)
 
 	// Expect validation error
-	_, err = ts.TokenService.CreateToken(ts.ctx, app.TokenCreateInput{})
+	_, err = db.CreateToken(ts.ctx, app.TokenCreateInput{})
 	ts.Error(err, "expected validation error")
 	ts.Equal(app.ERR_INVALID, app.ErrorCode(err))
 }
