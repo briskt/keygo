@@ -47,7 +47,7 @@ func (s *Server) tenantsListHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, tenants)
 }
 
-func (s *Server) tenantHandler(c echo.Context) error {
+func (s *Server) tenantsGetHandler(c echo.Context) error {
 	user := app.CurrentUser(c)
 
 	if user.Role != app.UserRoleAdmin {
@@ -66,4 +66,27 @@ func (s *Server) tenantHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, t)
+}
+
+func (s *Server) tenantsUsersCreateHandler(c echo.Context) error {
+	user := app.CurrentUser(c)
+	if user.Role != app.UserRoleAdmin {
+		return echo.NewHTTPError(http.StatusUnauthorized, AuthError{Error: "not an authorized user"})
+	}
+
+	var input app.TenantUserCreateInput
+	err := (&echo.DefaultBinder{}).BindBody(c, &input)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "bad request")
+	}
+
+	tenantID := c.Param("id")
+	tenantUser, err := db.CreateTenantUser(c, tenantID, input)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	s.Logger.Infof("created tenant user (email %q, id %q)", tenantUser.Email, tenantUser.ID)
+
+	return c.JSON(http.StatusOK, tenantUser)
 }

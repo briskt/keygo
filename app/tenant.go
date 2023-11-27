@@ -58,7 +58,7 @@ func (tu *TenantUpdateInput) Validate() error {
 	return nil
 }
 
-// TenantUserCreateInput is a set of fields to define a new tenant user for CreateTenantUser()
+// TenantUserCreateInput is a set of fields to define a new tenant user for tenantsUsersCreateHandler
 type TenantUserCreateInput struct {
-	Name string
+	Email string
 }

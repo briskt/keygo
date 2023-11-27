@@ -37,6 +37,7 @@ type UserCreateInput struct {
 	Email     string
 	AvatarURL string
 	Role      string
+	TenantID  string
 }
 
 // Validate returns an error if the struct contains invalid information

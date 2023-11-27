@@ -70,9 +70,13 @@ func (s *Server) registerRoutes() {
 	api.GET("/auth/login", s.authLogin)
 	api.GET("/auth/callback", s.authCallback)
 	api.GET("/auth/logout", s.authLogout)
+
 	api.POST("/tenants", s.tenantsCreateHandler)
 	api.GET("/tenants", s.tenantsListHandler)
-	api.GET("/tenants/:id", s.tenantHandler)
+	api.GET("/tenants/:id", s.tenantsGetHandler)
+
+	api.POST("/tenants/:id/users", s.tenantsUsersCreateHandler)
+
 	api.GET("/users", s.usersListHandler)
 	api.GET("/users/:id", s.userHandler)
 

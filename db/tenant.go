@@ -83,9 +83,13 @@ func DeleteTenant(ctx echo.Context, id string) error {
 	return nil
 }
 
-// CreateTenantUser permanently deletes a tenant and all child objects
-func CreateTenantUser(ctx echo.Context, input app.TenantUserCreateInput) error {
-	return nil
+// CreateTenantUser creates a new user for a tenant
+func CreateTenantUser(ctx echo.Context, tenantID string, input app.TenantUserCreateInput) (User, error) {
+	user, err := CreateUser(ctx, app.UserCreateInput{Email: input.Email, TenantID: tenantID})
+	if err != nil {
+		return User{}, err
+	}
+	return user, nil
 }
 
 // FindTenantByID is a function to fetch a tenant by ID.
