@@ -34,7 +34,7 @@
   }
 </script>
 
-<h1>Tenants</h1>
+<h2>Tenants</h2>
 
 <Button on:click={onClickAdd}>Add</Button>
 

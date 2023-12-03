@@ -5,7 +5,7 @@
   const { Email, FirstName, LastName, CreatedAt, LastLoginAt, Role } = $user
 </script>
 
-<h1>My Profile</h1>
+<h2>My Profile</h2>
 <dl>
   <dt>Name</dt>
   <dd>{FirstName} {LastName}</dd>

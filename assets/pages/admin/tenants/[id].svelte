@@ -35,7 +35,7 @@
   }
 </script>
 
-<h1>Tenant</h1>
+<h2>Tenant</h2>
 
 <Button on:click={onClickAdd}>Add User</Button>
 
