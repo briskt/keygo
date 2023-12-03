@@ -1,4 +1,4 @@
-import type {Tenant, TenantCreate} from 'data/types/tenant'
+import type {Tenant, TenantCreate, TenantUserCreate} from 'data/types/tenant'
 import api from '../api'
 
 export const addTenant = async (name: string): Promise<Tenant> => {
@@ -16,5 +16,13 @@ export const listTenants = async (): Promise<Tenant[]> => {
 
 export const getTenant = async (id: string): Promise<Tenant> => {
   const response = await api.get('/api/tenants/'+encodeURIComponent(id))
+  return response.json()
+}
+
+export const addTenantUser = async (tenantID: string, email: string): Promise<Tenant> => {
+  const body: TenantUserCreate = {
+    Email: email,
+  }
+  const response = await api.post('/api/tenants/'+encodeURIComponent(tenantID)+'/users', body)
   return response.json()
 }

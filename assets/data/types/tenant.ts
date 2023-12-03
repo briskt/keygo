@@ -8,3 +8,7 @@ export type Tenant = {
 export type TenantCreate = {
   Name: string
 }
+
+export type TenantUserCreate = {
+  Email: string
+}

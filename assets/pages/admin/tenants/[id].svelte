@@ -1,6 +1,6 @@
 <script lang="ts">
   import TenantUser from './_components/TenantUser.svelte'
-  import {getTenant} from 'data/api/tenants'
+  import {addTenantUser, getTenant, listTenants} from 'data/api/tenants'
   import type {Tenant} from 'data/types/tenant'
   import {localeTime} from 'helpers/time'
   import {Button, Dialog, Form, TextField} from '@silintl/ui-components'
@@ -8,6 +8,7 @@
 
   export let id: string
 
+  let newTenantUserEmail = ''
   let tenant = {} as Tenant
   let showAddTenantUserModal = false
 
@@ -17,6 +18,20 @@
 
   const onClickAdd = () => {
     showAddTenantUserModal = true
+  }
+
+  const onAddTenantUserModalClosed = () => {
+    showAddTenantUserModal = false
+  }
+
+  const onSubmitAddTenantUser = async () => {
+    showAddTenantUserModal = false
+    addTenantUser(id, newTenantUserEmail)
+    newTenantUserEmail = ''
+  }
+
+  const onCancel = () => {
+    showAddTenantUserModal = false
   }
 </script>
 
@@ -50,6 +65,27 @@
 {:else}
   <em>No users</em>
 {/if}
+
+<Dialog.Alert
+        open={showAddTenantUserModal}
+        buttons={[]}
+        defaultAction='cancel'
+        title='Add Tenant'
+        titleIcon='assignment_ind'
+        on:closed={onAddTenantUserModalClosed}
+>
+  <Form on:submit={onSubmitAddTenantUser}>
+    <p>
+      <TextField maxlength="40" label="Email Address" bind:value={newTenantUserEmail} class="w-100" autofocus />
+    </p>
+    <div class="float-right form-button">
+      <Button raised>Save</Button>
+    </div>
+    <div class="float-right form-button">
+      <Button on:click={onCancel}>Cancel</Button>
+    </div>
+  </Form>
+</Dialog.Alert>
 
 <style>
   dd {
