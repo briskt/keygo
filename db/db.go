@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/jaevor/go-nanoid"
 	"github.com/labstack/echo/v4"
 	"gorm.io/driver/postgres"
@@ -17,6 +18,9 @@ import (
 )
 
 var newID func() string
+
+// go-playground validator
+var validate = validator.New()
 
 func init() {
 	newID, _ = nanoid.Standard(21)
@@ -91,4 +95,11 @@ func (n *NullTime) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return (*time.Time)(n).UTC().Format(time.RFC3339), nil
+}
+
+func create(tx *gorm.DB, model any) error {
+	if err := validate.Struct(model); err != nil {
+		return err
+	}
+	return tx.Create(model).Error
 }

@@ -13,7 +13,7 @@ type User struct {
 	ID          string `gorm:"primaryKey;type:string"`
 	FirstName   string
 	LastName    string
-	Email       string
+	Email       string `validate:"email"`
 	AvatarURL   string
 	Role        string
 	TenantID    *string
@@ -73,9 +73,8 @@ func CreateUser(ctx echo.Context, userCreate app.UserCreateInput) (User, error) 
 	// TODO: remove this when ready
 	user.Role = app.UserRoleAdmin
 
-	result := Tx(ctx).Create(&user)
-	if result.Error != nil {
-		return User{}, result.Error
+	if err := create(Tx(ctx), &user); err != nil {
+		return User{}, err
 	}
 	return user, nil
 }
