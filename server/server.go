@@ -54,16 +54,21 @@ func New(options ...Option) *Server {
 		e.Debug = true
 	}
 
+	// serve static assets, e.g. favicon.ico
 	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Root:   "public",
 		Browse: false,
 	}))
 
-	svr.registerRoutes()
+	svr.registerAPIRoutes()
+
+	// send all other routes to the UI router
+	svr.registerUIRoutes()
+
 	return svr
 }
 
-func (s *Server) registerRoutes() {
+func (s *Server) registerAPIRoutes() {
 	api := s.Group("/api", s.AuthnMiddleware)
 
 	api.GET("/auth", s.authStatus)
@@ -79,6 +84,4 @@ func (s *Server) registerRoutes() {
 
 	api.GET("/users", s.usersListHandler)
 	api.GET("/users/:id", s.userHandler)
-
-	s.registerUiRoutes()
 }

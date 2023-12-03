@@ -8,7 +8,7 @@ import (
 
 var uiRoutes = []string{"/"}
 
-func (s *Server) registerUiRoutes() {
+func (s *Server) registerUIRoutes() {
 	s.GET("*", spaHandler)
 }
 
