@@ -26,11 +26,24 @@ func (s *Server) usersListHandler(c echo.Context) error {
 }
 
 func (s *Server) userHandler(c echo.Context) error {
-	user := app.CurrentUser(c)
+	actor := app.CurrentUser(c)
+	var user app.User
 
 	id := c.Param("id")
-	if id != user.ID {
+	if id == actor.ID {
+		user = actor
+	} else if actor.Role != app.UserRoleAdmin {
 		return echo.NewHTTPError(http.StatusNotFound, AuthError{Error: "not found"})
+	} else {
+		dbUser, err := db.FindUserByID(c, id)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusNotFound, err)
+		}
+
+		user, err = db.ConvertUser(c, dbUser)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
 	}
 
 	return c.JSON(http.StatusOK, user)

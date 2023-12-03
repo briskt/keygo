@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"gorm.io/gorm"
 
 	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/db"
@@ -24,6 +26,7 @@ type TestSuite struct {
 
 	server *server.Server
 	ctx    echo.Context
+	tx     *gorm.DB
 }
 
 // SetupTest runs before every test function
@@ -36,13 +39,14 @@ func (ts *TestSuite) SetupTest() {
 }
 
 func Test_RunSuite(t *testing.T) {
-	db := db.OpenDB()
-	svr := server.New(server.WithDataBase(db))
+	tx := db.OpenDB()
+	svr := server.New(server.WithDataBase(tx))
 	ctx := testContext()
-	ctx.Set(app.ContextKeyTx, db)
+	ctx.Set(app.ContextKeyTx, tx)
 	suite.Run(t, &TestSuite{
 		server: svr,
 		ctx:    ctx,
+		tx:     tx,
 	})
 }
 
@@ -55,7 +59,7 @@ func testContext() echo.Context {
 
 func (ts *TestSuite) createUserFixture() Fixtures {
 	fakeUserCreate := app.UserCreateInput{
-		Email: "test@example.com",
+		Email: fmt.Sprintf("test%s@example.com", RandStr(6)),
 	}
 	createdUser, err := db.CreateUser(ts.ctx, fakeUserCreate)
 	ts.NoError(err)
@@ -99,4 +103,14 @@ func deleteAll(c echo.Context, i any) {
 	if result.Error != nil {
 		panic(fmt.Sprintf("failed to delete all %T: %s", i, result.Error))
 	}
+}
+
+// RandStr generates a random string of length `n` containing uppercase, lowercase, and numbers
+func RandStr(n int) string {
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = chars[rand.Int63()%int64(len(chars))]
+	}
+	return string(b)
 }

@@ -70,9 +70,6 @@ func CreateUser(ctx echo.Context, userCreate app.UserCreateInput) (User, error) 
 		user.TenantID = &userCreate.TenantID
 	}
 
-	// TODO: remove this when ready
-	user.Role = app.UserRoleAdmin
-
 	if err := create(Tx(ctx), &user); err != nil {
 		return User{}, err
 	}
