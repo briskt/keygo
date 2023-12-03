@@ -89,7 +89,9 @@ func (ts *TestSuite) Test_GetUser() {
 
 func (ts *TestSuite) Test_GetUserList() {
 	f := ts.createUserFixture()
-	user := f.Users[0]
+	admin := f.Users[0]
+	admin.Role = app.UserRoleAdmin
+	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
 	token := f.Tokens[0]
 
 	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
@@ -107,9 +109,9 @@ func (ts *TestSuite) Test_GetUserList() {
 	var users []app.User
 	ts.NoError(json.Unmarshal(body, &users))
 	ts.Len(users, 1)
-	ts.Equal(user.ID, users[0].ID, "incorrect user ID, body: \n%s", body)
-	ts.Equal(user.Email, users[0].Email, "incorrect user email, body: \n%s", body)
-	ts.Equal(user.Role, users[0].Role, "incorrect user role, body: \n%s", body)
+	ts.Equal(admin.ID, users[0].ID, "incorrect user ID, body: \n%s", body)
+	ts.Equal(admin.Email, users[0].Email, "incorrect user email, body: \n%s", body)
+	ts.Equal(admin.Role, users[0].Role, "incorrect user role, body: \n%s", body)
 
 	// TODO: test error response
 }

@@ -15,6 +15,9 @@ import (
 
 func (ts *TestSuite) Test_tenantsCreateHandler() {
 	f := ts.createUserFixture()
+	admin := f.Users[0]
+	admin.Role = app.UserRoleAdmin
+	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
 	token := f.Tokens[0]
 
 	input := app.TenantCreateInput{Name: "new tenant"}
@@ -44,6 +47,9 @@ func (ts *TestSuite) Test_tenantsCreateHandler() {
 
 func (ts *TestSuite) Test_tenantsGetHandler() {
 	f := ts.createUserFixture()
+	admin := f.Users[0]
+	admin.Role = app.UserRoleAdmin
+	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
 	token := f.Tokens[0]
 	tenant := ts.createTenantFixture().Tenants[0]
 
@@ -68,6 +74,9 @@ func (ts *TestSuite) Test_tenantsGetHandler() {
 
 func (ts *TestSuite) Test_tenantsListHandler() {
 	f := ts.createUserFixture()
+	admin := f.Users[0]
+	admin.Role = app.UserRoleAdmin
+	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
 	token := f.Tokens[0]
 	tenant := ts.createTenantFixture().Tenants[0]
 
@@ -93,6 +102,9 @@ func (ts *TestSuite) Test_tenantsListHandler() {
 
 func (ts *TestSuite) Test_tenantsUsersCreateHandler() {
 	f := ts.createUserFixture()
+	admin := f.Users[0]
+	admin.Role = app.UserRoleAdmin
+	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
 	token := f.Tokens[0]
 	tenant := ts.createTenantFixture().Tenants[0]
 
