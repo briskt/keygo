@@ -56,37 +56,23 @@ func testContext() echo.Context {
 func (ts *TestSuite) createUserFixture() Fixtures {
 	fakeUserCreate := app.UserCreateInput{
 		Email: "test@example.com",
-		Role:  app.UserRoleAdmin,
 	}
 	createdUser, err := db.CreateUser(ts.ctx, fakeUserCreate)
 	ts.NoError(err)
 
-	fakeToken := app.Token{
-		ID: "1",
-		User: app.User{
-			ID:    createdUser.ID,
-			Email: "test@example.com",
-			Role:  app.UserRoleAdmin,
-		},
-		ExpiresAt: time.Now().Add(time.Hour * 24),
-	}
 	newToken, err := db.CreateToken(ts.ctx, app.TokenCreateInput{
 		UserID:    createdUser.ID,
 		AuthID:    createdUser.ID,
-		ExpiresAt: fakeToken.ExpiresAt,
+		ExpiresAt: time.Now().Add(time.Hour * 24),
 	})
 	ts.NoError(err)
 	if err != nil {
 		return Fixtures{}
 	}
-	fakeToken.PlainText = newToken.PlainText
-
-	u, err := db.ConvertUser(ts.ctx, createdUser)
-	ts.NoError(err)
 
 	return Fixtures{
-		Users:  []app.User{u},
-		Tokens: []app.Token{fakeToken},
+		Users:  []db.User{createdUser},
+		Tokens: []db.Token{newToken},
 	}
 }
 
@@ -97,18 +83,15 @@ func (ts *TestSuite) createTenantFixture() Fixtures {
 	createdTenant, err := db.CreateTenant(ts.ctx, fakeTenantCreate)
 	ts.NoError(err)
 
-	t, err := db.ConvertTenant(ts.ctx, createdTenant)
-	ts.NoError(err)
-
 	return Fixtures{
-		Tenants: []app.Tenant{t},
+		Tenants: []db.Tenant{createdTenant},
 	}
 }
 
 type Fixtures struct {
-	Tenants []app.Tenant
-	Tokens  []app.Token
-	Users   []app.User
+	Tenants []db.Tenant
+	Tokens  []db.Token
+	Users   []db.User
 }
 
 func deleteAll(c echo.Context, i any) {

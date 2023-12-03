@@ -56,8 +56,8 @@ func (ts *TestSuite) Test_GetUserList() {
 	ts.NoError(json.Unmarshal(body, &users))
 	ts.Len(users, 1)
 	ts.Equal(user.ID, users[0].ID, "incorrect user ID, body: \n%s", body)
-	ts.Equal(token.User.Email, users[0].Email, "incorrect user email, body: \n%s", body)
-	ts.Equal(token.User.Role, users[0].Role, "incorrect user role, body: \n%s", body)
+	ts.Equal(user.Email, users[0].Email, "incorrect user email, body: \n%s", body)
+	ts.Equal(user.Role, users[0].Role, "incorrect user role, body: \n%s", body)
 
 	// TODO: test error response
 }
