@@ -1,14 +1,10 @@
 package server_test
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
+	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
-
-	"github.com/labstack/echo/v4"
 
 	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/db"
@@ -167,31 +163,51 @@ func (ts *TestSuite) Test_tenantsListHandler() {
 }
 
 func (ts *TestSuite) Test_tenantsUsersCreateHandler() {
-	f := ts.createUserFixture()
-	admin := f.Users[0]
+	user := ts.createUserFixture().Users[0]
+
+	admin := ts.createUserFixture().Users[0]
 	admin.Role = app.UserRoleAdmin
 	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-	token := f.Tokens[0]
+
 	tenant := ts.createTenantFixture().Tenants[0]
 
-	input := app.TenantUserCreateInput{Email: "tenant_user@example.com"}
-	j, _ := json.Marshal(&input)
-	req := httptest.NewRequest(http.MethodPost, "/api/tenants/"+tenant.ID+"/users", bytes.NewReader((j)))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)
+	tests := []struct {
+		name       string
+		actor      db.User
+		wantStatus int
+	}{
+		{
+			name:       "not a valid user",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "a user cannot access a tenant",
+			actor:      user,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "admin can access a tenant",
+			actor:      admin,
+			wantStatus: http.StatusOK,
+		},
+	}
+	for _, tt := range tests {
+		ts.T().Run(tt.name, func(t *testing.T) {
+			input := app.TenantUserCreateInput{Email: "tenant_user@example.com"}
+			path := fmt.Sprintf("/api/tenants/%s/users", tenant.ID)
+			body, status := ts.request(http.MethodPost, path, tt.actor.Email, input)
 
-	res := httptest.NewRecorder()
-	ts.server.ServeHTTP(res, req)
-	body, err := io.ReadAll(res.Body)
-	ts.NoError(err)
+			// Assertions
+			ts.Equal(tt.wantStatus, status, "incorrect http status, body: \n%s", body)
 
-	// Assertions
-	ts.Equal(http.StatusOK, res.Code, "incorrect http status, body: \n%s", body)
+			if tt.wantStatus != http.StatusOK {
+				return
+			}
 
-	var user db.User
-	ts.NoError(json.Unmarshal(body, &user))
-	ts.Equal(input.Email, user.Email, "incorrect user Email, body: \n%s", body)
-	ts.Equal(tenant.ID, *user.TenantID, "incorrect user TenantID, body: \n%s", body)
-
-	// TODO: test error response
+			var user db.User
+			ts.NoError(json.Unmarshal(body, &user))
+			ts.Equal(input.Email, user.Email, "incorrect user Email, body: \n%s", body)
+			ts.Equal(tenant.ID, *user.TenantID, "incorrect user TenantID, body: \n%s", body)
+		})
+	}
 }
