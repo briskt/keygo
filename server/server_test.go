@@ -33,6 +33,11 @@ type TestSuite struct {
 	tx     *gorm.DB
 }
 
+type Fixtures struct {
+	Tenants []db.Tenant
+	Users   []db.User
+}
+
 // SetupTest runs before every test function
 func (ts *TestSuite) SetupTest() {
 	ts.Assertions = require.New(ts.T())
@@ -68,21 +73,10 @@ func (ts *TestSuite) createUserFixture() Fixtures {
 	createdUser, err := db.CreateUser(ts.ctx, fakeUserCreate)
 	ts.NoError(err)
 
-	newToken, err := db.CreateToken(ts.ctx, app.TokenCreateInput{
-		UserID:    createdUser.ID,
-		AuthID:    createdUser.ID,
-		ExpiresAt: time.Now().Add(time.Hour * 24),
-	})
-	ts.NoError(err)
-	if err != nil {
-		return Fixtures{}
-	}
-
 	ts.createTokenFixture(createdUser.Email, createdUser.ID)
 
 	return Fixtures{
-		Users:  []db.User{createdUser},
-		Tokens: []db.Token{newToken},
+		Users: []db.User{createdUser},
 	}
 }
 
@@ -96,12 +90,6 @@ func (ts *TestSuite) createTenantFixture() Fixtures {
 	return Fixtures{
 		Tenants: []db.Tenant{createdTenant},
 	}
-}
-
-type Fixtures struct {
-	Tenants []db.Tenant
-	Tokens  []db.Token
-	Users   []db.User
 }
 
 func deleteAll(c echo.Context, i any) {
