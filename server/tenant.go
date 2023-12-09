@@ -12,7 +12,7 @@ import (
 func (s *Server) tenantsCreateHandler(c echo.Context) error {
 	user := app.CurrentUser(c)
 	if user.Role != app.UserRoleAdmin {
-		return echo.NewHTTPError(http.StatusUnauthorized, AuthError{Error: "not an authorized user"})
+		return echo.NewHTTPError(http.StatusNotFound, AuthError{Error: "not an authorized user"})
 	}
 
 	var input app.TenantCreateInput

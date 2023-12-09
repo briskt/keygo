@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"testing"
 
 	"github.com/labstack/echo/v4"
 
@@ -15,34 +16,65 @@ import (
 
 func (ts *TestSuite) Test_tenantsCreateHandler() {
 	f := ts.createUserFixture()
-	admin := f.Users[0]
+	userToken := f.Tokens[0]
+
+	f2 := ts.createUserFixture()
+	admin := f2.Users[0]
 	admin.Role = app.UserRoleAdmin
 	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-	token := f.Tokens[0]
+	adminToken := f2.Tokens[0]
 
-	input := app.TenantCreateInput{Name: "new tenant"}
-	j, _ := json.Marshal(&input)
-	req := httptest.NewRequest(http.MethodPost, "/api/tenants", bytes.NewReader(j))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)
+	tests := []struct {
+		name       string
+		token      string
+		wantStatus int
+	}{
+		{
+			name:       "not a valid token",
+			token:      "x",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "a user cannot create a tenant",
+			token:      userToken.PlainText,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "admin can create a tenant",
+			token:      adminToken.PlainText,
+			wantStatus: http.StatusOK,
+		},
+	}
 
-	res := httptest.NewRecorder()
-	ts.server.ServeHTTP(res, req)
-	body, err := io.ReadAll(res.Body)
-	ts.NoError(err)
+	for _, tt := range tests {
+		ts.T().Run(tt.name, func(t *testing.T) {
+			input := app.TenantCreateInput{Name: "new tenant"}
+			j, _ := json.Marshal(&input)
+			req := httptest.NewRequest(http.MethodPost, "/api/tenants", bytes.NewReader(j))
+			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			req.Header.Set(echo.HeaderAuthorization, "Bearer "+tt.token)
 
-	// Assertions
-	ts.Equal(http.StatusOK, res.Code, "incorrect http status, body: \n%s", body)
+			res := httptest.NewRecorder()
+			ts.server.ServeHTTP(res, req)
+			body, err := io.ReadAll(res.Body)
+			ts.NoError(err)
 
-	var gotTenant app.Tenant
-	ts.NoError(json.Unmarshal(body, &gotTenant))
-	ts.Equal(input.Name, gotTenant.Name, "incorrect Tenant Name, body: \n%s", body)
+			// Assertions
+			ts.Equal(tt.wantStatus, res.Code, "incorrect http status, body: \n%s", body)
 
-	dbTenant, err := db.FindTenantByID(ts.ctx, gotTenant.ID)
-	ts.NoError(err)
-	ts.Equal(input.Name, dbTenant.Name, "incorrect Tenant Name in db")
+			if tt.wantStatus != http.StatusOK {
+				return
+			}
 
-	// TODO: test error response
+			var gotTenant app.Tenant
+			ts.NoError(json.Unmarshal(body, &gotTenant))
+			ts.Equal(input.Name, gotTenant.Name, "incorrect Tenant Name, body: \n%s", body)
+
+			dbTenant, err := db.FindTenantByID(ts.ctx, gotTenant.ID)
+			ts.NoError(err)
+			ts.Equal(input.Name, dbTenant.Name, "incorrect Tenant Name in db")
+		})
+	}
 }
 
 func (ts *TestSuite) Test_tenantsGetHandler() {
