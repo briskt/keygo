@@ -89,29 +89,60 @@ func (ts *TestSuite) Test_GetUser() {
 
 func (ts *TestSuite) Test_GetUserList() {
 	f := ts.createUserFixture()
-	admin := f.Users[0]
+	userToken := f.Tokens[0]
+
+	f2 := ts.createUserFixture()
+	admin := f2.Users[0]
 	admin.Role = app.UserRoleAdmin
 	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-	token := f.Tokens[0]
+	adminToken := f2.Tokens[0]
 
-	req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)
+	tests := []struct {
+		name       string
+		token      string
+		wantStatus int
+		want       int
+	}{
+		{
+			name:       "not a valid token",
+			token:      "x",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "non-admin gets an empty list of users",
+			token:      userToken.PlainText,
+			wantStatus: http.StatusOK,
+			want:       0,
+		},
+		{
+			name:       "admin can list users",
+			token:      adminToken.PlainText,
+			wantStatus: http.StatusOK,
+			want:       2,
+		},
+	}
 
-	res := httptest.NewRecorder()
-	ts.server.ServeHTTP(res, req)
-	body, err := io.ReadAll(res.Body)
-	ts.NoError(err)
+	for _, tt := range tests {
+		ts.T().Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/api/users", nil)
+			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			req.Header.Set(echo.HeaderAuthorization, "Bearer "+tt.token)
 
-	// Assertions
-	ts.Equal(http.StatusOK, res.Code, "incorrect http status, body: \n%s", body)
+			res := httptest.NewRecorder()
+			ts.server.ServeHTTP(res, req)
+			body, err := io.ReadAll(res.Body)
+			ts.NoError(err)
 
-	var users []app.User
-	ts.NoError(json.Unmarshal(body, &users))
-	ts.Len(users, 1)
-	ts.Equal(admin.ID, users[0].ID, "incorrect user ID, body: \n%s", body)
-	ts.Equal(admin.Email, users[0].Email, "incorrect user email, body: \n%s", body)
-	ts.Equal(admin.Role, users[0].Role, "incorrect user role, body: \n%s", body)
+			// Assertions
+			ts.Equal(tt.wantStatus, res.Code, "incorrect http status, body: \n%s", body)
 
-	// TODO: test error response
+			if tt.wantStatus != http.StatusOK {
+				return
+			}
+
+			var users []app.User
+			ts.NoError(json.Unmarshal(body, &users))
+			ts.Equal(tt.want, len(users), "got the wrong number of users")
+		})
+	}
 }
