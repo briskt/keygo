@@ -49,18 +49,10 @@ func (ts *TestSuite) Test_tenantsCreateHandler() {
 	for _, tt := range tests {
 		ts.T().Run(tt.name, func(t *testing.T) {
 			input := app.TenantCreateInput{Name: "new tenant"}
-			j, _ := json.Marshal(&input)
-			req := httptest.NewRequest(http.MethodPost, "/api/tenants", bytes.NewReader(j))
-			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-			req.Header.Set(echo.HeaderAuthorization, "Bearer "+tt.token)
-
-			res := httptest.NewRecorder()
-			ts.server.ServeHTTP(res, req)
-			body, err := io.ReadAll(res.Body)
-			ts.NoError(err)
+			body, status := ts.request(http.MethodPost, "/api/tenants", tt.token, input)
 
 			// Assertions
-			ts.Equal(tt.wantStatus, res.Code, "incorrect http status, body: \n%s", body)
+			ts.Equal(tt.wantStatus, status, "incorrect http status, body: \n%s", body)
 
 			if tt.wantStatus != http.StatusOK {
 				return
