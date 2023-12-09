@@ -13,7 +13,6 @@ import (
 
 	"github.com/briskt/keygo/app"
 	"github.com/briskt/keygo/db"
-	"github.com/briskt/keygo/migrations"
 )
 
 // TestSuite contains common setup and configuration for tests
@@ -26,12 +25,8 @@ type TestSuite struct {
 
 // SetupTest runs before every test function
 func (ts *TestSuite) SetupTest() {
-	if sqlDB, err := ts.DB.DB(); err != nil {
-		panic(err.Error())
-	} else {
-		migrations.Fresh(sqlDB)
-	}
 	ts.Assertions = require.New(ts.T())
+	ts.NoError(ts.DB.Exec("TRUNCATE TABLE tenants CASCADE").Error)
 }
 
 func Test_RunSuite(t *testing.T) {

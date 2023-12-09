@@ -42,9 +42,7 @@ type Fixtures struct {
 func (ts *TestSuite) SetupTest() {
 	ts.Assertions = require.New(ts.T())
 
-	deleteAll(ts.ctx, &db.Tenant{})
-	deleteAll(ts.ctx, &db.Token{})
-	deleteAll(ts.ctx, &db.User{})
+	ts.NoError(ts.tx.Exec("TRUNCATE TABLE tenants CASCADE").Error)
 }
 
 func Test_RunSuite(t *testing.T) {
@@ -89,13 +87,6 @@ func (ts *TestSuite) createTenantFixture() db.Tenant {
 	return createdTenant
 }
 
-func deleteAll(c echo.Context, i any) {
-	result := db.Tx(c).Where("TRUE").Delete(i)
-	if result.Error != nil {
-		panic(fmt.Sprintf("failed to delete all %T: %s", i, result.Error))
-	}
-}
-
 // RandStr generates a random string of length `n` containing uppercase, lowercase, and numbers
 func RandStr(n int) string {
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -130,7 +121,7 @@ func (ts *TestSuite) createTokenFixture(plainText, userID string) db.Token {
 		PlainText: plainText,
 		ExpiresAt: time.Now().Add(time.Hour * 24),
 	}
-	err := db.Tx(ts.ctx).Omit("User").Create(&token).Error
+	err := ts.tx.Omit("User").Create(&token).Error
 	if err != nil {
 		panic("failed to create token fixture: " + err.Error())
 	}
