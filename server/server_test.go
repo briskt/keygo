@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -77,6 +78,8 @@ func (ts *TestSuite) createUserFixture() Fixtures {
 		return Fixtures{}
 	}
 
+	ts.createTokenFixture(createdUser.Email, createdUser.ID)
+
 	return Fixtures{
 		Users:  []db.User{createdUser},
 		Tokens: []db.Token{newToken},
@@ -133,4 +136,18 @@ func (ts *TestSuite) request(method, path, token string, input any) ([]byte, int
 	body, err := io.ReadAll(res.Body)
 	ts.NoError(err)
 	return body, res.Code
+}
+
+func (ts *TestSuite) createTokenFixture(plainText, userID string) db.Token {
+	token := db.Token{
+		UserID:    userID,
+		Hash:      fmt.Sprintf("%x", sha256.Sum256([]byte(plainText))),
+		PlainText: plainText,
+		ExpiresAt: time.Now().Add(time.Hour * 24),
+	}
+	err := db.Tx(ts.ctx).Omit("User").Create(&token).Error
+	if err != nil {
+		panic("failed to create token fixture: " + err.Error())
+	}
+	return token
 }

@@ -122,30 +122,52 @@ func (ts *TestSuite) Test_tenantsGetHandler() {
 
 func (ts *TestSuite) Test_tenantsListHandler() {
 	f := ts.createUserFixture()
-	admin := f.Users[0]
+	user := f.Users[0]
+
+	f2 := ts.createUserFixture()
+	admin := f2.Users[0]
 	admin.Role = app.UserRoleAdmin
 	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-	token := f.Tokens[0]
+
 	tenant := ts.createTenantFixture().Tenants[0]
 
-	req := httptest.NewRequest(http.MethodGet, "/api/tenants", nil)
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)
+	tests := []struct {
+		name       string
+		actor      db.User
+		wantStatus int
+	}{
+		{
+			name:       "not a valid user",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "a user cannot access a tenant",
+			actor:      user,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "admin can access a tenant",
+			actor:      admin,
+			wantStatus: http.StatusOK,
+		},
+	}
+	for _, tt := range tests {
+		ts.T().Run(tt.name, func(t *testing.T) {
+			body, status := ts.request(http.MethodGet, "/api/tenants", tt.actor.Email, nil)
 
-	res := httptest.NewRecorder()
-	ts.server.ServeHTTP(res, req)
-	body, err := io.ReadAll(res.Body)
-	ts.NoError(err)
+			// Assertions
+			ts.Equal(tt.wantStatus, status, "incorrect http status, body: \n%s", body)
 
-	// Assertions
-	ts.Equal(http.StatusOK, res.Code, "incorrect http status, body: \n%s", body)
+			if tt.wantStatus != http.StatusOK {
+				return
+			}
 
-	var tenants []app.Tenant
-	ts.NoError(json.Unmarshal(body, &tenants))
-	ts.Len(tenants, 1)
-	ts.Equal(tenant.ID, tenants[0].ID, "incorrect Tenant ID, body: \n%s", body)
-
-	// TODO: test error response
+			var tenants []app.Tenant
+			ts.NoError(json.Unmarshal(body, &tenants))
+			ts.Len(tenants, 1)
+			ts.Equal(tenant.ID, tenants[0].ID, "incorrect Tenant ID, body: \n%s", body)
+		})
+	}
 }
 
 func (ts *TestSuite) Test_tenantsUsersCreateHandler() {
