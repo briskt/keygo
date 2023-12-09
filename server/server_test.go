@@ -1,7 +1,10 @@
 package server_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -113,4 +116,21 @@ func RandStr(n int) string {
 		b[i] = chars[rand.Int63()%int64(len(chars))]
 	}
 	return string(b)
+}
+
+func (ts *TestSuite) request(method, path, token string, input any) ([]byte, int) {
+	var r io.Reader
+	if input != nil {
+		j, _ := json.Marshal(&input)
+		r = bytes.NewReader(j)
+	}
+	req := httptest.NewRequest(method, path, r)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token)
+
+	res := httptest.NewRecorder()
+	ts.server.ServeHTTP(res, req)
+	body, err := io.ReadAll(res.Body)
+	ts.NoError(err)
+	return body, res.Code
 }

@@ -79,29 +79,53 @@ func (ts *TestSuite) Test_tenantsCreateHandler() {
 
 func (ts *TestSuite) Test_tenantsGetHandler() {
 	f := ts.createUserFixture()
-	admin := f.Users[0]
+	userToken := f.Tokens[0]
+
+	f2 := ts.createUserFixture()
+	admin := f2.Users[0]
 	admin.Role = app.UserRoleAdmin
 	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-	token := f.Tokens[0]
+	adminToken := f2.Tokens[0]
+
 	tenant := ts.createTenantFixture().Tenants[0]
 
-	req := httptest.NewRequest(http.MethodGet, "/api/tenants/"+tenant.ID, nil)
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.Header.Set(echo.HeaderAuthorization, "Bearer "+token.PlainText)
+	tests := []struct {
+		name       string
+		token      string
+		wantStatus int
+	}{
+		{
+			name:       "not a valid token",
+			token:      "x",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "a user cannot access a tenant",
+			token:      userToken.PlainText,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "admin can access a tenant",
+			token:      adminToken.PlainText,
+			wantStatus: http.StatusOK,
+		},
+	}
+	for _, tt := range tests {
+		ts.T().Run(tt.name, func(t *testing.T) {
+			body, status := ts.request(http.MethodGet, "/api/tenants/"+tenant.ID, tt.token, nil)
 
-	res := httptest.NewRecorder()
-	ts.server.ServeHTTP(res, req)
-	body, err := io.ReadAll(res.Body)
-	ts.NoError(err)
+			// Assertions
+			ts.Equal(tt.wantStatus, status, "incorrect http status, body: \n%s", body)
 
-	// Assertions
-	ts.Equal(http.StatusOK, res.Code, "incorrect http status, body: \n%s", body)
+			if tt.wantStatus != http.StatusOK {
+				return
+			}
 
-	var gotTenant app.Tenant
-	ts.NoError(json.Unmarshal(body, &gotTenant))
-	ts.Equal(tenant.ID, gotTenant.ID, "incorrect Tenant data, body: \n%s", body)
-
-	// TODO: test error response
+			var gotTenant app.Tenant
+			ts.NoError(json.Unmarshal(body, &gotTenant))
+			ts.Equal(tenant.ID, gotTenant.ID, "incorrect Tenant data, body: \n%s", body)
+		})
+	}
 }
 
 func (ts *TestSuite) Test_tenantsListHandler() {
