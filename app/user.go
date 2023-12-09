@@ -4,7 +4,10 @@ import (
 	"time"
 )
 
-const UserRoleAdmin = "Admin"
+const (
+	UserRoleBasic = "Basic"
+	UserRoleAdmin = "Admin"
+)
 
 // UserFilter is a filter passed to FindUsers()
 type UserFilter struct {

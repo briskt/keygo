@@ -2,11 +2,12 @@ package server_test
 
 import (
 	"testing"
+
+	"github.com/briskt/keygo/app"
 )
 
 func (ts *TestSuite) TestServer_findOrCreateUser() {
-	f := ts.createUserFixture()
-	user := f.Users[0]
+	user := ts.createUserFixture(app.UserRoleBasic)
 
 	tests := []struct {
 		name    string

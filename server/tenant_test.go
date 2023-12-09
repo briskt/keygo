@@ -11,13 +11,8 @@ import (
 )
 
 func (ts *TestSuite) Test_tenantsCreateHandler() {
-	f := ts.createUserFixture()
-	user := f.Users[0]
-
-	f2 := ts.createUserFixture()
-	admin := f2.Users[0]
-	admin.Role = app.UserRoleAdmin
-	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
+	user := ts.createUserFixture(app.UserRoleBasic)
+	admin := ts.createUserFixture(app.UserRoleAdmin)
 
 	tests := []struct {
 		name       string
@@ -64,15 +59,9 @@ func (ts *TestSuite) Test_tenantsCreateHandler() {
 }
 
 func (ts *TestSuite) Test_tenantsGetHandler() {
-	f := ts.createUserFixture()
-	user := f.Users[0]
-
-	f2 := ts.createUserFixture()
-	admin := f2.Users[0]
-	admin.Role = app.UserRoleAdmin
-	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-
-	tenant := ts.createTenantFixture().Tenants[0]
+	user := ts.createUserFixture(app.UserRoleBasic)
+	admin := ts.createUserFixture(app.UserRoleAdmin)
+	tenant := ts.createTenantFixture()
 
 	tests := []struct {
 		name       string
@@ -113,15 +102,9 @@ func (ts *TestSuite) Test_tenantsGetHandler() {
 }
 
 func (ts *TestSuite) Test_tenantsListHandler() {
-	f := ts.createUserFixture()
-	user := f.Users[0]
-
-	f2 := ts.createUserFixture()
-	admin := f2.Users[0]
-	admin.Role = app.UserRoleAdmin
-	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-
-	tenant := ts.createTenantFixture().Tenants[0]
+	user := ts.createUserFixture(app.UserRoleBasic)
+	admin := ts.createUserFixture(app.UserRoleAdmin)
+	tenant := ts.createTenantFixture()
 
 	tests := []struct {
 		name       string
@@ -163,13 +146,9 @@ func (ts *TestSuite) Test_tenantsListHandler() {
 }
 
 func (ts *TestSuite) Test_tenantsUsersCreateHandler() {
-	user := ts.createUserFixture().Users[0]
-
-	admin := ts.createUserFixture().Users[0]
-	admin.Role = app.UserRoleAdmin
-	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-
-	tenant := ts.createTenantFixture().Tenants[0]
+	user := ts.createUserFixture(app.UserRoleBasic)
+	admin := ts.createUserFixture(app.UserRoleAdmin)
+	tenant := ts.createTenantFixture()
 
 	tests := []struct {
 		name       string

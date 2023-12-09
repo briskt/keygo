@@ -66,30 +66,27 @@ func testContext() echo.Context {
 	return ctx
 }
 
-func (ts *TestSuite) createUserFixture() Fixtures {
+func (ts *TestSuite) createUserFixture(role string) db.User {
 	fakeUserCreate := app.UserCreateInput{
 		Email: fmt.Sprintf("test%s@example.com", RandStr(6)),
+		Role:  role,
 	}
 	createdUser, err := db.CreateUser(ts.ctx, fakeUserCreate)
 	ts.NoError(err)
 
 	ts.createTokenFixture(createdUser.Email, createdUser.ID)
 
-	return Fixtures{
-		Users: []db.User{createdUser},
-	}
+	return createdUser
 }
 
-func (ts *TestSuite) createTenantFixture() Fixtures {
+func (ts *TestSuite) createTenantFixture() db.Tenant {
 	fakeTenantCreate := app.TenantCreateInput{
 		Name: "Test Tenant",
 	}
 	createdTenant, err := db.CreateTenant(ts.ctx, fakeTenantCreate)
 	ts.NoError(err)
 
-	return Fixtures{
-		Tenants: []db.Tenant{createdTenant},
-	}
+	return createdTenant
 }
 
 func deleteAll(c echo.Context, i any) {

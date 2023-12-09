@@ -10,13 +10,8 @@ import (
 )
 
 func (ts *TestSuite) Test_GetUser() {
-	f := ts.createUserFixture()
-	user := f.Users[0]
-
-	f2 := ts.createUserFixture()
-	admin := f2.Users[0]
-	admin.Role = app.UserRoleAdmin
-	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
+	user := ts.createUserFixture(app.UserRoleBasic)
+	admin := ts.createUserFixture(app.UserRoleAdmin)
 
 	tests := []struct {
 		name       string
@@ -74,13 +69,8 @@ func (ts *TestSuite) Test_GetUser() {
 }
 
 func (ts *TestSuite) Test_GetUserList() {
-	f := ts.createUserFixture()
-	user := f.Users[0]
-
-	f2 := ts.createUserFixture()
-	admin := f2.Users[0]
-	admin.Role = app.UserRoleAdmin
-	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
+	user := ts.createUserFixture(app.UserRoleBasic)
+	admin := ts.createUserFixture(app.UserRoleAdmin)
 
 	tests := []struct {
 		name       string
