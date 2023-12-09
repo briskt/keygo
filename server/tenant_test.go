@@ -16,32 +16,30 @@ import (
 
 func (ts *TestSuite) Test_tenantsCreateHandler() {
 	f := ts.createUserFixture()
-	userToken := f.Tokens[0]
+	user := f.Users[0]
 
 	f2 := ts.createUserFixture()
 	admin := f2.Users[0]
 	admin.Role = app.UserRoleAdmin
 	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-	adminToken := f2.Tokens[0]
 
 	tests := []struct {
 		name       string
-		token      string
+		actor      db.User
 		wantStatus int
 	}{
 		{
-			name:       "not a valid token",
-			token:      "x",
+			name:       "not a valid user",
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
 			name:       "a user cannot create a tenant",
-			token:      userToken.PlainText,
+			actor:      user,
 			wantStatus: http.StatusNotFound,
 		},
 		{
 			name:       "admin can create a tenant",
-			token:      adminToken.PlainText,
+			actor:      admin,
 			wantStatus: http.StatusOK,
 		},
 	}
@@ -49,7 +47,7 @@ func (ts *TestSuite) Test_tenantsCreateHandler() {
 	for _, tt := range tests {
 		ts.T().Run(tt.name, func(t *testing.T) {
 			input := app.TenantCreateInput{Name: "new tenant"}
-			body, status := ts.request(http.MethodPost, "/api/tenants", tt.token, input)
+			body, status := ts.request(http.MethodPost, "/api/tenants", tt.actor.Email, input)
 
 			// Assertions
 			ts.Equal(tt.wantStatus, status, "incorrect http status, body: \n%s", body)
@@ -71,40 +69,38 @@ func (ts *TestSuite) Test_tenantsCreateHandler() {
 
 func (ts *TestSuite) Test_tenantsGetHandler() {
 	f := ts.createUserFixture()
-	userToken := f.Tokens[0]
+	user := f.Users[0]
 
 	f2 := ts.createUserFixture()
 	admin := f2.Users[0]
 	admin.Role = app.UserRoleAdmin
 	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-	adminToken := f2.Tokens[0]
 
 	tenant := ts.createTenantFixture().Tenants[0]
 
 	tests := []struct {
 		name       string
-		token      string
+		actor      db.User
 		wantStatus int
 	}{
 		{
-			name:       "not a valid token",
-			token:      "x",
+			name:       "not a valid user",
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
 			name:       "a user cannot access a tenant",
-			token:      userToken.PlainText,
+			actor:      user,
 			wantStatus: http.StatusNotFound,
 		},
 		{
 			name:       "admin can access a tenant",
-			token:      adminToken.PlainText,
+			actor:      admin,
 			wantStatus: http.StatusOK,
 		},
 	}
 	for _, tt := range tests {
 		ts.T().Run(tt.name, func(t *testing.T) {
-			body, status := ts.request(http.MethodGet, "/api/tenants/"+tenant.ID, tt.token, nil)
+			body, status := ts.request(http.MethodGet, "/api/tenants/"+tenant.ID, tt.actor.Email, nil)
 
 			// Assertions
 			ts.Equal(tt.wantStatus, status, "incorrect http status, body: \n%s", body)

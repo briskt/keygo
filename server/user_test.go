@@ -12,47 +12,44 @@ import (
 func (ts *TestSuite) Test_GetUser() {
 	f := ts.createUserFixture()
 	user := f.Users[0]
-	userToken := f.Tokens[0]
 
 	f2 := ts.createUserFixture()
 	admin := f2.Users[0]
 	admin.Role = app.UserRoleAdmin
 	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-	adminToken := f2.Tokens[0]
 
 	tests := []struct {
 		name       string
-		token      string
+		actor      db.User
 		userID     string
 		wantStatus int
 	}{
 		{
-			name:       "not a valid token",
-			token:      "x",
+			name:       "not a valid user",
 			userID:     user.ID,
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
 			name:       "not a valid ID",
-			token:      adminToken.PlainText,
+			actor:      admin,
 			userID:     "x",
 			wantStatus: http.StatusNotFound,
 		},
 		{
 			name:       "non-admin cannot access other users",
-			token:      userToken.PlainText,
+			actor:      user,
 			userID:     admin.ID,
 			wantStatus: http.StatusNotFound,
 		},
 		{
 			name:       "a user can access their own record",
-			token:      userToken.PlainText,
+			actor:      user,
 			userID:     user.ID,
 			wantStatus: http.StatusOK,
 		},
 		{
 			name:       "admin can access other users",
-			token:      adminToken.PlainText,
+			actor:      admin,
 			userID:     user.ID,
 			wantStatus: http.StatusOK,
 		},
@@ -60,7 +57,7 @@ func (ts *TestSuite) Test_GetUser() {
 
 	for _, tt := range tests {
 		ts.T().Run(tt.name, func(t *testing.T) {
-			body, status := ts.request(http.MethodGet, "/api/users/"+tt.userID, tt.token, nil)
+			body, status := ts.request(http.MethodGet, "/api/users/"+tt.userID, tt.actor.Email, nil)
 
 			// Assertions
 			ts.Equal(tt.wantStatus, status, "incorrect http status, body: \n%s", body)
@@ -78,34 +75,32 @@ func (ts *TestSuite) Test_GetUser() {
 
 func (ts *TestSuite) Test_GetUserList() {
 	f := ts.createUserFixture()
-	userToken := f.Tokens[0]
+	user := f.Users[0]
 
 	f2 := ts.createUserFixture()
 	admin := f2.Users[0]
 	admin.Role = app.UserRoleAdmin
 	ts.NoError(db.Tx(ts.ctx).Save(&admin).Error)
-	adminToken := f2.Tokens[0]
 
 	tests := []struct {
 		name       string
-		token      string
+		actor      db.User
 		wantStatus int
 		want       int
 	}{
 		{
-			name:       "not a valid token",
-			token:      "x",
+			name:       "not a valid user",
 			wantStatus: http.StatusUnauthorized,
 		},
 		{
 			name:       "non-admin gets an empty list of users",
-			token:      userToken.PlainText,
+			actor:      user,
 			wantStatus: http.StatusOK,
 			want:       0,
 		},
 		{
 			name:       "admin can list users",
-			token:      adminToken.PlainText,
+			actor:      admin,
 			wantStatus: http.StatusOK,
 			want:       2,
 		},
@@ -113,7 +108,7 @@ func (ts *TestSuite) Test_GetUserList() {
 
 	for _, tt := range tests {
 		ts.T().Run(tt.name, func(t *testing.T) {
-			body, status := ts.request(http.MethodGet, "/api/users", tt.token, nil)
+			body, status := ts.request(http.MethodGet, "/api/users", tt.actor.Email, nil)
 
 			// Assertions
 			ts.Equal(tt.wantStatus, status, "incorrect http status, body: \n%s", body)
