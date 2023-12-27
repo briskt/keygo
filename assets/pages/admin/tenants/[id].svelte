@@ -26,6 +26,9 @@
 
   const onSubmitAddTenantUser = async () => {
     showAddTenantUserModal = false
+    if (newTenantUserEmail === '') {
+      return
+    }
     addTenantUser(id, newTenantUserEmail)
     newTenantUserEmail = ''
   }
