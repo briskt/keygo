@@ -24,6 +24,9 @@
 
   const onSubmitAddTenant = async () => {
     showAddTenantModal = false
+    if (newTenantName === '') {
+      return
+    }
     addTenant(newTenantName)
     newTenantName = ''
     tenants = await listTenants()
