@@ -11,6 +11,12 @@ export type User = {
   TenantID: string
 }
 
+export type UserUpdateInput = {
+  Email: string
+  FirstName: string
+  LastName: string
+}
+
 export const isAdmin = (user: User) => user.Role == Admin
 
 const Admin = 'Admin'

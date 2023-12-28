@@ -24,6 +24,7 @@
 
 <table>
   <tr>
+    <th>Edit</th>
     <th>Role</th>
     <th>Tenant</th>
     <th>First Name</th>
@@ -36,6 +37,7 @@
   </tr>
 {#each users as user (user.ID)}
   <tr>
+    <td><a href="/admin/users/{user.ID}">Edit</a></td>
     <td>{user.Role}</td>
     <td>{getTenantNameFromID(user.TenantID)}</td>
     <td>{user.FirstName}</td>

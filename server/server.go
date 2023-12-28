@@ -84,4 +84,5 @@ func (s *Server) registerAPIRoutes() {
 
 	api.GET("/users", s.usersListHandler)
 	api.GET("/users/:id", s.userHandler)
+	api.PUT("/users/:id", s.usersUpdateHandler)
 }

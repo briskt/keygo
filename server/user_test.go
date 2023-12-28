@@ -113,3 +113,56 @@ func (ts *TestSuite) Test_GetUserList() {
 		})
 	}
 }
+
+func (ts *TestSuite) Test_usersUpdateHandler() {
+	user := ts.createUserFixture(app.UserRoleBasic)
+	admin := ts.createUserFixture(app.UserRoleAdmin)
+
+	tests := []struct {
+		name       string
+		actor      db.User
+		userID     string
+		wantStatus int
+	}{
+		{
+			name:       "not a valid user",
+			userID:     "xyz",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "a user cannot update a user",
+			actor:      user,
+			userID:     admin.ID,
+			wantStatus: http.StatusNotFound,
+		},
+		{
+			name:       "admin can update a user",
+			actor:      admin,
+			userID:     user.ID,
+			wantStatus: http.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		ts.T().Run(tt.name, func(t *testing.T) {
+			email := "updated@example.com"
+			input := app.UserUpdateInput{Email: &email}
+			body, status := ts.request(http.MethodPut, "/api/users/"+tt.userID, tt.actor.Email, input)
+
+			// Assertions
+			ts.Equal(tt.wantStatus, status, "incorrect http status, body: \n%s", body)
+
+			if tt.wantStatus != http.StatusOK {
+				return
+			}
+
+			var gotUser app.User
+			ts.NoError(json.Unmarshal(body, &gotUser))
+			ts.Equal(*input.Email, gotUser.Email, "incorrect User Email, body: \n%s", body)
+
+			dbUser, err := db.FindUserByID(ts.ctx, gotUser.ID)
+			ts.NoError(err)
+			ts.Equal(*input.Email, dbUser.Email, "incorrect User Name in db")
+		})
+	}
+}

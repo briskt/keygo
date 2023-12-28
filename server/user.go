@@ -48,3 +48,30 @@ func (s *Server) userHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, user)
 }
+
+func (s *Server) usersUpdateHandler(c echo.Context) error {
+	var input app.UserUpdateInput
+	err := (&echo.DefaultBinder{}).BindBody(c, &input)
+	if err != nil {
+		// TODO: improve error response here (and probably everywhere else too)
+		return echo.NewHTTPError(http.StatusBadRequest, "bad request")
+	}
+
+	id := c.Param("id")
+	actor := app.CurrentUser(c)
+	if id != actor.ID && actor.Role != app.UserRoleAdmin {
+		return echo.NewHTTPError(http.StatusNotFound, AuthError{Error: "not found"})
+	}
+
+	updatedUser, err := db.UpdateUser(c, id, input)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	user, err := db.ConvertUser(c, updatedUser)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.JSON(http.StatusOK, user)
+}
