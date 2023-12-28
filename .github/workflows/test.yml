@@ -11,11 +11,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Migration
-        run: docker-compose run --rm test bash -c "goose -dir migrations postgres postgres://keygo:keygo@testdb:5432/keygo?sslmode=disable up"
-
       - name: Setup
         run: cp test.env .env && touch proxy.env
+
+      - name: Migration
+        run: docker-compose run --rm test bash -c "goose -dir migrations postgres postgres://keygo:keygo@testdb:5432/keygo?sslmode=disable up"
 
       - name: Test
         run: docker compose run --rm test
