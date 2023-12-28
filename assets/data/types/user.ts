@@ -8,6 +8,7 @@ export type User = {
   UpdatedAt: string //date
   LastName: string
   Role: string
+  TenantID: string
 }
 
 export const isAdmin = (user: User) => user.Role == Admin

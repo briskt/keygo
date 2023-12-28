@@ -1,6 +1,8 @@
 import type {Tenant, TenantCreate, TenantUserCreate} from 'data/types/tenant'
 import api from '../api'
 
+// TODO: cache tenant list
+
 export const addTenant = async (name: string): Promise<Tenant> => {
   const body: TenantCreate = {
     Name: name,

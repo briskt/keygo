@@ -28,6 +28,7 @@ type User struct {
 	Email       string
 	AvatarURL   string
 	Role        string
+	TenantID    string
 	LastLoginAt *time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

@@ -123,7 +123,7 @@ func findUserByID(ctx echo.Context, id string) (User, error) {
 }
 
 func ConvertUser(_ echo.Context, u User) (app.User, error) {
-	return app.User{
+	user := app.User{
 		ID:          u.ID,
 		FirstName:   u.FirstName,
 		LastName:    u.LastName,
@@ -133,5 +133,9 @@ func ConvertUser(_ echo.Context, u User) (app.User, error) {
 		LastLoginAt: u.LastLoginAt,
 		CreatedAt:   u.CreatedAt,
 		UpdatedAt:   u.UpdatedAt,
-	}, nil
+	}
+	if u.TenantID != nil {
+		user.TenantID = *u.TenantID
+	}
+	return user, nil
 }
